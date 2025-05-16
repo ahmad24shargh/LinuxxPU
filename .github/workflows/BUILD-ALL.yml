@@ -77,7 +77,7 @@ jobs:
     uses: ./.github/workflows/fetch_patch.yml
     secrets: inherit
     with:
-      ksu_fork: ${{ matrix.kernel_variant }}
+      ksu_fork: ${{ matrix.ksu_fork }}
     
   calc_tag_version:
     needs: 
