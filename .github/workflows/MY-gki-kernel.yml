@@ -365,7 +365,7 @@ jobs:
           # Add KSU configuration settings
           echo "CONFIG_KSU=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_MANUAL_HOOK=y" >> ./common/arch/arm64/configs/gki_defconfig
-          [ ${{ env.ksu_fork == SUKISU }} ] && echo "CONFIG_KPM=y" >> ./common/arch/arm64/configs/gki_defconfig
+          [ ${{ env.ksu_fork == 'SUKISU' }} ] && echo "CONFIG_KPM=y" >> ./common/arch/arm64/configs/gki_defconfig
           
           
           #if [ "${{ inputs.linuxpu_variant }}" == "Next" ]; then
