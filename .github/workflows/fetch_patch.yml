@@ -177,11 +177,11 @@ jobs:
           [ -f ${repo_folder}/manager/app/src/main/res/values/ic_launcher_background.xml -a -f ${repo_folder}/manager/app/src/main/res/values/colors.xml ] && rm ${repo_folder}/manager/app/src/main/res/values/colors.xml
           cd ${repo_folder}
           for file in $(grep -R "${repo_folder}" -e 'com.rifsxd.linuxpu' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -E -i 's#(com.)rifsxd(.)ksunext#\1ahmad\2linuxpu#g' $file;done
-          for file in $(grep -R "${repo_folder}" -e 'com.sukisu.ultra' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -E -i 's#(com.)sukisu(.)ultra#\1ahmad\2linuxpu#g' $file;done
+          for file in $(grep -R "${repo_folder}" -e 'com.sukisu.zako' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -E -i 's#(com.)sukisu(.)zako#\1ahmad\2linuxpu#g' $file;done
           for file in $(grep -R ${repo_folder}/manager ${repo_folder}/userspace -e 'rifsxd' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -i 's#rifsxd#ahmad#g' $file;done
           for file in $(grep -R ${repo_folder}/manager ${repo_folder}/userspace -e 'sukisu' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -i 's#sukisu#ahmad#g' $file;done
           for dir in $(find ${repo_folder} -type d -name 'ksunext' 2>/dev/null);do bn="$( cd -- "$(dirname "$dir")" >/dev/null 2>&1 ; pwd -P )";mv $dir "${bn}/linuxpu";mv "${bn}" "$(echo ${bn} | rev | cut -d'/' -f2- | rev)/ahmad";done
-          for dir in $(find ${repo_folder} -type d -name 'ultra' 2>/dev/null);do bn="$( cd -- "$(dirname "$dir")" >/dev/null 2>&1 ; pwd -P )";mv $dir "${bn}/linuxpu";mv "${bn}" "$(echo ${bn} | rev | cut -d'/' -f2- | rev)/ahmad";done
+          for dir in $(find ${repo_folder} -type d -name 'zako' 2>/dev/null);do bn="$( cd -- "$(dirname "$dir")" >/dev/null 2>&1 ; pwd -P )";mv $dir "${bn}/linuxpu";mv "${bn}" "$(echo ${bn} | rev | cut -d'/' -f2- | rev)/ahmad";done
           sed -E -i 's|(KSU[^[:space:]]+EXPECTED_SIZE).+0x.+|\1 := 0x373|g' ${repo_folder}/kernel/Makefile
           sed -E -i 's|(KSU[^[:space:]]+EXPECTED_HASH) := .+|\1 := 5028506331f6c9f189e2f6500d90c3d6972bd7033e960fed4b5dda1fe31a5e95|g' ${repo_folder}/kernel/Makefile
           sed -E -i 's|^([[:space:]]+)android\:label\=.+|\1android:label="LinuxPU"|g' ${repo_folder}/manager/app/src/main/AndroidManifest.xml
