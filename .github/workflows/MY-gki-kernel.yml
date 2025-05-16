@@ -286,10 +286,10 @@ jobs:
           
       - name: Add KernelSU
         run: |
-          [ ${{ env.ksu_fork == KSUN }} ] && echo "BRANCH=-s next" >> $GITHUB_ENV || echo "BRANCH=-" >> $GITHUB_ENV
+          ${{ env.ksu_fork == 'KSUN' }}  && echo "BRANCH=-s next" >> $GITHUB_ENV || echo "BRANCH=-" >> $GITHUB_ENV
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG"
-          [ ${{ env.ksu_fork == KSUN }} ] && echo "Adding KernelSU Next..." || echo echo "Adding SukiSU Ultra..."
+          [ ${{ env.ksu_fork == 'KSUN' }} ] && echo "Adding KernelSU Next..." || echo echo "Adding SukiSU Ultra..."
           GKI_ROOT=$(pwd)
           test -d "$GKI_ROOT/common/drivers" &&  DRIVER_DIR="$GKI_ROOT/common/drivers" ||  DRIVER_DIR="$GKI_ROOT/drivers"
           DRIVER_MAKEFILE=$DRIVER_DIR/Makefile
