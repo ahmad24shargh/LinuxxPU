@@ -247,7 +247,7 @@ jobs:
     with:
       target: ${{ matrix.target }}
       os: ${{ matrix.os }}
-      ksu_fork: ${{ marrix.ksu_fork }}
+      ksu_fork: ${{ matrix.ksu_fork }}
       C_VERSION: ${{ matrix.C_VERSION }}
       C_LAST_COMMIT: ${{ matrix.C_LAST_COMMIT }}
       C_TAG_NAME: ${{ matrix.C_TAG_NAME }}
