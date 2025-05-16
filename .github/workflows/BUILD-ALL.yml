@@ -28,8 +28,9 @@ on:
           - only_kernel
           - only_manager
       ksu_fork:
+        type: choice
         description: 'Which ksu fork should be made?'
-        default: 'ksun'
+        default: 'KSUN'
         required: true
         options:
           - KSUN
