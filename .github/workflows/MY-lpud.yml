@@ -50,7 +50,8 @@ jobs:
         path: .
         github-token: '${{ env.GH_TOKEN }}'
         
-    - name: Download Artifacts
+    - name: Download susfsd
+      if: ${{ inputs.ksu_fork == 'KSUN' }}
       uses: actions/download-artifact@v4
       with:
         name: susfsd-aarch64-linux-android
