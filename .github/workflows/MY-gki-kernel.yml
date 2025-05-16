@@ -324,7 +324,7 @@ jobs:
           cp $GITHUB_WORKSPACE/susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch ./common/
           cp $GITHUB_WORKSPACE/susfs4ksu/kernel_patches/fs/* ./common/fs/
           cp $GITHUB_WORKSPACE/susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
-          [ ${{ env.ksu_fork == KSUN }} ] && echo "Applying SUSFS patches for KernelSU-Next..." || echo "Applying SUSFS patches for SukiSU Ultra..."
+          [ ${{ env.ksu_fork == 'KSUN' }} ] && echo "Applying SUSFS patches for KernelSU-Next..." || echo "Applying SUSFS patches for SukiSU Ultra..."
           cd ./KernelSU-Next
           cp ./kernel_patches/next/kernel-implement-susfs-v1.5.7-gki.patch ./
           patch -p1 --forward < kernel-implement-susfs-v1.5.7-gki.patch
