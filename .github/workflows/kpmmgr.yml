@@ -1,0 +1,46 @@
+name: Build kpmmgr
+
+on:
+  push:
+    branches: [ "mian" ]
+    paths:
+      - '.github/workflows/kpmmgr.yml'
+      - 'userspace/kpmmgr/**'
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      target:
+        required: true
+        type: string
+      os:
+        required: false
+        type: string
+        default: self-hosted
+
+jobs:
+  build-susfs:
+    name: Build userspace kpmmgr
+    runs-on: ubuntu-latest
+
+    steps:
+      #- name: Checkout code
+        #uses: actions/checkout@v4
+        #with:
+          #fetch-depth: 0
+      - name: download linuxpu with patched dir
+        uses: actions/download-artifact@v4
+        with:
+          name: linuxpu
+          path: .
+
+      - name: Build kpmmgr
+        working-directory: ./userspace/kpmmgr
+        run: |
+          bash ${GITHUB_WORKSPACE}/.github/scripts/calc_patch_tg.sh
+          $ANDROID_NDK_HOME/ndk-build
+
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kpmmgr-aarch64-linux-android
+          path: ./userspace/kpmmgr/libs
