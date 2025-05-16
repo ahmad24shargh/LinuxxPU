@@ -49,14 +49,14 @@ jobs:
           #echo "gh run list --status in_progress: $(gh run list --status in_progress)"
           #has_new_commits=true
           #declare -a repo_commits=($(git log -n 200 --no-decorate | grep -E '^commit' | cut -d' ' -f2))
-          case ${{ inputs.ksu_fork }} in
-            "KSUN")
-              git clone https://github.com/KernelSU-Next/KernelSU-Next KSU;;
-            "SUKISU")
-              git clone https://github.com/ShirkNeko/SukiSU-Ultra KSU;;
-            *)
-              false;;
-          esac
+          if [ ${{ inputs.ksu_fork }} == 'KSUN' ];then
+            git clone https://github.com/KernelSU-Next/KernelSU-Next KSU
+          elif [ ${{ inputs.ksu_fork }} == 'SUKISU' ];then
+            git clone https://github.com/ShirkNeko/SukiSU-Ultra KSU
+          else
+            exit 1
+            false
+          fi
           #git clone https://github.com/KernelSU-Next/KernelSU-Next
           #cd KernelSU-Next
           #cp -af KernelSU-Next/* KernelSU-Next/.git .
