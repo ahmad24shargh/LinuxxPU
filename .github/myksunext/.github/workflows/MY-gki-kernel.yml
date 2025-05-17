@@ -303,7 +303,7 @@ jobs:
           echo '[+] Done.'
           cd "${repo_path}/$CONFIG"
           ln -s ${repo_path} ./KernelSU-Next
-          ln -s ${repo_path} ./KernelSU
+          ln -s ${repo_path} ./kernelsu
           for files in $(grep -R ../kernel_patches -e 'ksud' 2>/dev/null | grep -v 'https' | grep -v 'rustix::' | cut -d':' -f1 | sort | uniq);do sed -i 's|ksud|lpud|g' $files;done
           for files in $(grep -R ../kernel_patches -e 'ksu' 2>/dev/null | grep -v 'https' | grep -v 'rustix::' | cut -d':' -f1 | sort | uniq);do sed -i 's|ksu|lpu|g' $files;done
           if [ ${{ env.include_susfs }} == false ];then for file in $(grep -R ${repo_path}/kernel -e 'is_manager_apk' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -i 's/is_manager_apk/lpu_is_manager_apk/g' $file;echo $file;grep 'lpu_is_manager_apk' $file;done;fi
@@ -619,7 +619,7 @@ jobs:
             for files in $(grep -R ${repo_path}/kernel -e 'KSURC' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's#KSURC#LPURC#g' $files;done
             for files in $(grep -R ${repo_path}/kernel -e 'ksu' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's#ksu#lpu#g' $files;done
             files=('/fs/Makefile' '/fs/Kconfig' '/fs/dcache.c' '/fs/devpts/inode.c' '/fs/exec.c' '/fs/namei.c' '/fs/namespace.c' '/fs/notify/fdinfo.c' '/fs/open.c' '/fs/overlayfs/inode.c' '/fs/overlayfs/readdir.c' '/fs/overlayfs/super.c' '/fs/proc/bootconfig.c' '/fs/proc/fd.c' '/fs/proc/task_mmu.c' '/fs/proc_namespace.c' '/fs/readdir.c' '/fs/stat.c' '/fs/statfs.c' '/include/linux/mount.h' '/include/linux/sched.h' '/kernel/kallsyms.c' '/kernel/sys.c' '/drivers/input/input.c' '/drivers/tty/pty.c' '/fs/read_write.c' '/drivers/Makefile' '/drivers/Kconfig' '/include/linux/sus_su.h' '/include/linux/susfs_def.h' '/include/linux/susfs.h' '/fs/sus_su.c' '/fs/susfs.c')
-            for each in "${files[@]}";do [ -f "./common${each}" ] && sed -i -e 's|KSU|LPU|g' -e 's|KERNEL_SU|LINUXPU|g' -e  's|KernelSU|LinuxPU|g' -e 's|ksud|lpud|g' -e 's|ksu|lpu|g' -e 's|SukiSU-Ultra|LINUXPU|g' -e 's|sukisu|linuxpu|g' -e 's|SukiSU Ultra|LINUXPU|g' -e 's|SUKISU|LINUXPU|g'  -e 's|SukiSU|LinuxPU|g' ./common${each};done
+            for each in "${files[@]}";do if [ -f "./common${each}" ];then sed -i 's|KSU|LPU|g' ./common${each};sed -i 's|KERNEL_SU|LINUXPU|g' ./common${each};sed -i  's|KernelSU|LinuxPU|g' ./common${each};sed -i 's|ksud|lpud|g' ./common${each};sed -i 's|ksu|lpu|g' ./common${each};sed -i 's|SukiSU-Ultra|LINUXPU|g' ./common${each};sed -i 's|sukisu|linuxpu|g' ./common${each};sed -i 's|SukiSU Ultra|LINUXPU|g' ./common${each};sed -i 's|SUKISU|LINUXPU|g'  ./common${each};sed -i 's|SukiSU|LinuxPU|g' ./common${each};fi;done
             set -e
             set -x
           else
@@ -678,6 +678,31 @@ jobs:
             mkdir -p ./out/${CONFIG}/common && cp ./common/arch/arm64/configs/gki_defconfig ./out/${CONFIG}/common/.config
             mkdir -p ./out/$(echo ${CONFIG} | cut -d'-' -f1,2)/common && cp ./common/arch/arm64/configs/gki_defconfig ./out/$(echo ${CONFIG} | cut -d'-' -f1,2)/common/.config
             grep -Ei 'ksu|lpu|susfs' ./out/${CONFIG}/common/.config 
+            grep -R . -e 'ksu_vfs_read_hook' 2>/dev/null
+            echo .
+            echo .
+            grep -R . -e 'ksu_execveat_hook' 2>/dev/null
+            echo .
+            echo .
+            grep -R . -e 'ksu_handle_devpts' 2>/dev/null
+            echo .
+            echo .
+            grep -R . -e 'ksu_input_hook' 2>/dev/null
+            echo .
+            echo .
+            grep -R . -e 'lpu_vfs_read_hook' 2>/dev/null
+            echo .
+            echo .
+            grep -R . -e 'lpu_execveat_hook' 2>/dev/null
+            echo .
+            echo .
+            grep -R . -e 'lpu_handle_devpts' 2>/dev/null
+            echo .
+            echo .
+            grep -R . -e 'lpu_input_hook' 2>/dev/null
+            echo .
+            echo .
+            exit
             LTO=thin BUILD_CONFIG=${BUILD_CONFIG} SKIP_EXT_MODULES=1 SKIP_CP_KERNEL_HDR=1 SKIP_VENDOR_BOOT=1 SKIP_MRPROPER=1 SYSTEM_DLKM_RE_SIGN=0 BUILD_SYSTEM_DLKM=0 KMI_SYMBOL_LIST_STRICT_MODE=0 build/build.sh CC="${CC}"
             
               
