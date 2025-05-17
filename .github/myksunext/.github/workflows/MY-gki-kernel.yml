@@ -305,11 +305,10 @@ jobs:
           ln -s ${repo_path} ./KernelSU-Next
           ln -s ${repo_path} ./kernelsu
           for files in $(grep -R ../kernel_patches -e 'ksud' 2>/dev/null | grep -v 'https' | grep -v 'rustix::' | cut -d':' -f1 | sort | uniq);do sed -i 's|ksud|lpud|g' $files;done
-          for files in $(grep -R ../kernel_patches -e 'ksu' 2>/dev/null | grep -v 'https' | grep -v 'rustix::' | cut -d':' -f1 | sort | uniq);do sed -i 's|ksu|lpu|g' $files;done
-          if [ ${{ env.include_susfs }} == false ];then for file in $(grep -R ${repo_path}/kernel -e 'is_manager_apk' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -i 's/is_manager_apk/lpu_is_manager_apk/g' $file;echo $file;grep 'lpu_is_manager_apk' $file;done;fi
+          for files in $(grep -R ../kernel_patches -e 'ksu' 2>/dev/null | grep -v 'https' | grep -v 'rustix::' | cut -d':' -f1 | sort | uniq);do echo $files;sed -i 's|ksu|lpu|g' $files;done
           
       - name: Apply SUSFS Patches for KernelSU Variants
-        if: ${{ env.include_susfs == true }}
+        if: ${{ env.include_susfs == 'true' }}
         run: |
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG"
@@ -387,6 +386,8 @@ jobs:
             tar -xzkf ${GITHUB_WORKSPACE}/.github/scripts/build.tar.gz -C build/
             for file in $(find build/ -type f -name '*.sh' 2>/dev/null);do sed -i 's|/\/build\/|build\/|g' $file;chmod +x $file;done
           fi
+
+          for file in $(grep -R ${repo_path}/kernel -e 'is_manager_apk' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -E -i 's/([[:space:]]+)is_manager_apk/\1lpu_is_manager_apk/g' $file;done
           
       - name: Copy source files & apply LZ4KD & ZSTDN patches
         run: |
@@ -462,7 +463,7 @@ jobs:
           fi   
           
       - name: Add SUSFS Configuration Settings
-        if: ${{ env.include_susfs == true }}
+        if: ${{ env.include_susfs == 'true' }}
         run: |
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG"
@@ -617,9 +618,9 @@ jobs:
             for files in $(grep -R ${repo_path}/kernel -e 'KSU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed  -i 's#KSU#LPU#g' $files;done
             for files in $(grep -R ${repo_path}/kernel -e 'Ksu' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -i 's|Ksu|Lpu|g' $files;done
             for files in $(grep -R ${repo_path}/kernel -e 'KSURC' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's#KSURC#LPURC#g' $files;done
-            for files in $(grep -R ${repo_path}/kernel -e 'ksu' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's#ksu#lpu#g' $files;done
+            for files in $(grep -R ${repo_path}/kernel -e 'ksu' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do echo $files;sed -i 's#ksu#lpu#g' $files;done
             files=('/fs/Makefile' '/fs/Kconfig' '/fs/dcache.c' '/fs/devpts/inode.c' '/fs/exec.c' '/fs/namei.c' '/fs/namespace.c' '/fs/notify/fdinfo.c' '/fs/open.c' '/fs/overlayfs/inode.c' '/fs/overlayfs/readdir.c' '/fs/overlayfs/super.c' '/fs/proc/bootconfig.c' '/fs/proc/fd.c' '/fs/proc/task_mmu.c' '/fs/proc_namespace.c' '/fs/readdir.c' '/fs/stat.c' '/fs/statfs.c' '/include/linux/mount.h' '/include/linux/sched.h' '/kernel/kallsyms.c' '/kernel/sys.c' '/drivers/input/input.c' '/drivers/tty/pty.c' '/fs/read_write.c' '/drivers/Makefile' '/drivers/Kconfig' '/include/linux/sus_su.h' '/include/linux/susfs_def.h' '/include/linux/susfs.h' '/fs/sus_su.c' '/fs/susfs.c')
-            for each in "${files[@]}";do if [ -f "./common${each}" ];then sed -i 's|KSU|LPU|g' ./common${each};sed -i 's|KERNEL_SU|LINUXPU|g' ./common${each};sed -i  's|KernelSU|LinuxPU|g' ./common${each};sed -i 's|ksud|lpud|g' ./common${each};sed -i 's|ksu|lpu|g' ./common${each};sed -i 's|SukiSU-Ultra|LINUXPU|g' ./common${each};sed -i 's|sukisu|linuxpu|g' ./common${each};sed -i 's|SukiSU Ultra|LINUXPU|g' ./common${each};sed -i 's|SUKISU|LINUXPU|g'  ./common${each};sed -i 's|SukiSU|LinuxPU|g' ./common${each};fi;done
+            for each in "${files[@]}";do if [ -f "./common${each}" ];then echo "./common${each}"; sed -i 's|KSU|LPU|g' ./common${each};sed -i 's|KERNEL_SU|LINUXPU|g' ./common${each};sed -i  's|KernelSU|LinuxPU|g' ./common${each};sed -i 's|ksud|lpud|g' ./common${each};sed -i 's|ksu|lpu|g' ./common${each};sed -i 's|SukiSU-Ultra|LINUXPU|g' ./common${each};sed -i 's|sukisu|linuxpu|g' ./common${each};sed -i 's|SukiSU Ultra|LINUXPU|g' ./common${each};sed -i 's|SUKISU|LINUXPU|g'  ./common${each};sed -i 's|SukiSU|LinuxPU|g' ./common${each};fi;done
             set -e
             set -x
           else
