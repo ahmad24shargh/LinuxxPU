@@ -291,7 +291,7 @@ jobs:
           cd "$CONFIG"
           [ ${{ env.ksu_fork == 'KSUN' }} ] && echo "Adding KernelSU Next..."
           [ ${{ env.ksu_fork == 'SUKISU' }} ] && echo "Adding SukiSU Ultra..."
-          [ ${{ env.ksu_fork == 'KSUN' }} -o ${{ env.include_susfs == 'false' }} ];then
+          if [ ${{ env.ksu_fork == 'KSUN' }} -o ${{ env.include_susfs == 'false' }} ];then
             GKI_ROOT=$(pwd)
             test -d "$GKI_ROOT/common/drivers" &&  DRIVER_DIR="$GKI_ROOT/common/drivers" ||  DRIVER_DIR="$GKI_ROOT/drivers"
             DRIVER_MAKEFILE=$DRIVER_DIR/Makefile
