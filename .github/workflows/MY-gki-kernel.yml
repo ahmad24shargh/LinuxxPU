@@ -678,28 +678,28 @@ jobs:
             mkdir -p ./out/${CONFIG}/common && cp ./common/arch/arm64/configs/gki_defconfig ./out/${CONFIG}/common/.config
             mkdir -p ./out/$(echo ${CONFIG} | cut -d'-' -f1,2)/common && cp ./common/arch/arm64/configs/gki_defconfig ./out/$(echo ${CONFIG} | cut -d'-' -f1,2)/common/.config
             grep -Ei 'ksu|lpu|susfs' ./out/${CONFIG}/common/.config 
-            grep -R . -e 'ksu_vfs_read_hook' 2>/dev/null
+            grep -R --exclude-dir=".github" . -e 'ksu_vfs_read_hook' 2>/dev/null
             echo .
             echo .
-            grep -R . -e 'ksu_execveat_hook' 2>/dev/null
+            grep -R --exclude-dir=".github" . -e 'ksu_execveat_hook' 2>/dev/null
             echo .
             echo .
-            grep -R . -e 'ksu_handle_devpts' 2>/dev/null
+            grep -R --exclude-dir=".github" . -e 'ksu_handle_devpts' 2>/dev/null
             echo .
             echo .
-            grep -R . -e 'ksu_input_hook' 2>/dev/null
+            grep -R --exclude-dir=".github" . -e 'ksu_input_hook' 2>/dev/null
             echo .
             echo .
-            grep -R . -e 'lpu_vfs_read_hook' 2>/dev/null
+            grep -R --exclude-dir=".github" . -e 'lpu_vfs_read_hook' 2>/dev/null
             echo .
             echo .
-            grep -R . -e 'lpu_execveat_hook' 2>/dev/null
+            grep -R --exclude-dir=".github" . -e 'lpu_execveat_hook' 2>/dev/null
             echo .
             echo .
-            grep -R . -e 'lpu_handle_devpts' 2>/dev/null
+            grep -R --exclude-dir=".github" . -e 'lpu_handle_devpts' 2>/dev/null
             echo .
             echo .
-            grep -R . -e 'lpu_input_hook' 2>/dev/null
+            grep -R --exclude-dir=".github" . -e 'lpu_input_hook' 2>/dev/null
             echo .
             echo .
             LTO=thin BUILD_CONFIG=${BUILD_CONFIG} SKIP_EXT_MODULES=1 SKIP_CP_KERNEL_HDR=1 SKIP_VENDOR_BOOT=1 SKIP_MRPROPER=1 SYSTEM_DLKM_RE_SIGN=0 BUILD_SYSTEM_DLKM=0 KMI_SYMBOL_LIST_STRICT_MODE=0 build/build.sh CC="${CC}"
