@@ -487,9 +487,9 @@ jobs:
       - name: Get commit hash or tag and generate URL for LinuxPU
         run: |
           bash ${GITHUB_WORKSPACE}/.github/scripts/calc_patch_tg.sh
-          LPU_BRANCH=next
+          LPU_BRANCH=main
           #TAG_NAME=$(git describe --tags)
-          echo "LPU_BRANCH=next" >> $GITHUB_ENV
+          echo "LPU_BRANCH=${LPU_BRANCH}" >> $GITHUB_ENV
           #echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
           REPO_URL="https://github.com/ahmad24shargh/LinuxPU.git"
           REPO_URL2="ahmad24shargh/LinuxPU"
