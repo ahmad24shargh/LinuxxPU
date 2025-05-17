@@ -286,21 +286,42 @@ jobs:
           
       - name: Add KernelSU
         run: |
-          ${{ env.ksu_fork == 'KSUN' }}  && echo "BRANCH=-s next" >> $GITHUB_ENV || echo "BRANCH=-" >> $GITHUB_ENV
+          ${{ env.ksu_fork == 'KSUN' }}  && echo "BRANCH=-s next" >> $GITHUB_ENV || echo "BRANCH=-s susfs-dev" >> $GITHUB_ENV
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG"
-          [ ${{ env.ksu_fork == 'KSUN' }} ] && echo "Adding KernelSU Next..." || echo echo "Adding SukiSU Ultra..."
-          GKI_ROOT=$(pwd)
-          test -d "$GKI_ROOT/common/drivers" &&  DRIVER_DIR="$GKI_ROOT/common/drivers" ||  DRIVER_DIR="$GKI_ROOT/drivers"
-          DRIVER_MAKEFILE=$DRIVER_DIR/Makefile
-          DRIVER_KCONFIG=$DRIVER_DIR/Kconfig
-          [ ! -d $DRIVER_DIR ] && exit 123
-          cd "$DRIVER_DIR"
-          ln -sf "${repo_path}/kernel" "linuxpu" && echo "[+] Symlink created."
-          # Add entries in Makefile and Kconfig if not already existing
-          grep -q "linuxpu" "$DRIVER_MAKEFILE" || printf "\nobj-\$(CONFIG_LPU) += linuxpu/\n" >> "$DRIVER_MAKEFILE" && echo "[+] Modified Makefile."
-          grep -q "source \"drivers/linuxpu/Kconfig\"" "$DRIVER_KCONFIG" || sed -i "/endmenu/i\source \"drivers/linuxpu/Kconfig\"" "$DRIVER_KCONFIG" && echo "[+] Modified Kconfig."
-          echo '[+] Done.'
+          [ ${{ env.ksu_fork == 'KSUN' }} ] && echo "Adding KernelSU Next..."
+          [ ${{ env.ksu_fork == 'SUKISU }} ] && echo "Adding SukiSU Ultra..."
+          [ ${{ env.ksu_fork == 'KSUN' }} -o ${{ env.include_susfs == 'false' }} ];then
+            GKI_ROOT=$(pwd)
+            test -d "$GKI_ROOT/common/drivers" &&  DRIVER_DIR="$GKI_ROOT/common/drivers" ||  DRIVER_DIR="$GKI_ROOT/drivers"
+            DRIVER_MAKEFILE=$DRIVER_DIR/Makefile
+            DRIVER_KCONFIG=$DRIVER_DIR/Kconfig
+            [ ! -d $DRIVER_DIR ] && exit 123
+            cd "$DRIVER_DIR"
+            ln -sf "${repo_path}/kernel" "linuxpu" && echo "[+] Symlink created."
+            # Add entries in Makefile and Kconfig if not already existing
+            grep -q "linuxpu" "$DRIVER_MAKEFILE" || printf "\nobj-\$(CONFIG_LPU) += linuxpu/\n" >> "$DRIVER_MAKEFILE" && echo "[+] Modified Makefile."
+            grep -q "source \"drivers/linuxpu/Kconfig\"" "$DRIVER_KCONFIG" || sed -i "/endmenu/i\source \"drivers/linuxpu/Kconfig\"" "$DRIVER_KCONFIG" && echo "[+] Modified Kconfig."
+            echo '[+] Done.'
+          elif [ ${{ env.ksu_fork == 'SUKISU }} -a  ${{ env.include_susfs == 'true' }} ];then
+            curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash $BRANCH
+            GKI_ROOT="$CONFIG"
+            test -d "$GKI_ROOT/common/drivers" &&  DRIVER_DIR="$GKI_ROOT/common/drivers" ||  DRIVER_DIR="$GKI_ROOT/drivers"
+            DRIVER_MAKEFILE=$DRIVER_DIR/Makefile
+            DRIVER_KCONFIG=$DRIVER_DIR/Kconfig
+            [ ! -d $DRIVER_DIR ] && exit 123
+            [ -L "$DRIVER_DIR/kernelsu" ] && rm "$DRIVER_DIR/kernelsu"
+            rm -rf ${repo_path}/kernel
+            cp -af $GKI_ROOT/KernelSU/kernel ${repo_path}/
+            rm -rf $GKI_ROOT/KernelSU
+            cd "$DRIVER_DIR"
+            ln -sf "${repo_path}/kernel" "linuxpu"
+            sed -i 's/kernelsu/linuxpu/g; s/CONFIG_KSU/CONFIG_LPU/g' "$DRIVER_MAKEFILE"
+            sed -i 's/kernelsu/linuxpu/g' "$DRIVER_KCONFIG"
+          else
+            exit
+            false
+          fi
           cd "${repo_path}/$CONFIG"
           ln -s ${repo_path} ./KernelSU-Next
           ln -s ${repo_path} ./kernelsu
