@@ -436,7 +436,7 @@ jobs:
       build_type: ${{ inputs.build_type }}
       kernel_variant: ${{ inputs.kernel_variant }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      susfs_version: "ඞ v1.5.7"
+      susfs_version: "Susfs v1.5.7"
       
     steps:
       ## Checkout the code
@@ -516,9 +516,9 @@ jobs:
       - name: Append Commit Hashes & Links to `RELEASE_NOTES` & Append LinuxPU Reference to `RELEASE_NOTES`
         run: |
           RELEASE_NOTES="\nThis release contains LinuxPU DEV(${{ env.kernel_variant }})"
-          [ ${{ inputs.include_susfs }} == 'true'  ] && RELEASE_NOTES="${RELEASE_NOTES} \& ${{ env.susfs_version}}"
+          [ ${{ inputs.include_susfs }} == 'true'  ] && RELEASE_NOTES="${RELEASE_NOTES} and ${{ env.susfs_version}}"
           RELEASE_NOTES="${RELEASE_NOTES}\n\nFeatures\:\n-\> LinuxPU DEV(${{ env.kernel_variant }})\n"
-          [ ${{ inputs.include_susfs }} == 'true'  ] && RELEASE_NOTES="${RELEASE_NOTES}-\>${{ env.susfs_version}}\n"
+          [ ${{ inputs.include_susfs }} == 'true'  ] && RELEASE_NOTES="${RELEASE_NOTES}-\> ${{ env.susfs_version}}\n"
           RELEASE_NOTES="${RELEASE_NOTES}-\> Manual Hooks for Better Hiding\n"
           RELEASE_NOTES="${RELEASE_NOTES}-\> Wireguard Support\n"
           RELEASE_NOTES="${RELEASE_NOTES}-\> Simple Maphide for LineageOS Detections\n"
@@ -545,7 +545,7 @@ jobs:
           elif [ "${{ env.ksu_fork }}" == "SUKISU" ];then
             RELEASE_NAME="${RELEASE_NAME}With LinuxPU DEV(SukiSU based)"
           fi
-          [ ${{ inputs.include_susfs }} == 'true'  ] && RELEASE_NAME="${RELEASE_NAME} \& ${{ env.susfs_version}}"
+          [ ${{ inputs.include_susfs }} == 'true'  ] && RELEASE_NAME="${RELEASE_NAME} and ${{ env.susfs_version}}"
           echo -e "RELEASE_NAME=${RELEASE_NAME}" >> $GITHUB_ENV
           echo -e "RELEASE_NOTES=${RELEASE_NOTES}" >> $GITHUB_ENV
           
