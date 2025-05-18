@@ -304,25 +304,6 @@ jobs:
             grep -q "linuxpu" "$DRIVER_MAKEFILE" || printf "\nobj-\$(CONFIG_LPU) += linuxpu/\n" >> "$DRIVER_MAKEFILE" && echo "[+] Modified Makefile."
             grep -q "source \"drivers/linuxpu/Kconfig\"" "$DRIVER_KCONFIG" || sed -i "/endmenu/i\source \"drivers/linuxpu/Kconfig\"" "$DRIVER_KCONFIG" && echo "[+] Modified Kconfig."
             echo '[+] Done.'
-          elif [ ${{ env.ksu_fork }} == 'SUKISU'  -a  ${{ env.include_susfs }} == 'true'  ];then
-            curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash $BRANCH
-            GKI_ROOT="${repo_path}/$CONFIG"
-            test -d "$GKI_ROOT/common/drivers" &&  DRIVER_DIR="$GKI_ROOT/common/drivers" ||  DRIVER_DIR="$GKI_ROOT/drivers"
-            DRIVER_MAKEFILE=$DRIVER_DIR/Makefile
-            DRIVER_KCONFIG=$DRIVER_DIR/Kconfig
-            [ ! -d $DRIVER_DIR ] && exit 123
-            [ -L "$DRIVER_DIR/kernelsu" ] && rm "$DRIVER_DIR/kernelsu"
-            rm -rf ${repo_path}/kernel
-            cp -af $GKI_ROOT/KernelSU/kernel ${repo_path}/
-            rm -rf $GKI_ROOT/KernelSU
-            cd "$DRIVER_DIR"
-            ln -sf "${repo_path}/kernel" "linuxpu"
-            sed -i 's/kernelsu/linuxpu/g; s/CONFIG_KSU/CONFIG_LPU/g' "$DRIVER_MAKEFILE"
-            sed -i 's/kernelsu/linuxpu/g' "$DRIVER_KCONFIG"
-            grep 'SUS' ${repo_path}/kernel/core_hook.c
-          else
-            exit
-            false
           fi
           cd "${repo_path}/$CONFIG"
           ln -s ${repo_path} ./KernelSU-Next
@@ -772,6 +753,7 @@ jobs:
           rm -rf $GITHUB_WORKSPACE/kernel-build-tools
           rm -rf $GITHUB_WORKSPACE/mkbootimg
           rm -rf ./git-repo
+          find . -type d
           
       - name: Delete linuxpu Artifact
         uses: GeekyEggo/delete-artifact@v5.1.0
