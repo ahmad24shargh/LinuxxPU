@@ -292,38 +292,19 @@ jobs:
           cd "$CONFIG"
           [ ${{ env.ksu_fork }} == 'KSUN' ]  && echo "Adding KernelSU Next..."
           [ ${{ env.ksu_fork }} == 'SUKISU' ] && echo "Adding SukiSU Ultra..."
-          if [ ${{ env.ksu_fork }} == 'KSUN' -o ${{ env.include_susfs }} == 'false'  ];then
-            GKI_ROOT=$(pwd)
-            test -d "$GKI_ROOT/common/drivers" &&  DRIVER_DIR="$GKI_ROOT/common/drivers" ||  DRIVER_DIR="$GKI_ROOT/drivers"
-            DRIVER_MAKEFILE=$DRIVER_DIR/Makefile
-            DRIVER_KCONFIG=$DRIVER_DIR/Kconfig
-            [ ! -d $DRIVER_DIR ] && exit 123
-            cd "$DRIVER_DIR"
-            ln -sf "${repo_path}/kernel" "linuxpu" && echo "[+] Symlink created."
-            # Add entries in Makefile and Kconfig if not already existing
-            grep -q "linuxpu" "$DRIVER_MAKEFILE" || printf "\nobj-\$(CONFIG_LPU) += linuxpu/\n" >> "$DRIVER_MAKEFILE" && echo "[+] Modified Makefile."
-            grep -q "source \"drivers/linuxpu/Kconfig\"" "$DRIVER_KCONFIG" || sed -i "/endmenu/i\source \"drivers/linuxpu/Kconfig\"" "$DRIVER_KCONFIG" && echo "[+] Modified Kconfig."
-            echo '[+] Done.'
-          elif [ ${{ env.ksu_fork }} == 'SUKISU'  -a  ${{ env.include_susfs }} == 'true'  ];then
-            curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash $BRANCH
-            GKI_ROOT="${repo_path}/$CONFIG"
-            test -d "$GKI_ROOT/common/drivers" &&  DRIVER_DIR="$GKI_ROOT/common/drivers" ||  DRIVER_DIR="$GKI_ROOT/drivers"
-            DRIVER_MAKEFILE=$DRIVER_DIR/Makefile
-            DRIVER_KCONFIG=$DRIVER_DIR/Kconfig
-            [ ! -d $DRIVER_DIR ] && exit 123
-            [ -L "$DRIVER_DIR/kernelsu" ] && rm "$DRIVER_DIR/kernelsu"
-            rm -rf ${repo_path}/kernel
-            cp -af $GKI_ROOT/KernelSU/kernel ${repo_path}/
-            rm -rf $GKI_ROOT/KernelSU
-            cd "$DRIVER_DIR"
-            ln -sf "${repo_path}/kernel" "linuxpu"
-            sed -i 's/kernelsu/linuxpu/g; s/CONFIG_KSU/CONFIG_LPU/g' "$DRIVER_MAKEFILE"
-            sed -i 's/kernelsu/linuxpu/g' "$DRIVER_KCONFIG"
-            grep 'SUS' ${repo_path}/kernel/core_hook.c
-          else
-            exit
-            false
-          fi
+          #if [ ${{ env.ksu_fork }} == 'KSUN' -o ${{ env.include_susfs }} == 'false'  ];then
+          GKI_ROOT=$(pwd)
+          test -d "$GKI_ROOT/common/drivers" &&  DRIVER_DIR="$GKI_ROOT/common/drivers" ||  DRIVER_DIR="$GKI_ROOT/drivers"
+          DRIVER_MAKEFILE=$DRIVER_DIR/Makefile
+          DRIVER_KCONFIG=$DRIVER_DIR/Kconfig
+          [ ! -d $DRIVER_DIR ] && exit 123
+          cd "$DRIVER_DIR"
+          ln -sf "${repo_path}/kernel" "linuxpu" && echo "[+] Symlink created."
+          # Add entries in Makefile and Kconfig if not already existing
+          grep -q "linuxpu" "$DRIVER_MAKEFILE" || printf "\nobj-\$(CONFIG_LPU) += linuxpu/\n" >> "$DRIVER_MAKEFILE" && echo "[+] Modified Makefile."
+          grep -q "source \"drivers/linuxpu/Kconfig\"" "$DRIVER_KCONFIG" || sed -i "/endmenu/i\source \"drivers/linuxpu/Kconfig\"" "$DRIVER_KCONFIG" && echo "[+] Modified Kconfig."
+          echo '[+] Done.'
+          #fi
           cd "${repo_path}/$CONFIG"
           ln -s ${repo_path} ./KernelSU-Next
           ln -s ${repo_path} ./kernelsu
@@ -613,9 +594,19 @@ jobs:
               fi
               SUPPORTED_MANAGER_COUNT="${#managers_size[@]}"
               for (( i=0; i<$SUPPORTED_MANAGER_COUNT; i++ )); do echo "${managers_size[$i]}:${managers_hash[$i]}" ; done
-              sed -E -i 's|(bool .*is_manager_apk\(char \*path\)\;)|#define SUPPORTED_MANAGER_COUNT '${SUPPORTED_MANAGER_COUNT}'\nextern unsigned MANAGER_SIZE[SUPPORTED_MANAGER_COUNT];\nextern const char *MANAGER_HASH[SUPPORTED_MANAGER_COUNT];\n\n\1|g' ${repo_path}/kernel/apk_sign.h
-              sed -E -i '/bool .*is_manager_apk\(char \*.+/,/}/d' ${repo_path}/kernel/apk_sign.c
-              echo -e '\nunsigned MANAGER_SIZE[SUPPORTED_MANAGER_COUNT]={'$(echo "${managers_size[*]}" | tr ' ' ', ')'};\nconst char *MANAGER_HASH[SUPPORTED_MANAGER_COUNT]={'$(echo $(for i in "${managers_hash[@]}" ; do printf '"%s" ' "$i";done) | tr ' ' ', ')'};\n\nbool lpu_is_manager_apk(char *path)\n{\n        int i;\n        bool result = false;\n\n        for (i = 0; i < SUPPORTED_MANAGER_COUNT; i++)\n     {\n             result = check_v2_signature(path, MANAGER_SIZE[i], MANAGER_HASH[i]);\n           if (result)  { return result;}\n        }\n     return result;\n}\n' >> ${repo_path}/kernel/apk_sign.c
+              grep -q 'apk_sign_keys\[\] \= \{' ${repo_path}/kernel/apk_sign.c
+              if [ $? -eq 0 ];then
+                temp_str="$(grep -E '.+apk_sign_keys\[\] \= \{.*' ${repo_path}/kernel/apk_sign.c)\n"
+                for (( i=0; i<$SUPPORTED_MANAGER_COUNT; i++ )); do 
+                  temp_str="${temp_str}\t\{${managers_size[$i]}, ${managers_hash[$i]}\},\n"
+                done
+                sed -E -i '/.*\{EXPECTED_SIZE.*\,.*EXPECTED_HASH.*\}.+/d' ${repo_path}/kernel/apk_sign.c
+                sed -E -i 's/(.+apk_sign_keys\[\] \= \{.*)/\1'"${temp_str}"'/g' ${repo_path}/kernel/apk_sign.c
+              else
+                sed -E -i 's|(bool .*is_manager_apk\(char \*path\)\;)|#define SUPPORTED_MANAGER_COUNT '${SUPPORTED_MANAGER_COUNT}'\nextern unsigned MANAGER_SIZE[SUPPORTED_MANAGER_COUNT];\nextern const char *MANAGER_HASH[SUPPORTED_MANAGER_COUNT];\n\n\1|g' ${repo_path}/kernel/apk_sign.h
+                sed -E -i '/bool .*is_manager_apk\(char \*.+/,/}/d' ${repo_path}/kernel/apk_sign.c
+                echo -e '\nunsigned MANAGER_SIZE[SUPPORTED_MANAGER_COUNT]={'$(echo "${managers_size[*]}" | tr ' ' ', ')'};\nconst char *MANAGER_HASH[SUPPORTED_MANAGER_COUNT]={'$(echo $(for i in "${managers_hash[@]}" ; do printf '"%s" ' "$i";done) | tr ' ' ', ')'};\n\nbool lpu_is_manager_apk(char *path)\n{\n        int i;\n        bool result = false;\n\n        for (i = 0; i < SUPPORTED_MANAGER_COUNT; i++)\n     {\n             result = check_v2_signature(path, MANAGER_SIZE[i], MANAGER_HASH[i]);\n           if (result)  { return result;}\n        }\n     return result;\n}\n' >> ${repo_path}/kernel/apk_sign.c
+              fi
               cat ${repo_path}/kernel/apk_sign.c
             fi
             #sed -i 's|KernelSU|LinuxPU|g' $(find . -type f -name 'ksu.c')
@@ -643,7 +634,7 @@ jobs:
             for files in $(grep -R ${repo_path}/kernel -e 'KSURC' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's#KSURC#LPURC#g' $files;done
             for files in $(grep -R ${repo_path}/kernel -e 'ksu' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do echo $files;sed -i 's#ksu#lpu#g' $files;done
             files=('/fs/Makefile' '/fs/Kconfig' '/fs/dcache.c' '/fs/devpts/inode.c' '/fs/exec.c' '/fs/namei.c' '/fs/namespace.c' '/fs/notify/fdinfo.c' '/fs/open.c' '/fs/overlayfs/inode.c' '/fs/overlayfs/readdir.c' '/fs/overlayfs/super.c' '/fs/proc/bootconfig.c' '/fs/proc/fd.c' '/fs/proc/task_mmu.c' '/fs/proc_namespace.c' '/fs/readdir.c' '/fs/stat.c' '/fs/statfs.c' '/include/linux/mount.h' '/include/linux/sched.h' '/kernel/kallsyms.c' '/kernel/sys.c' '/drivers/input/input.c' '/drivers/tty/pty.c' '/fs/read_write.c' '/drivers/Makefile' '/drivers/Kconfig' '/include/linux/sus_su.h' '/include/linux/susfs_def.h' '/include/linux/susfs.h' '/fs/sus_su.c' '/fs/susfs.c')
-            for each in "${files[@]}";do if [ -f "./common${each}" ];then echo "./common${each}"; sed -i 's|KSU|LPU|g' ./common${each};sed -i 's|KERNEL_SU|LINUXPU|g' ./common${each};sed -i  's|KernelSU|LinuxPU|g' ./common${each};sed -i 's|ksud|lpud|g' ./common${each};sed -i 's|ksu|lpu|g' ./common${each};sed -i 's|SukiSU-Ultra|LINUXPU|g' ./common${each};sed -i 's|sukisu|linuxpu|g' ./common${each};sed -i 's|SukiSU Ultra|LINUXPU|g' ./common${each};sed -i 's|SUKISU|LINUXPU|g'  ./common${each};sed -i 's|SukiSU|LinuxPU|g' ./common${each};fi;done
+            for each in "${files[@]}";do if [ -f "./common${each}" ];then sed -i 's|KSU|LPU|g' ./common${each};sed -i 's|KERNEL_SU|LINUXPU|g' ./common${each};sed -i  's|KernelSU|LinuxPU|g' ./common${each};sed -i 's|ksud|lpud|g' ./common${each};sed -i 's|ksu|lpu|g' ./common${each};sed -i 's|SukiSU-Ultra|LINUXPU|g' ./common${each};sed -i 's|sukisu|linuxpu|g' ./common${each};sed -i 's|SukiSU Ultra|LINUXPU|g' ./common${each};sed -i 's|SUKISU|LINUXPU|g'  ./common${each};sed -i 's|SukiSU|LinuxPU|g' ./common${each};fi;done
             set -e
             set -x
           else
@@ -702,7 +693,6 @@ jobs:
             mkdir -p ./out/${CONFIG}/common && cp ./common/arch/arm64/configs/gki_defconfig ./out/${CONFIG}/common/.config
             mkdir -p ./out/$(echo ${CONFIG} | cut -d'-' -f1,2)/common && cp ./common/arch/arm64/configs/gki_defconfig ./out/$(echo ${CONFIG} | cut -d'-' -f1,2)/common/.config
             grep -Ei 'ksu|lpu|susfs' ./out/${CONFIG}/common/.config 
-            grep -RE ./common/drivers/linuxpu -e '_hook|_devpts' 2>/dev/null
             LTO=thin BUILD_CONFIG=${BUILD_CONFIG} SKIP_EXT_MODULES=1 SKIP_CP_KERNEL_HDR=1 SKIP_VENDOR_BOOT=1 SKIP_MRPROPER=1 SYSTEM_DLKM_RE_SIGN=0 BUILD_SYSTEM_DLKM=0 KMI_SYMBOL_LIST_STRICT_MODE=0 build/build.sh CC="${CC}"
             
               
@@ -772,6 +762,7 @@ jobs:
           rm -rf $GITHUB_WORKSPACE/kernel-build-tools
           rm -rf $GITHUB_WORKSPACE/mkbootimg
           rm -rf ./git-repo
+          find . -type d
           
       - name: Delete linuxpu Artifact
         uses: GeekyEggo/delete-artifact@v5.1.0
