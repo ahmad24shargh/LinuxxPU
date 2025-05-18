@@ -287,7 +287,7 @@ jobs:
       - name: Add KernelSU
         run: |
           [ ${{ env.ksu_fork }} == 'KSUN' ]  && BRANCH="-s next"  || BRANCH="-s susfs-dev"
-          echo "BRANCH=${BRANCH}" >> $GITHUB_ENV
+          echo "BRANCH=${BRANCH}" >> $GITHUB_ENV;echo $BRANCH
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG"
           [ ${{ env.ksu_fork }} == 'KSUN' ]  && echo "Adding KernelSU Next..."
@@ -319,6 +319,7 @@ jobs:
             ln -sf "${repo_path}/kernel" "linuxpu"
             sed -i 's/kernelsu/linuxpu/g; s/CONFIG_KSU/CONFIG_LPU/g' "$DRIVER_MAKEFILE"
             sed -i 's/kernelsu/linuxpu/g' "$DRIVER_KCONFIG"
+            grep 'SUS' ${repo_path}/kernel/core_hook.c
           else
             exit
             false
