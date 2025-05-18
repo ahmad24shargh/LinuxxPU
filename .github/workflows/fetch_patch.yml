@@ -76,6 +76,7 @@ jobs:
             git clone -b susfs-dev https://github.com/ShirkNeko/SukiSU-Ultra
             rm  -rf kernel
             mv SukiSU-Ultra/kernel .
+            rm -rf SukiSU-Ultra
             cd ..
           fi
           cp -af KSU/* KSU/.git .
