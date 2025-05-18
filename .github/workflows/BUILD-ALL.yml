@@ -516,9 +516,9 @@ jobs:
 
       - name: Append Commit Hashes & Links to `RELEASE_NOTES` & Append LinuxPU Reference to `RELEASE_NOTES`
         run: |
-          RELEASE_NOTES="\nThis release contains LinuxPU DEV\(${{ env.kernel_variant }}\)"
+          RELEASE_NOTES="\nThis release contains LinuxPU DEV(${{ env.kernel_variant }})"
           [ ${{ inputs.include_susfs }} == 'true'  ] && RELEASE_NOTES="${RELEASE_NOTES} and ${{ env.susfs_version}}"
-          RELEASE_NOTES="${RELEASE_NOTES}\n\nFeatures\:\n-\> LinuxPU DEV\(${{ env.kernel_variant }}\)\n"
+          RELEASE_NOTES="${RELEASE_NOTES}\n\nFeatures\:\n-\> LinuxPU DEV(${{ env.kernel_variant }})\n"
           [ ${{ inputs.include_susfs }} == 'true'  ] && RELEASE_NOTES="${RELEASE_NOTES}-\> ${{ env.susfs_version}}\n"
           RELEASE_NOTES="${RELEASE_NOTES}-\> Manual Hooks for Better Hiding\n"
           RELEASE_NOTES="${RELEASE_NOTES}-\> Wireguard Support\n"
@@ -532,25 +532,25 @@ jobs:
           fi
           RELEASE_NOTES="${RELEASE_NOTES}kernel and manager based on ${{ inputs.ksu_fork }} variant\n\"\"\n"
           RELEASE_NOTES="${RELEASE_NOTES}Commit Hashes and Links\:\n"
-          RELEASE_NOTES="${RELEASE_NOTES}LinuxPU-Dev\: \[$LPU_REF\]\($LPU_URL\)\n" 
+          RELEASE_NOTES="${RELEASE_NOTES}LinuxPU-Dev\: \[$LPU_REF\]($LPU_URL)\n" 
           if [ ${{ inputs.include_susfs }} == 'true'  ];then
             RELEASE_NOTES="${RELEASE_NOTES}SUSFS4KSU\:\n"
-            RELEASE_NOTES="${RELEASE_NOTES}gki-android13-5.15\: \[$COMMIT_HASH_gki_android13_5_15\]\($COMMIT_URL_gki_android13_5_15\)\n\"\"\n"
+            RELEASE_NOTES="${RELEASE_NOTES}gki-android13-5.15\: \[$COMMIT_HASH_gki_android13_5_15\]($COMMIT_URL_gki_android13_5_15)\n\"\"\n"
           fi
           [[ "${{ env.kernel_variant }}" == "common-android-mainline" ]] &&  RELEASE_NAME="GKI Kernel "
           [[ "${{ env.kernel_variant }}" == "chickernel" ]] &&  RELEASE_NAME="ChicKernel "
-          [[ "${{ env.kernel_variant }}" == "topnotchfreaks-codelinaro" ]] && RELEASE_NAME="TopNotchFreaks\(codelinaro source\) Kernel "
-          [[ "${{ env.kernel_variant }}" == "topnotchfreaks-google" ]] && RELEASE_NAME="TopNotchFreaks\(google source\) Kernel "
+          [[ "${{ env.kernel_variant }}" == "topnotchfreaks-codelinaro" ]] && RELEASE_NAME="TopNotchFreaks(codelinaro source) Kernel "
+          [[ "${{ env.kernel_variant }}" == "topnotchfreaks-google" ]] && RELEASE_NAME="TopNotchFreaks(google source) Kernel "
           if [ "${{ env.ksu_fork }}" == "KSUN" ];then
-            RELEASE_NAME="${RELEASE_NAME}With LinuxPU DEV\(KSUN based\)"
+            RELEASE_NAME="${RELEASE_NAME}With LinuxPU DEV(KSUN based)"
           elif [ "${{ env.ksu_fork }}" == "SUKISU" ];then
-            RELEASE_NAME="${RELEASE_NAME}With LinuxPU DEV\(SukiSU based\)"
+            RELEASE_NAME="${RELEASE_NAME}With LinuxPU DEV(SukiSU based)"
           fi
           [ ${{ inputs.include_susfs }} == 'true'  ] && RELEASE_NAME="${RELEASE_NAME} and ${{ env.susfs_version}}"
           export RELEASE_NAME
           export RELEASE_NOTES
-          echo -e "RELEASE_NAME=${RELEASE_NAME}" >> $GITHUB_ENV || true
-          echo -e "RELEASE_NOTES=${RELEASE_NOTES}" >> $GITHUB_ENV || true
+          #echo -e "RELEASE_NAME=${RELEASE_NAME}" >> $GITHUB_ENV || true
+          #echo -e "RELEASE_NOTES=${RELEASE_NOTES}" >> $GITHUB_ENV || true
           
      # Download Artifacts for A12 (Only if A12 Build is successful or input is true or empty)
       - name: Download Artifacts
@@ -571,14 +571,14 @@ jobs:
         uses: softprops/action-gh-release@v2.2.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          name: ${{ env.RELEASE_NAME }}
+          name: ${RELEASE_NAME}
           tag_name: ${{ env.C_TAG_NAME }}  # Use the generated tag for the release
           prerelease: false  # Mark the release as a pre-release
           draft: false
           make_latest: true
           fail_on_unmatched_files: false
           #release_name: ${{ env.RELEASE_NAME }}  # Pass the RELEASE_NAME to the action
-          body: ${{ env.RELEASE_NOTES }}  # Pass the RELEASE_NOTES to the action
+          body: ${RELEASE_NOTES}  # Pass the RELEASE_NOTES to the action
           files: |
             ./downloaded-artifacts/Manager/*.apk
             ./downloaded-artifacts/kernel*/*.img
