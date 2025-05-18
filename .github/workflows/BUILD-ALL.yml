@@ -463,8 +463,6 @@ jobs:
           git_tag_gpgsign: true
           #git_push_gpgsign: true
           trust_level: 5
-      
-        RELEASE_NAME: "GKI Kernel With LinuxPU DEV & SUSFS XXXXX"
         
       - name: Get commit hash or tag and generate URL for LinuxPU
         run: |
@@ -517,46 +515,39 @@ jobs:
 
       - name: Append Commit Hashes & Links to `RELEASE_NOTES` & Append LinuxPU Reference to `RELEASE_NOTES`
         run: |
-          RELEASE_NOTES=
-          This release contains LinuxPU DEV and SUSFS XXXXX
-        
-        Features:
-        -> LinuxPU DEV
-        -> SUSFS XXXXX
-        -> Manual Hooks for Better Hiding
-        -> Wireguard Support
-        -> Simple Maphide for LineageOS Detections
-        -> Futile Maphide for jit-zygote-cache Detections
-        -> Magic Mount Support
-        -> BBR Support
-
-        Notes:
-        -> SUS SU Mode 2 will show as disabled or not compatble due to non-kprobe hooks and is not needed anymore!
-        -> [Kernel Flasher App](https://github.com/capntrips/KernelFlasher/releases/tag/v1.0.0-alpha20%2Ballow-errors) is broken with latest susfs, try [Horizon Kernel Flasher](https://github.com/libxzr/HorizonKernelFlasher)!
-       
-        Module: 
-        -> https://github.com/sidex15/ksu_module_susfs
-        
-          echo "This is the Next variant"
-          echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
-          echo "$RELEASE_NOTES" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-          if [ "${{ env.build_type }}" != "only_manager" ];then
-            echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
-            echo "$RELEASE_NOTES" >> $GITHUB_ENV
-            echo "" >> $GITHUB_ENV
-            echo "LTO: thin" >> $GITHUB_ENV
-            echo "" >> $GITHUB_ENV
-            echo "Commit Hashes and Links:" >> $GITHUB_ENV
-            echo "LinuxPU-Dev: [$LPU_REF]($LPU_URL)" >> $GITHUB_ENV
-            [ ${{ inputs.include_susfs == true }} ] && echo "SUSFS4KSU:" >> $GITHUB_ENV
-            echo "gki-android13-5.15: [$COMMIT_HASH_gki_android13_5_15]($COMMIT_URL_gki_android13_5_15)" >> $GITHUB_ENV
-            echo "" >> $GITHUB_ENV
-            echo "EOF" >> $GITHUB_ENV
-          else
-            echo "RELEASE_NOTES=only the manager has been built."  >> $GITHUB_ENV
-            echo "RELEASE_NAME=Only the manager apk and components were built" >> $GITHUB_ENV
+          RELEASE_NOTES="\nThis release contains LinuxPU DEV(${{ env.kernel_variant }})"
+          [ ${{ inputs.include_susfs }} == 'true'  ] && RELEASE_NOTES="${RELEASE_NOTES} \& ${{ env.susfs_version}}"
+          RELEASE_NOTES="${RELEASE_NOTES}\n\nFeatures\:\n-\> LinuxPU DEV(${{ env.kernel_variant }})\n"
+          [ ${{ inputs.include_susfs }} == 'true'  ] && RELEASE_NOTES="${RELEASE_NOTES}-\>${{ env.susfs_version}}\n"
+          RELEASE_NOTES="${RELEASE_NOTES}-\> Manual Hooks for Better Hiding\n"
+          RELEASE_NOTES="${RELEASE_NOTES}-\> Wireguard Support\n"
+          RELEASE_NOTES="${RELEASE_NOTES}-\> Simple Maphide for LineageOS Detections\n"
+          RELEASE_NOTES="${RELEASE_NOTES}-\> Futile Maphide for jit-zygote-cache Detections\n"
+          RELEASE_NOTES="${RELEASE_NOTES}-\> Magic Mount Support\n"
+          RELEASE_NOTES="${RELEASE_NOTES}-\> BBR Support\n\n"
+          if [ ${{ inputs.include_susfs }} == 'true'  ];then
+            RELEASE_NOTES="${RELEASE_NOTES}Notes\:\n  -\> SUS SU Mode 2 will show as disabled or not compatble due to non-kprobe hooks and is not needed anymore!\n\n"
+            RELEASE_NOTES="${RELEASE_NOTES}Module\:\n  -\> https\://github.com/sidex15/ksu_module_susfs\n\n"
           fi
+          RELEASE_NOTES="${RELEASE_NOTES}kernel and manager based on ${{ inputs.ksu_fork }} variant\n\"\"\n"
+          RELEASE_NOTES="${RELEASE_NOTES}Commit Hashes and Links\:\n"
+          RELEASE_NOTES="${RELEASE_NOTES}LinuxPU-Dev\: \[$LPU_REF\]($LPU_URL)\n" 
+          if [ ${{ inputs.include_susfs }} == 'true'  ];then
+            RELEASE_NOTES="${RELEASE_NOTES}SUSFS4KSU\:\n"
+            RELEASE_NOTES="${RELEASE_NOTES}gki-android13-5.15\: \[$COMMIT_HASH_gki_android13_5_15\]($COMMIT_URL_gki_android13_5_15)\n\"\"\n"
+          fi
+          [[ "${{ env.kernel_variant }}" == "common-android-mainline" ]] &&  RELEASE_NAME="GKI Kernel "
+          [[ "${{ env.kernel_variant }}" == "chickernel" ]] &&  RELEASE_NAME="ChicKernel "
+          [[ "${{ env.kernel_variant }}" == "topnotchfreaks-codelinaro" ]] && RELEASE_NAME="TopNotchFreaks(codelinaro source) Kernel "
+          [[ "${{ env.kernel_variant }}" == "topnotchfreaks-google" ]] && RELEASE_NAME="TopNotchFreaks(google source) Kernel "
+          if [ "${{ env.ksu_fork }}" == "KSUN" ];then
+            RELEASE_NAME="${RELEASE_NAME}With LinuxPU DEV(KSUN based)"
+          elif [ "${{ env.ksu_fork }}" == "SUKISU" ];then
+            RELEASE_NAME="${RELEASE_NAME}With LinuxPU DEV(SukiSU based)"
+          fi
+          [ ${{ inputs.include_susfs }} == 'true'  ] && RELEASE_NAME="${RELEASE_NAME} \& ${{ env.susfs_version}}"
+          echo -e "RELEASE_NAME=${RELEASE_NAME}" >> $GITHUB_ENV
+          echo -e "RELEASE_NOTES=${RELEASE_NOTES}" >> $GITHUB_ENV
           
      # Download Artifacts for A12 (Only if A12 Build is successful or input is true or empty)
       - name: Download Artifacts
@@ -567,27 +558,8 @@ jobs:
       # Display Files Uploaded
       - name: Display Files Uploaded
         run: |
-          if [ ${{ inputs.include_susfs }} == 'true'  ];then
-            RELEASE_NAME=$(echo "${RELEASE_NAME}" | sed 's/SUSFS XXXXX/SUSFS '"${susfs_version}"'/g')
-            RELEASE_NOTES=$(echo "${RELEASE_NOTES}" | sed 's/SUSFS XXXXX/SUSFS '"${susfs_version}"'/g')
-          else
-            RELEASE_NAME=$(echo "${RELEASE_NAME}" | sed 's/\& SUSFS XXXXX//g')
-            RELEASE_NOTES=$(echo "${RELEASE_NOTES}" | sed -e 's/\n-> SUSFS XXXXX//g' -e 's/\n-> SUS SU Mode.+//g' -e 's/and SUSFS XXXXX//g' -e 's/->.+ksu_module_susfs.+//g' -e 's/\nModule: //g')
-          fi
-          if [[ "${{ env.kernel_variant }}" == "chickernel" ]];then RELEASE_NAME=$(echo $RELEASE_NAME | sed 's/GKI Kernel/ChicKernel/g');fi
-          if [[ "${{ env.kernel_variant }}" == "topnotchfreaks-codelinaro" ]];then RELEASE_NAME=$(echo $RELEASE_NAME | sed 's/GKI Kernel/TopNotchFreaks(codelinaro source) Kernel/g');fi
-          if [[ "${{ env.kernel_variant }}" == "topnotchfreaks-google" ]];then RELEASE_NAME=$(echo $RELEASE_NAME | sed 's/GKI Kernel/TopNotchFreaks(google source) Kernel/g');fi
-          if [ "${{ env.ksu_fork }}" == "KSUN" ];then
-            RELEASE_NAME=$(echo "${RELEASE_NAME}" | sed 's/LinuxPU DEV/LinuxPU DEV(KSUN based)/g')
-            RELEASE_NOTES=$(echo "${RELEASE_NOTES}" | sed 's/LinuxPU DEV/LinuxPU DEV(KSUN based)/g')
-          elif [ "${{ env.ksu_fork }}" == "SUKISU" ];then
-            RELEASE_NAME=$(echo "${RELEASE_NAME}" | sed 's/LinuxPU DEV/LinuxPU DEV(SukiSU based)/g')
-            RELEASE_NOTES=$(echo "${RELEASE_NOTES}" | sed 's/LinuxPU DEV/LinuxPU DEV(SukiSU based)/g')
-          fi
-          echo "RELEASE_NAME=${RELEASE_NAME}" >> $GITHUB_ENV
-          echo "RELEASE_NOTES=${RELEASE_NOTES}" >> $GITHUB_ENV
           echo "GitHub release created with the following files:"
-          find  ./downloaded-artifacts/ -type f
+          find  ./downloaded-artifacts/ -type f  -name \*.apk -o -name \*.zip -o -name \*.img
           [ "${{ env.ksu_fork }}" == "KSUN" ] && zip ./downloaded-artifacts/lpud_overlayfs-aarch64-linux-android/aarch64-linux-android/release/lpud_overlayfs-aarch64-linux-android.zip ./downloaded-artifacts/lpud_overlayfs-aarch64-linux-android/aarch64-linux-android/release/lpud || true
           [ "${{ env.ksu_fork }}" == "KSUN" ] && zip ./downloaded-artifacts/lpud_magic-aarch64-linux-android/aarch64-linux-android/release/lpud_magic-aarch64-linux-android.zip ./downloaded-artifacts/lpud_magic-aarch64-linux-android/aarch64-linux-android/release/lpud || true
           
@@ -610,6 +582,6 @@ jobs:
             ./downloaded-artifacts/kernel*/*.zip
             ./downloaded-artifacts/kpmmgr*/*/*
             ./downloaded-artifacts/lpud*/aarch64-linux-android/release/*.zip
-            ./downloaded-artifacts/susf*/*/susf*
+            ./downloaded-artifacts/susf*/*/*
             
           
