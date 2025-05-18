@@ -66,21 +66,24 @@ jobs:
           #git clone https://github.com/KernelSU-Next/KernelSU-Next
           #cd KernelSU-Next
           #cp -af KernelSU-Next/* KernelSU-Next/.git .
-          cp -af KSU/* KSU/.git .
           #upstream_last_commit=$(git log -n 1 --no-decorate | grep -E '^commit' | cut -d' ' -f2)
           #cd ..
-          rm -rf KSU
           repo_folder=$(realpath .)
           mkdir -p /home/runner/mylinuxpu
           patched_folder='/home/runner/myksunext'
           if [ ${{ env.ksu_fork }} == 'SUKISU'  -a  ${{ env.include_susfs }} == 'true'  ];then
+            cd KSU
             git stash
             if [ "$(git status | grep -Po 'v\d+(\.\d+)*' | head -n1)" ]; then
               git checkout main && echo "[-] Switched to main branch."
             fi
             git pull
             git checkout susfs-dev
+            cd ..
+            ls KSU
           fi
+          cp -af KSU/* KSU/.git .
+          rm -rf KSU
           #for item in "${repo_commits[@]}";do if [[ ${upstream_last_commit} == ${item} ]]; then has_new_commits=false && break;fi;done
           #echo "has_new_commits=${has_new_commits}" >> $GITHUB_OUTPUT
           #echo "has_new_commits=${has_new_commits}" >> $GITHUB_ENV
