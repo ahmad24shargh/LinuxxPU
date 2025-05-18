@@ -438,6 +438,9 @@ jobs:
       kernel_variant: ${{ inputs.kernel_variant }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       susfs_version: "Susfs v1.5.7"
+      RELEASE_NOTES: ''
+      RELEASE_NAME: ''
+      
       
     steps:
       ## Checkout the code
