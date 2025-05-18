@@ -438,9 +438,6 @@ jobs:
       kernel_variant: ${{ inputs.kernel_variant }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       susfs_version: "Susfs v1.5.7"
-      RELEASE_NOTES: ''
-      RELEASE_NAME: ''
-      
       
     steps:
       ## Checkout the code
@@ -519,27 +516,30 @@ jobs:
 
       - name: Append Commit Hashes & Links to `RELEASE_NOTES` & Append LinuxPU Reference to `RELEASE_NOTES`
         run: |
-          RELEASE_NOTES="\nThis release contains LinuxPU DEV(${{ env.kernel_variant }})"
-          [ ${{ inputs.include_susfs }} == 'true'  ] && RELEASE_NOTES="${RELEASE_NOTES} and ${{ env.susfs_version}}"
-          RELEASE_NOTES="${RELEASE_NOTES}\n\nFeatures\:\n-\> LinuxPU DEV(${{ env.kernel_variant }})\n"
-          [ ${{ inputs.include_susfs }} == 'true'  ] && RELEASE_NOTES="${RELEASE_NOTES}-\> ${{ env.susfs_version}}\n"
-          RELEASE_NOTES="${RELEASE_NOTES}-\> Manual Hooks for Better Hiding\n"
-          RELEASE_NOTES="${RELEASE_NOTES}-\> Wireguard Support\n"
-          RELEASE_NOTES="${RELEASE_NOTES}-\> Simple Maphide for LineageOS Detections\n"
-          RELEASE_NOTES="${RELEASE_NOTES}-\> Futile Maphide for jit-zygote-cache Detections\n"
-          RELEASE_NOTES="${RELEASE_NOTES}-\> Magic Mount Support\n"
-          RELEASE_NOTES="${RELEASE_NOTES}-\> BBR Support\n\n"
+          echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
+          echo >> $GITHUB_ENV
+          echo -n "This release contains LinuxPU DEV(${{ env.kernel_variant }})" >> $GITHUB_ENV
+          [ ${{ inputs.include_susfs }} == 'true'  ] && echo " and ${{ env.susfs_version}}" >> $GITHUB_ENV || echo >> $GITHUB_ENV
+          echo -e "\n\nFeatures:\n-> LinuxPU DEV(${{ env.kernel_variant }})\n" >> $GITHUB_ENV
+          [ ${{ inputs.include_susfs }} == 'true'  ] && echo  "-> ${{ env.susfs_version}}" >> $GITHUB_ENV
+          echo "-> Manual Hooks for Better Hiding" >> $GITHUB_ENV
+          echo "-> Wireguard Support" >> $GITHUB_ENV
+          echo "-> Simple Maphide for LineageOS Detections" >> $GITHUB_ENV
+          echo "-> Futile Maphide for jit-zygote-cache Detections" >> $GITHUB_ENV
+          echo "-> Magic Mount Support" >> $GITHUB_ENV
+          echo -e "-> BBR Support\n\n" >> $GITHUB_ENV
           if [ ${{ inputs.include_susfs }} == 'true'  ];then
-            RELEASE_NOTES="${RELEASE_NOTES}Notes\:\n  -\> SUS SU Mode 2 will show as disabled or not compatble due to non-kprobe hooks and is not needed anymore\!\n\n"
-            RELEASE_NOTES="${RELEASE_NOTES}Module\:\n  -\> https\://github.com/sidex15/ksu_module_susfs\n\n"
+            echo -e "Notes:\n  -> SUS SU Mode 2 will show as disabled or not compatble due to non-kprobe hooks and is not needed anymore!\n\n" >> $GITHUB_ENV
+            echo -e "Module:\n  -> https\://github.com/sidex15/ksu_module_susfs\n\n" >> $GITHUB_ENV
           fi
-          RELEASE_NOTES="${RELEASE_NOTES}kernel and manager based on ${{ inputs.ksu_fork }} variant\n\"\"\n"
-          RELEASE_NOTES="${RELEASE_NOTES}Commit Hashes and Links\:\n"
-          RELEASE_NOTES="${RELEASE_NOTES}LinuxPU-Dev\: \[$LPU_REF\]($LPU_URL)\n" 
+          echo -e "kernel and manager based on ${{ inputs.ksu_fork }} variant\n\"\"\n" >> $GITHUB_ENV
+          echo "Commit Hashes and Links:" >> $GITHUB_ENV
+          echo "LinuxPU-Dev: [$LPU_REF]($LPU_URL)" >> $GITHUB_ENV
           if [ ${{ inputs.include_susfs }} == 'true'  ];then
-            RELEASE_NOTES="${RELEASE_NOTES}SUSFS4KSU\:\n"
-            RELEASE_NOTES="${RELEASE_NOTES}gki-android13-5.15\: \[$COMMIT_HASH_gki_android13_5_15\]($COMMIT_URL_gki_android13_5_15)\n\"\"\n"
+            echo "SUSFS4KSU:" >> $GITHUB_ENV
+            echo -e "gki-android13-5.15: [${COMMIT_HASH_gki_android13_5_15}]($COMMIT_URL_gki_android13_5_15)\n\"\"\n" >> $GITHUB_ENV
           fi
+          echo "EOF" >> $GITHUB_ENV
           [[ "${{ env.kernel_variant }}" == "common-android-mainline" ]] &&  RELEASE_NAME="GKI Kernel "
           [[ "${{ env.kernel_variant }}" == "chickernel" ]] &&  RELEASE_NAME="ChicKernel "
           [[ "${{ env.kernel_variant }}" == "topnotchfreaks-codelinaro" ]] && RELEASE_NAME="TopNotchFreaks(codelinaro source) Kernel "
@@ -550,10 +550,7 @@ jobs:
             RELEASE_NAME="${RELEASE_NAME}With LinuxPU DEV(SukiSU based)"
           fi
           [ ${{ inputs.include_susfs }} == 'true'  ] && RELEASE_NAME="${RELEASE_NAME} and ${{ env.susfs_version}}"
-          export RELEASE_NAME
-          export RELEASE_NOTES
-          #echo -e "RELEASE_NAME=${RELEASE_NAME}" >> $GITHUB_ENV || true
-          #echo -e "RELEASE_NOTES=${RELEASE_NOTES}" >> $GITHUB_ENV || true
+          echo "RELEASE_NAME=${RELEASE_NAME}" >> $GITHUB_ENV
           
      # Download Artifacts for A12 (Only if A12 Build is successful or input is true or empty)
       - name: Download Artifacts
@@ -574,14 +571,14 @@ jobs:
         uses: softprops/action-gh-release@v2.2.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          name: ${RELEASE_NAME}
+          name: ${{ env.RELEASE_NAME }}
           tag_name: ${{ env.C_TAG_NAME }}  # Use the generated tag for the release
           prerelease: false  # Mark the release as a pre-release
           draft: false
           make_latest: true
           fail_on_unmatched_files: false
           #release_name: ${{ env.RELEASE_NAME }}  # Pass the RELEASE_NAME to the action
-          body: ${RELEASE_NOTES}  # Pass the RELEASE_NOTES to the action
+          body: ${{ env.RELEASE_NOTES }}  # Pass the RELEASE_NOTES to the action
           files: |
             ./downloaded-artifacts/Manager/*.apk
             ./downloaded-artifacts/kernel*/*.img
