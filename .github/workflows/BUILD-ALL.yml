@@ -79,9 +79,6 @@ jobs:
     with:
       ksu_fork: ${{ matrix.ksu_fork }}
       include_susfs: ${{ inputs.include_susfs }}
-      android_version: "android13"
-      kernel_version: "5.15"
-      sub_level: ${{ matrix.sub_level }}
     
   calc_tag_version:
     needs: 
