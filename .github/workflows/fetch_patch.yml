@@ -79,7 +79,7 @@ jobs:
               git checkout main && echo "[-] Switched to main branch."
             fi
             git pull
-            git checkout -s susfs-dev
+            git checkout susfs-dev
           fi
           #for item in "${repo_commits[@]}";do if [[ ${upstream_last_commit} == ${item} ]]; then has_new_commits=false && break;fi;done
           #echo "has_new_commits=${has_new_commits}" >> $GITHUB_OUTPUT
