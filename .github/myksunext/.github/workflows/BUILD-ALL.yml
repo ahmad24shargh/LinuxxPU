@@ -568,7 +568,7 @@ jobs:
       # Display Files Uploaded
       - name: Display Files Uploaded
         run: |
-          if [ ${{ inputs.include_susfs }} == true  ];then
+          if [ ${{ inputs.include_susfs }} == 'true'  ];then
             RELEASE_NAME=$(echo "${RELEASE_NAME}" | sed 's/SUSFS XXXXX/SUSFS '"${susfs_version}"'/g')
             RELEASE_NOTES=$(echo "${RELEASE_NOTES}" | sed 's/SUSFS XXXXX/SUSFS '"${susfs_version}"'/g')
           else
@@ -589,8 +589,8 @@ jobs:
           echo "RELEASE_NOTES=${RELEASE_NOTES}" >> $GITHUB_ENV
           echo "GitHub release created with the following files:"
           find  ./downloaded-artifacts/ -type f
-          zip ./downloaded-artifacts/lpud_overlayfs-aarch64-linux-android/aarch64-linux-android/release/lpud_overlayfs-aarch64-linux-android.zip ./downloaded-artifacts/lpud_overlayfs-aarch64-linux-android/aarch64-linux-android/release/lpud || true
-          zip ./downloaded-artifacts/lpud_magic-aarch64-linux-android/aarch64-linux-android/release/lpud_magic-aarch64-linux-android.zip ./downloaded-artifacts/lpud_magic-aarch64-linux-android/aarch64-linux-android/release/lpud || true
+          [ "${{ env.ksu_fork }}" == "KSUN" ] && zip ./downloaded-artifacts/lpud_overlayfs-aarch64-linux-android/aarch64-linux-android/release/lpud_overlayfs-aarch64-linux-android.zip ./downloaded-artifacts/lpud_overlayfs-aarch64-linux-android/aarch64-linux-android/release/lpud || true
+          [ "${{ env.ksu_fork }}" == "KSUN" ] && zip ./downloaded-artifacts/lpud_magic-aarch64-linux-android/aarch64-linux-android/release/lpud_magic-aarch64-linux-android.zip ./downloaded-artifacts/lpud_magic-aarch64-linux-android/aarch64-linux-android/release/lpud || true
           
       - name: release
         if: ${{ env.build_type == 'build_all' }}
@@ -602,6 +602,7 @@ jobs:
           prerelease: false  # Mark the release as a pre-release
           draft: false
           make_latest: true
+          fail_on_unmatched_files: false
           #release_name: ${{ env.RELEASE_NAME }}  # Pass the RELEASE_NAME to the action
           body: ${{ env.RELEASE_NOTES }}  # Pass the RELEASE_NOTES to the action
           files: |
@@ -610,6 +611,6 @@ jobs:
             ./downloaded-artifacts/kernel*/*.zip
             ./downloaded-artifacts/kpmmgr*/*/*
             ./downloaded-artifacts/lpud*/aarch64-linux-android/release/*.zip
-            ./downloaded-artifacts/susf*/arm64-v8a/susf*
+            ./downloaded-artifacts/susf*/*/susf*
             
           
