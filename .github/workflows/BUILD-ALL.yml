@@ -78,6 +78,7 @@ jobs:
     secrets: inherit
     with:
       ksu_fork: ${{ matrix.ksu_fork }}
+      include_susfs: ${{ inputs.include_susfs }}
     
   calc_tag_version:
     needs: 
