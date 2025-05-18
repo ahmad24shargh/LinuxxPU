@@ -306,7 +306,7 @@ jobs:
             echo '[+] Done.'
           elif [ ${{ env.ksu_fork }} == 'SUKISU'  -a  ${{ env.include_susfs }} == 'true'  ];then
             curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash $BRANCH
-            GKI_ROOT="$CONFIG"
+            GKI_ROOT="${repo_path}/$CONFIG"
             test -d "$GKI_ROOT/common/drivers" &&  DRIVER_DIR="$GKI_ROOT/common/drivers" ||  DRIVER_DIR="$GKI_ROOT/drivers"
             DRIVER_MAKEFILE=$DRIVER_DIR/Makefile
             DRIVER_KCONFIG=$DRIVER_DIR/Kconfig
@@ -320,7 +320,6 @@ jobs:
             sed -i 's/kernelsu/linuxpu/g; s/CONFIG_KSU/CONFIG_LPU/g' "$DRIVER_MAKEFILE"
             sed -i 's/kernelsu/linuxpu/g' "$DRIVER_KCONFIG"
             grep 'SUS' ${repo_path}/kernel/core_hook.c
-            echo 'inja'
           else
             exit
             false
