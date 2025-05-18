@@ -437,27 +437,7 @@ jobs:
       kernel_variant: ${{ inputs.kernel_variant }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       susfs_version: "ඞ v1.5.7"
-      RELEASE_NAME: "GKI Kernel With LinuxPU DEV & SUSFS XXXXX"
-      RELEASE_NOTES: |
-        This release contains LinuxPU DEV and SUSFS XXXXX
-        
-        Features:
-        -> LinuxPU DEV
-        -> SUSFS XXXXX
-        -> Manual Hooks for Better Hiding
-        -> Wireguard Support
-        -> Simple Maphide for LineageOS Detections
-        -> Futile Maphide for jit-zygote-cache Detections
-        -> Magic Mount Support
-        -> BBR Support
-
-        Notes:
-        -> SUS SU Mode 2 will show as disabled or not compatble due to non-kprobe hooks and is not needed anymore!
-        -> [Kernel Flasher App](https://github.com/capntrips/KernelFlasher/releases/tag/v1.0.0-alpha20%2Ballow-errors) is broken with latest susfs, try [Horizon Kernel Flasher](https://github.com/libxzr/HorizonKernelFlasher)!
-       
-        Module: 
-        -> https://github.com/sidex15/ksu_module_susfs
-        
+      
     steps:
       ## Checkout the code
       #- name: Checkout code
@@ -483,7 +463,9 @@ jobs:
           git_tag_gpgsign: true
           #git_push_gpgsign: true
           trust_level: 5
-
+      
+        RELEASE_NAME: "GKI Kernel With LinuxPU DEV & SUSFS XXXXX"
+        
       - name: Get commit hash or tag and generate URL for LinuxPU
         run: |
           bash ${GITHUB_WORKSPACE}/.github/scripts/calc_patch_tg.sh
@@ -535,13 +517,30 @@ jobs:
 
       - name: Append Commit Hashes & Links to `RELEASE_NOTES` & Append LinuxPU Reference to `RELEASE_NOTES`
         run: |
+          RELEASE_NOTES=
+          This release contains LinuxPU DEV and SUSFS XXXXX
+        
+        Features:
+        -> LinuxPU DEV
+        -> SUSFS XXXXX
+        -> Manual Hooks for Better Hiding
+        -> Wireguard Support
+        -> Simple Maphide for LineageOS Detections
+        -> Futile Maphide for jit-zygote-cache Detections
+        -> Magic Mount Support
+        -> BBR Support
+
+        Notes:
+        -> SUS SU Mode 2 will show as disabled or not compatble due to non-kprobe hooks and is not needed anymore!
+        -> [Kernel Flasher App](https://github.com/capntrips/KernelFlasher/releases/tag/v1.0.0-alpha20%2Ballow-errors) is broken with latest susfs, try [Horizon Kernel Flasher](https://github.com/libxzr/HorizonKernelFlasher)!
+       
+        Module: 
+        -> https://github.com/sidex15/ksu_module_susfs
+        
           echo "This is the Next variant"
           echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
           echo "$RELEASE_NOTES" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
-          
-      - name: Append Commit Hashes & Links to `RELEASE_NOTES` & Append LinuxPU Reference to `RELEASE_NOTES`
-        run: |
           if [ "${{ env.build_type }}" != "only_manager" ];then
             echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
             echo "$RELEASE_NOTES" >> $GITHUB_ENV
