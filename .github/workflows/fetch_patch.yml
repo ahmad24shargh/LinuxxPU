@@ -73,14 +73,13 @@ jobs:
           patched_folder='/home/runner/myksunext'
           if [ ${{ env.ksu_fork }} == 'SUKISU'  -a  ${{ env.include_susfs }} == 'true'  ];then
             cd KSU
-            git stash
-            if [ "$(git status | grep -Po 'v\d+(\.\d+)*' | head -n1)" ]; then
-              git checkout main && echo "[-] Switched to main branch."
-            fi
-            git pull
-            git checkout susfs-dev
+            git checkout main && echo "[-] Switched to main branch."
+            rm  -rf kernel
+            git checkout susfs-dev -- kernel/*
+            git Add kernel
             cd ..
             ls KSU
+            ls KSU/kernel
           fi
           cp -af KSU/* KSU/.git .
           rm -rf KSU
