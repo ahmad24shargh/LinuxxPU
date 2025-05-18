@@ -20,15 +20,6 @@ on:
       include_susfs:
         required: true
         type: boolean
-      android_version:
-        required: true
-        type: string
-      kernel_version:
-        required: true
-        type: string
-      sub_level:
-        required: true
-        type: string
   #workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
@@ -56,17 +47,7 @@ jobs:
       #    name: '${{ vars.MY_NAME }}'
        #   email: '${{ vars.MY_EMAIL }}'
        #   token: '${{ env.GH_TOKEN }}'
-      - name: Set CONFIG Environment Variable
-        run: |
-          # Set CONFIG dynamically based on inputs values
-          CONFIG="${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}"
-
-          # Set CONFIG as an environment variable for future steps
-          echo "CONFIG=$CONFIG" >> $GITHUB_ENV
-
-          echo "CONFIG set to: $CONFIG"
-          mkdir -p $CONFIG
-          
+      
       - name: fetch upstream ... 
       #- name: Determining the need for rebase upstream
         #id: calc-commite
@@ -93,20 +74,12 @@ jobs:
           mkdir -p /home/runner/mylinuxpu
           patched_folder='/home/runner/myksunext'
           if [ ${{ env.ksu_fork }} == 'SUKISU'  -a  ${{ env.include_susfs }} == 'true'  ];then
-            curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-dev
-            GKI_ROOT="${repo_folder}/$CONFIG"
-            test -d "$GKI_ROOT/common/drivers" &&  DRIVER_DIR="$GKI_ROOT/common/drivers" ||  DRIVER_DIR="$GKI_ROOT/drivers"
-            DRIVER_MAKEFILE=$DRIVER_DIR/Makefile
-            DRIVER_KCONFIG=$DRIVER_DIR/Kconfig
-            [ ! -d $DRIVER_DIR ] && exit 123
-            [ -L "$DRIVER_DIR/kernelsu" ] && rm "$DRIVER_DIR/kernelsu"
-            rm -rf ${repo_folde}/kernel
-            cp -af $GKI_ROOT/KernelSU/kernel ${repo_folder}/
-            rm -rf $GKI_ROOT/KernelSU
-            cd "$DRIVER_DIR"
-            ln -sf "${repo_folder}/kernel" "linuxpu"
-            sed -i 's/kernelsu/linuxpu/g; s/CONFIG_KSU/CONFIG_LPU/g' "$DRIVER_MAKEFILE"
-            sed -i 's/kernelsu/linuxpu/g' "$DRIVER_KCONFIG"
+            git stash
+            if [ "$(git status | grep -Po 'v\d+(\.\d+)*' | head -n1)" ]; then
+              git checkout main && echo "[-] Switched to main branch."
+            fi
+            git pull
+            git checkout -s susfs-dev
           fi
           #for item in "${repo_commits[@]}";do if [[ ${upstream_last_commit} == ${item} ]]; then has_new_commits=false && break;fi;done
           #echo "has_new_commits=${has_new_commits}" >> $GITHUB_OUTPUT
