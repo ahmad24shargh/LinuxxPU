@@ -436,7 +436,7 @@ jobs:
       build_type: ${{ inputs.build_type }}
       kernel_variant: ${{ inputs.kernel_variant }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      susfs_version: "ඞ v1.5.7"
+      susfs_version: "Susfs v1.5.7"
       
     steps:
       ## Checkout the code
@@ -518,7 +518,7 @@ jobs:
           RELEASE_NOTES="\nThis release contains LinuxPU DEV(${{ env.kernel_variant }})"
           [ ${{ inputs.include_susfs }} == 'true'  ] && RELEASE_NOTES="${RELEASE_NOTES} and ${{ env.susfs_version}}"
           RELEASE_NOTES="${RELEASE_NOTES}\n\nFeatures\:\n-\> LinuxPU DEV(${{ env.kernel_variant }})\n"
-          [ ${{ inputs.include_susfs }} == 'true'  ] && RELEASE_NOTES="${RELEASE_NOTES}-\>${{ env.susfs_version}}\n"
+          [ ${{ inputs.include_susfs }} == 'true'  ] && RELEASE_NOTES="${RELEASE_NOTES}-\> ${{ env.susfs_version}}\n"
           RELEASE_NOTES="${RELEASE_NOTES}-\> Manual Hooks for Better Hiding\n"
           RELEASE_NOTES="${RELEASE_NOTES}-\> Wireguard Support\n"
           RELEASE_NOTES="${RELEASE_NOTES}-\> Simple Maphide for LineageOS Detections\n"
