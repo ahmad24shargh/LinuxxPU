@@ -286,11 +286,11 @@ jobs:
           
       - name: Add KernelSU
         run: |
-          ${{ env.ksu_fork == 'KSUN' }}  && echo "BRANCH=-s next" >> $GITHUB_ENV || echo "BRANCH=-s susfs-dev" >> $GITHUB_ENV
+          [ ${{ env.ksu_fork }} == 'KSUN' ]  && echo "BRANCH=-s next" >> $GITHUB_ENV || echo "BRANCH=-s susfs-dev" >> $GITHUB_ENV
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG"
-          [ ${{ env.ksu_fork == 'KSUN' }} ] && echo "Adding KernelSU Next..."
-          [ ${{ env.ksu_fork == 'SUKISU' }} ] && echo "Adding SukiSU Ultra..."
+          [ ${{ env.ksu_fork }} == 'KSUN' ]  && echo "Adding KernelSU Next..."
+          [ ${{ env.ksu_fork }} == 'SUKISU' ] && echo "Adding SukiSU Ultra..."
           if [ ${{ env.ksu_fork == 'KSUN' }} -o ${{ env.include_susfs == 'false' }} ];then
             GKI_ROOT=$(pwd)
             test -d "$GKI_ROOT/common/drivers" &&  DRIVER_DIR="$GKI_ROOT/common/drivers" ||  DRIVER_DIR="$GKI_ROOT/drivers"
@@ -344,10 +344,10 @@ jobs:
           cp $GITHUB_WORKSPACE/susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch ./common/
           cp $GITHUB_WORKSPACE/susfs4ksu/kernel_patches/fs/* ./common/fs/
           cp $GITHUB_WORKSPACE/susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
-          [ ${{ env.ksu_fork == 'KSUN' }} ] && echo "Applying SUSFS patches for KernelSU-Next..." || echo "Applying SUSFS patches for SukiSU Ultra..."
+          [ ${{ env.ksu_fork }} == 'KSUN' ] && echo "Applying SUSFS patches for KernelSU-Next..." || echo "Applying SUSFS patches for SukiSU Ultra..."
           cd ./KernelSU-Next
           cp ./kernel_patches/next/kernel-implement-susfs-v1.5.7-gki.patch ./
-          [ ${{ env.ksu_fork == 'KSUN' }} ] && patch -p1 --forward < kernel-implement-susfs-v1.5.7-gki.patch
+          [ ${{ env.ksu_fork }} == 'KSUN' ] && patch -p1 --forward < kernel-implement-susfs-v1.5.7-gki.patch
           # Change to common directory and apply common SUSFS patch
           cd ./$CONFIG/common
           if [[ "${{ env.kernel_variant }}" != "chickernel" ]];then patch -p1 < 50_add_susfs_in_gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch;fi
@@ -386,7 +386,7 @@ jobs:
           echo "CONFIG_KSU=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_MANUAL_HOOK=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_HOOK_KPROBES=n" >> ./common/arch/arm64/configs/gki_defconfig
-          [ ${{ env.ksu_fork == 'SUKISU' }} ] && echo "CONFIG_KPM=y" >> ./common/arch/arm64/configs/gki_defconfig
+          [ ${{ env.ksu_fork }} == 'SUKISU' ] && echo "CONFIG_KPM=y" >> ./common/arch/arm64/configs/gki_defconfig
           
           
           #if [ "${{ inputs.linuxpu_variant }}" == "Next" ]; then
