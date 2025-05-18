@@ -292,19 +292,19 @@ jobs:
           cd "$CONFIG"
           [ ${{ env.ksu_fork }} == 'KSUN' ]  && echo "Adding KernelSU Next..."
           [ ${{ env.ksu_fork }} == 'SUKISU' ] && echo "Adding SukiSU Ultra..."
-          if [ ${{ env.ksu_fork }} == 'KSUN' -o ${{ env.include_susfs }} == 'false'  ];then
-            GKI_ROOT=$(pwd)
-            test -d "$GKI_ROOT/common/drivers" &&  DRIVER_DIR="$GKI_ROOT/common/drivers" ||  DRIVER_DIR="$GKI_ROOT/drivers"
-            DRIVER_MAKEFILE=$DRIVER_DIR/Makefile
-            DRIVER_KCONFIG=$DRIVER_DIR/Kconfig
-            [ ! -d $DRIVER_DIR ] && exit 123
-            cd "$DRIVER_DIR"
-            ln -sf "${repo_path}/kernel" "linuxpu" && echo "[+] Symlink created."
-            # Add entries in Makefile and Kconfig if not already existing
-            grep -q "linuxpu" "$DRIVER_MAKEFILE" || printf "\nobj-\$(CONFIG_LPU) += linuxpu/\n" >> "$DRIVER_MAKEFILE" && echo "[+] Modified Makefile."
-            grep -q "source \"drivers/linuxpu/Kconfig\"" "$DRIVER_KCONFIG" || sed -i "/endmenu/i\source \"drivers/linuxpu/Kconfig\"" "$DRIVER_KCONFIG" && echo "[+] Modified Kconfig."
-            echo '[+] Done.'
-          fi
+          #if [ ${{ env.ksu_fork }} == 'KSUN' -o ${{ env.include_susfs }} == 'false'  ];then
+          GKI_ROOT=$(pwd)
+          test -d "$GKI_ROOT/common/drivers" &&  DRIVER_DIR="$GKI_ROOT/common/drivers" ||  DRIVER_DIR="$GKI_ROOT/drivers"
+          DRIVER_MAKEFILE=$DRIVER_DIR/Makefile
+          DRIVER_KCONFIG=$DRIVER_DIR/Kconfig
+          [ ! -d $DRIVER_DIR ] && exit 123
+          cd "$DRIVER_DIR"
+          ln -sf "${repo_path}/kernel" "linuxpu" && echo "[+] Symlink created."
+          # Add entries in Makefile and Kconfig if not already existing
+          grep -q "linuxpu" "$DRIVER_MAKEFILE" || printf "\nobj-\$(CONFIG_LPU) += linuxpu/\n" >> "$DRIVER_MAKEFILE" && echo "[+] Modified Makefile."
+          grep -q "source \"drivers/linuxpu/Kconfig\"" "$DRIVER_KCONFIG" || sed -i "/endmenu/i\source \"drivers/linuxpu/Kconfig\"" "$DRIVER_KCONFIG" && echo "[+] Modified Kconfig."
+          echo '[+] Done.'
+          #fi
           cd "${repo_path}/$CONFIG"
           ln -s ${repo_path} ./KernelSU-Next
           ln -s ${repo_path} ./kernelsu
