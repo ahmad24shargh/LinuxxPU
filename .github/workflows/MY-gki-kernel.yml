@@ -292,7 +292,7 @@ jobs:
           cd "$CONFIG"
           [ ${{ env.ksu_fork }} == 'KSUN' ]  && echo "Adding KernelSU Next..."
           [ ${{ env.ksu_fork }} == 'SUKISU' ] && echo "Adding SukiSU Ultra..."
-          if [ ${{ env.ksu_fork == 'KSUN' }} -o ${{ env.include_susfs == 'false' }} ];then
+          if [ ${{ env.ksu_fork }] == 'KSUN' -o ${{ env.include_susfs }} == 'false'  ];then
             GKI_ROOT=$(pwd)
             test -d "$GKI_ROOT/common/drivers" &&  DRIVER_DIR="$GKI_ROOT/common/drivers" ||  DRIVER_DIR="$GKI_ROOT/drivers"
             DRIVER_MAKEFILE=$DRIVER_DIR/Makefile
@@ -304,7 +304,7 @@ jobs:
             grep -q "linuxpu" "$DRIVER_MAKEFILE" || printf "\nobj-\$(CONFIG_LPU) += linuxpu/\n" >> "$DRIVER_MAKEFILE" && echo "[+] Modified Makefile."
             grep -q "source \"drivers/linuxpu/Kconfig\"" "$DRIVER_KCONFIG" || sed -i "/endmenu/i\source \"drivers/linuxpu/Kconfig\"" "$DRIVER_KCONFIG" && echo "[+] Modified Kconfig."
             echo '[+] Done.'
-          elif [ ${{ env.ksu_fork == 'SUKISU' }} -a  ${{ env.include_susfs == 'true' }} ];then
+          elif [ ${{ env.ksu_fork }} == 'SUKISU'  -a  ${{ env.include_susfs }} == 'true'  ];then
             curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU-Ultra/main/kernel/setup.sh" | bash $BRANCH
             GKI_ROOT="$CONFIG"
             test -d "$GKI_ROOT/common/drivers" &&  DRIVER_DIR="$GKI_ROOT/common/drivers" ||  DRIVER_DIR="$GKI_ROOT/drivers"
@@ -320,6 +320,7 @@ jobs:
             sed -i 's/kernelsu/linuxpu/g; s/CONFIG_KSU/CONFIG_LPU/g' "$DRIVER_MAKEFILE"
             sed -i 's/kernelsu/linuxpu/g' "$DRIVER_KCONFIG"
             grep 'SUS' ${repo_path}/kernel/core_hook.c
+            echo 'inja'
           else
             exit
             false
@@ -328,7 +329,7 @@ jobs:
           ln -s ${repo_path} ./KernelSU-Next
           ln -s ${repo_path} ./kernelsu
           for files in $(grep -R ../kernel_patches -e 'ksud' 2>/dev/null | grep -v 'https' | grep -v 'rustix::' | cut -d':' -f1 | sort | uniq);do sed -i 's|ksud|lpud|g' $files;done
-          for files in $(grep -R ../kernel_patches -e 'ksu' 2>/dev/null | grep -v 'https' | grep -v 'rustix::' | cut -d':' -f1 | sort | uniq);do echo $files;sed -i 's|ksu|lpu|g' $files;done
+          for files in $(grep -R ../kernel_patches -e 'ksu' 2>/dev/null | grep -v 'https' | grep -v 'rustix::' | cut -d':' -f1 | sort | uniq);do sed -i 's|ksu|lpu|g' $files;done
           
       - name: Apply SUSFS Patches for KernelSU Variants
         if: ${{ env.include_susfs == 'true' }}
