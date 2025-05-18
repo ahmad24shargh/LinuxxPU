@@ -17,6 +17,9 @@ on:
       ksu_fork:
         required: true
         type: string
+      include_susfs:
+        required: true
+        type: boolean
   #workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
@@ -25,6 +28,7 @@ jobs:
   fetch_upstream:
     env:
       ksu_fork: ${{ inputs.ksu_fork }}
+      include_susfs: ${{ inputs.include_susfs }}
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
     #outputs:
@@ -62,13 +66,21 @@ jobs:
           #git clone https://github.com/KernelSU-Next/KernelSU-Next
           #cd KernelSU-Next
           #cp -af KernelSU-Next/* KernelSU-Next/.git .
-          cp -af KSU/* KSU/.git .
           #upstream_last_commit=$(git log -n 1 --no-decorate | grep -E '^commit' | cut -d' ' -f2)
           #cd ..
-          rm -rf KSU
           repo_folder=$(realpath .)
           mkdir -p /home/runner/mylinuxpu
           patched_folder='/home/runner/myksunext'
+          if [ ${{ env.ksu_fork }} == 'SUKISU'  -a  ${{ env.include_susfs }} == 'true'  ];then
+            cd KSU
+            git clone -b susfs-dev https://github.com/ShirkNeko/SukiSU-Ultra
+            rm  -rf kernel
+            mv SukiSU-Ultra/kernel .
+            rm -rf SukiSU-Ultra
+            cd ..
+          fi
+          cp -af KSU/* KSU/.git .
+          rm -rf KSU
           #for item in "${repo_commits[@]}";do if [[ ${upstream_last_commit} == ${item} ]]; then has_new_commits=false && break;fi;done
           #echo "has_new_commits=${has_new_commits}" >> $GITHUB_OUTPUT
           #echo "has_new_commits=${has_new_commits}" >> $GITHUB_ENV
