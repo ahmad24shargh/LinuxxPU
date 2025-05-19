@@ -538,7 +538,6 @@ jobs:
             echo -e "Notes:\n  -> SUS SU Mode 2 will show as disabled or not compatble due to non-kprobe hooks and is not needed anymore!\n\n" >> $GITHUB_ENV
             echo -e "Module:\n  -> https\://github.com/sidex15/ksu_module_susfs\n\n" >> $GITHUB_ENV
           fi
-          echo -e "kernel and manager based on ${{ inputs.ksu_fork }} variant\n\"\"\n" >> $GITHUB_ENV
           echo "Commit Hashes and Links:" >> $GITHUB_ENV
           echo "LinuxPU-Dev: [$LPU_REF]($LPU_URL)" >> $GITHUB_ENV
           if [ ${{ inputs.include_susfs }} == 'true'  ];then
