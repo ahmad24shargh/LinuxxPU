@@ -705,7 +705,8 @@ jobs:
           ccache --show-stats
 
       - name: Patch Image File A12 & A13
-        if: ${{ env.ksu_fork  == 'SUKISU' &&  inputs.android_version == 'android12' || inputs.android_version == 'android13' }}
+        #if: ${{ env.ksu_fork  == 'SUKISU' &&  inputs.android_version == 'android12' || inputs.android_version == 'android13' }}
+        if: false
         run: |
           if [ "${{ inputs.kernel_version }}" != "6.6" ]; then
             echo "Patching Image file..."
