@@ -518,15 +518,20 @@ jobs:
         run: |
           echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
           echo >> $GITHUB_ENV
-          echo -n "This release contains LinuxPU DEV(${{ env.kernel_variant }})" >> $GITHUB_ENV
+          echo -n 'This release contains LinuxPU DEV('${{ env.kernel_variant }}')' >> $GITHUB_ENV
+          echo 1
           [ ${{ inputs.include_susfs }} == 'true'  ] && echo " and ${{ env.susfs_version}}" >> $GITHUB_ENV || echo >> $GITHUB_ENV
+          echo 2
           echo -e "\n\nFeatures:\n >> $GITHUB_ENV
+          echo 3
           if [ "${{ env.ksu_fork }}" == "SUKISU" ];then
             echo "-> based on SUKISU ULTRA" >> $GITHUB_ENV
           elif [ "${{ env.ksu_fork }}" == "KSUN" ];then 
             echo "-> based on KERNELSU NEXT" >> $GITHUB_ENV
           fi
-          echo "-> LinuxPU DEV(${{ env.kernel_variant }})" >> $GITHUB_ENV
+          echo 4
+          echo '-> LinuxPU DEV('${{ env.kernel_variant }}')' >> $GITHUB_ENV
+          echo 5
           [ ${{ inputs.include_susfs }} == 'true'  ] && echo  "-> ${{ env.susfs_version}}" >> $GITHUB_ENV
           echo "-> Manual Hooks for Better Hiding" >> $GITHUB_ENV
           echo "-> Wireguard Support" >> $GITHUB_ENV
@@ -534,15 +539,19 @@ jobs:
           echo "-> Futile Maphide for jit-zygote-cache Detections" >> $GITHUB_ENV
           echo "-> Magic Mount Support" >> $GITHUB_ENV
           echo -e "-> BBR Support\n\n" >> $GITHUB_ENV
+          echo 6
           if [ ${{ inputs.include_susfs }} == 'true'  ];then
             echo -e "Notes:\n  -> SUS SU Mode 2 will show as disabled or not compatble due to non-kprobe hooks and is not needed anymore!\n\n" >> $GITHUB_ENV
-            echo -e "Module:\n  -> https\://github.com/sidex15/ksu_module_susfs\n\n" >> $GITHUB_ENV
+            echo -e "Module:\n  -> https://github.com/sidex15/ksu_module_susfs\n\n" >> $GITHUB_ENV
           fi
+          echo 7
           echo "Commit Hashes and Links:" >> $GITHUB_ENV
-          echo "LinuxPU-Dev: [$LPU_REF]($LPU_URL)" >> $GITHUB_ENV
+          echo 'LinuxPU-Dev: ['${LPU_REF}']('${LPU_URL}')' >> $GITHUB_ENV
+          echo 8
           if [ ${{ inputs.include_susfs }} == 'true'  ];then
             echo "SUSFS4KSU:" >> $GITHUB_ENV
-            echo -e "gki-android13-5.15: [${COMMIT_HASH_gki_android13_5_15}]($COMMIT_URL_gki_android13_5_15)\n\"\"\n" >> $GITHUB_ENV
+            echo 9
+            echo -e 'gki-android13-5.15: ['${COMMIT_HASH_gki_android13_5_15}']('${COMMIT_URL_gki_android13_5_15}')\n\"\"\n' >> $GITHUB_ENV
           fi
           echo "EOF" >> $GITHUB_ENV
           [[ "${{ env.kernel_variant }}" == "common-android-mainline" ]] &&  RELEASE_NAME="GKI Kernel "
