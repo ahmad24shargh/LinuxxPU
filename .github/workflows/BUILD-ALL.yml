@@ -437,7 +437,7 @@ jobs:
       build_type: ${{ inputs.build_type }}
       kernel_variant: ${{ inputs.kernel_variant }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      susfs_version: "Susfs v1.5.7"
+      susfs_version: "Susfs ඞ v1.5.7"
       
     steps:
       ## Checkout the code
@@ -520,7 +520,13 @@ jobs:
           echo >> $GITHUB_ENV
           echo -n "This release contains LinuxPU DEV(${{ env.kernel_variant }})" >> $GITHUB_ENV
           [ ${{ inputs.include_susfs }} == 'true'  ] && echo " and ${{ env.susfs_version}}" >> $GITHUB_ENV || echo >> $GITHUB_ENV
-          echo -e "\n\nFeatures:\n-> LinuxPU DEV(${{ env.kernel_variant }})\n" >> $GITHUB_ENV
+          echo -e "\n\nFeatures:\n
+          if [ "${{ env.ksu_fork }}" == "SUKISU" ];then
+            echo "-> based on KERNELSU NEXT" >> $GITHUB_ENV
+          elif [ "${{ env.ksu_fork }}" == "KSUN" ];then 
+            echo "-> based on SUKISU ULTRA" >> $GITHUB_ENV
+          fi
+          echo "-> LinuxPU DEV(${{ env.kernel_variant }})" >> $GITHUB_ENV
           [ ${{ inputs.include_susfs }} == 'true'  ] && echo  "-> ${{ env.susfs_version}}" >> $GITHUB_ENV
           echo "-> Manual Hooks for Better Hiding" >> $GITHUB_ENV
           echo "-> Wireguard Support" >> $GITHUB_ENV
@@ -584,7 +590,7 @@ jobs:
             ./downloaded-artifacts/kernel*/*.img
             ./downloaded-artifacts/kernel*/*.zip
             ./downloaded-artifacts/kpmmgr*/*/*
-            ./downloaded-artifacts/lpud*/aarch64-linux-android/release/*.zip
+            ./downloaded-artifacts/lpud*/*/*/*.zip
             ./downloaded-artifacts/susf*/*/*
             
           
