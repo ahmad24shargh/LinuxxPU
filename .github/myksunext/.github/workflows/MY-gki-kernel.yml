@@ -598,7 +598,7 @@ jobs:
               if [ $? -eq 0 ];then
                 temp_str="$(grep -E '.+apk_sign_keys\[\] = .*' ${repo_path}/kernel/apk_sign.c 2>/dev/null)\n"
                 for (( i=0; i<$SUPPORTED_MANAGER_COUNT; i++ )); do 
-                  temp_str="${temp_str}\t\{${managers_size[$i]}, ${managers_hash[$i]}\},\n"
+                  temp_str="${temp_str}\t\{${managers_size[$i]}, \"${managers_hash[$i]}\"\},\n"
                 done
                 sed -E -i '/.*\{EXPECTED_SIZE.*\,.*EXPECTED_HASH.*\}.+/d' ${repo_path}/kernel/apk_sign.c
                 sed -E -i 's/(.+apk_sign_keys\[\] \=.*)/'"${temp_str}"'/g' ${repo_path}/kernel/apk_sign.c
@@ -705,7 +705,8 @@ jobs:
           ccache --show-stats
 
       - name: Patch Image File A12 & A13
-        if: ${{ env.ksu_fork  == 'SUKISU' &&  inputs.android_version == 'android12' || inputs.android_version == 'android13' }}
+        #if: ${{ env.ksu_fork  == 'SUKISU' &&  inputs.android_version == 'android12' || inputs.android_version == 'android13' }}
+        if: false
         run: |
           if [ "${{ inputs.kernel_version }}" != "6.6" ]; then
             echo "Patching Image file..."
