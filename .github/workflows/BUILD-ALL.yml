@@ -519,11 +519,8 @@ jobs:
           echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
           echo >> $GITHUB_ENV
           echo -n 'This release contains LinuxPU DEV('${{ env.kernel_variant }}')' >> $GITHUB_ENV
-          echo 1
           [ ${{ inputs.include_susfs }} == 'true'  ] && echo " and ${{ env.susfs_version}}" >> $GITHUB_ENV || echo >> $GITHUB_ENV
-          echo 2
-          echo -e "\n\nFeatures:\n >> $GITHUB_ENV
-          echo 3
+          echo -e "\n\nFeatures:\n" >> $GITHUB_ENV
           if [ "${{ env.ksu_fork }}" == "SUKISU" ];then
             echo "-> based on SUKISU ULTRA" >> $GITHUB_ENV
           elif [ "${{ env.ksu_fork }}" == "KSUN" ];then 
