@@ -71,12 +71,22 @@ jobs:
           repo_folder=$(realpath .)
           mkdir -p /home/runner/mylinuxpu
           patched_folder='/home/runner/myksunext'
-          if [ ${{ env.ksu_fork }} == 'SUKISU'  -a  ${{ env.include_susfs }} == 'true'  ];then
+          if [ ${{ env.include_susfs }} == 'true' ];then
             cd KSU
-            git clone -b susfs-dev https://github.com/ShirkNeko/SukiSU-Ultra
-            rm  -rf kernel
-            mv SukiSU-Ultra/kernel .
-            rm -rf SukiSU-Ultra
+            if [ ${{ env.ksu_fork }} == 'SUKISU' ];then
+              git clone -b susfs-dev https://github.com/ShirkNeko/SukiSU-Ultra
+              rm  -rf kernel
+              mv SukiSU-Ultra/kernel .
+              rm -rf SukiSU-Ultra
+            elif [ ${{ env.ksu_fork }} == 'KSUN'  ];then
+              git clone -b next-susfs-dev https://github.com/KernelSU-Next/KernelSU-Next
+              rm  -rf kernel
+              mv KernelSU-Next/kernel .
+              rm -rf KernelSU-Next
+            else
+              exit 78
+              false
+            fi
             cd ..
           fi
           cp -af KSU/. .
