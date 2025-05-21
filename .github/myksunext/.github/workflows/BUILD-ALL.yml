@@ -569,8 +569,10 @@ jobs:
         run: |
           echo "GitHub release created with the following files:"
           find  ./downloaded-artifacts/
-          mv $(find ./downloaded-artifacts/ -type f -name 'zakozakozako' 2>/dev/null) susfs-aarch64-linux-android || true
-          mv $(find ./downloaded-artifacts/ -type f -name 'zakozako' 2>/dev/null) lpud-aarch64-linux-android || true
+          if [ "${{ env.ksu_fork }}" == "SUKISU" ];then
+            mv $(find ./downloaded-artifacts/ -type f -name 'zakozakozako' 2>/dev/null) $(diname $(find ./downloaded-artifacts/ -type f -name 'zakozakozako' 2>/dev/null) || true)/susfs-aarch64-linux-android || true
+            mv $(find ./downloaded-artifacts/ -type f -name 'zakozako' 2>/dev/null) $(dirname $(find ./downloaded-artifacts/ -type f -name 'zakozako' 2>/dev/null) || true)/lpud-aarch64-linux-android || true
+          fi
           [ "${{ env.ksu_fork }}" == "KSUN" ] && zip ./downloaded-artifacts/lpud_overlayfs-aarch64-linux-android/aarch64-linux-android/release/lpud_overlayfs-aarch64-linux-android.zip ./downloaded-artifacts/lpud_overlayfs-aarch64-linux-android/aarch64-linux-android/release/lpud || true
           [ "${{ env.ksu_fork }}" == "KSUN" ] && zip ./downloaded-artifacts/lpud_magic-aarch64-linux-android/aarch64-linux-android/release/lpud_magic-aarch64-linux-android.zip ./downloaded-artifacts/lpud_magic-aarch64-linux-android/aarch64-linux-android/release/lpud || true
           
@@ -594,6 +596,6 @@ jobs:
             ./downloaded-artifacts/kpmmgr*/*/kpmmgr
             ./downloaded-artifacts/lpud*/*/*/lpud*
             ./downloaded-artifacts/susf*/*/susf*
-            ./downloaded-artifacts/linuxpu
+            ./downloaded-artifacts/linuxpu/*
             
           
