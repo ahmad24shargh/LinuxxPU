@@ -374,6 +374,7 @@ jobs:
           
           #if [ "${{ inputs.linuxpu_variant }}" == "Next" ]; then
           echo "CONFIG_KSU_WITH_KPROBES=n" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_KPROBES_HOOK=n"  >> ./common/arch/arm64/configs/gki_defconfig
           #fi
           # Add additional tmpfs config setting
           echo "CONFIG_TMPFS_XATTR=y" >> ./common/arch/arm64/configs/gki_defconfig
