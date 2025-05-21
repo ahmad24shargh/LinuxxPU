@@ -193,6 +193,7 @@ jobs:
           for file in $(grep -R "${repo_folder}" -e 'com.sukisu.zako' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -E -i 's#(com.)sukisu(.)zako#\1ahmad\2linuxpu#g' $file;done
           for file in $(grep -R ${repo_folder}/manager ${repo_folder}/userspace -e 'rifsxd' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -i 's#rifsxd#ahmad#g' $file;done
           for file in $(grep -R ${repo_folder}/manager ${repo_folder}/userspace -e 'sukisu_kpm' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -i 's#sukisu_kpm#linuxpu_kpm#g' $file;done
+          for file in $(grep -R ${repo_folder}/manager ${repo_folder}/userspace -e 'SUKISU_KPM' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -i 's#SUKISU_KPM#LINUXPU_KPM#g' $file;done
           for file in $(grep -R ${repo_folder}/manager ${repo_folder}/userspace -e 'sukisu' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -i 's#sukisu#ahmad#g' $file;done
           for dir in $(find ${repo_folder} -type d -name 'ksunext' 2>/dev/null);do bn="$( cd -- "$(dirname "$dir")" >/dev/null 2>&1 ; pwd -P )";mv $dir "${bn}/linuxpu";mv "${bn}" "$(echo ${bn} | rev | cut -d'/' -f2- | rev)/ahmad";done
           for dir in $(find ${repo_folder} -type d -name 'ultra' 2>/dev/null);do bn="$( cd -- "$(dirname "$dir")" >/dev/null 2>&1 ; pwd -P )";mv $dir "${bn}/linuxpu";mv "${bn}" "$(echo ${bn} | rev | cut -d'/' -f2- | rev)/ahmad";done
