@@ -709,14 +709,14 @@ jobs:
           ccache --show-stats
 
       - name: Patch Image File A12 & A13
-        if: ${{ env.ksu_fork  == 'SUKISU' &&  inputs.android_version == 'android12' || inputs.android_version == 'android13' }}
+        if: ${{ env.ksu_fork  == 'SUKISU' &&  (inputs.android_version == 'android12' || inputs.android_version == 'android13') }}
         #if: false
         run: |
           if [ "${{ inputs.kernel_version }}" != "6.6" ]; then
             echo "Patching Image file..."
             cd "$CONFIG/out/${{ inputs.android_version }}-${{ inputs.kernel_version }}/dist"
             #curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU_patch/refs/heads/main/kpm/patch_linux" -o patch
-            cp $GITHUB_WORKSPACE/kernel_patches/kpm/patch_linux ./patch
+            cp $GITHUB_WORKSPACE/kernel_patches/sukisu/patch_linux ./patch
             chmod 777 patch
             ./patch
             rm -rf Image
@@ -749,8 +749,8 @@ jobs:
           echo "Building boot.img"
           $MKBOOTIMG --header_version 4 --kernel Image --output boot.img
           $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot.img --algorithm SHA256_RSA2048 --key $BOOT_SIGN_KEY_PATH
-          #zip boot.img.zip boot.img
-          cp ./boot.img ../${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-boot.img.zip
+          zip boot.img.zip boot.img
+          cp ./boot.img.zip ../${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-boot.img.zip
           
 
       - name: Upload Build Artifacts
