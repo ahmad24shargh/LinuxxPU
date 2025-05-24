@@ -545,7 +545,7 @@ jobs:
             echo "SUSFS4KSU:" >> $GITHUB_ENV
             echo -e 'gki-android13-5.15: ['${COMMIT_HASH_gki_android13_5_15}']('${COMMIT_URL_gki_android13_5_15}')\n\"\"\n' >> $GITHUB_ENV
           fi
-          [ "${{ env.ksu_fork }}" == "SUKISU" ] && echo "💡 If you need kpm, patch the kernel file manually." >> $GITHUB_ENV
+          #[ "${{ env.ksu_fork }}" == "SUKISU" ] && echo "💡 If you need kpm, patch the kernel file manually." >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
           [[ "${{ env.kernel_variant }}" == "common-android-mainline" ]] &&  RELEASE_NAME="GKI Kernel "
           [[ "${{ env.kernel_variant }}" == "chickernel" ]] &&  RELEASE_NAME="ChicKernel "
