@@ -709,14 +709,14 @@ jobs:
           ccache --show-stats
 
       - name: Patch Image File A12 & A13
-        #if: ${{ env.ksu_fork  == 'SUKISU' &&  (inputs.android_version == 'android12' || inputs.android_version == 'android13') }}
-        if: false
+        if: ${{ env.ksu_fork  == 'SUKISU' &&  (inputs.android_version == 'android12' || inputs.android_version == 'android13') }}
+        #if: false
         run: |
           if [ "${{ inputs.kernel_version }}" != "6.6" ]; then
             echo "Patching Image file..."
             cd "$CONFIG/out/${{ inputs.android_version }}-${{ inputs.kernel_version }}/dist"
             #curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU_patch/refs/heads/main/kpm/patch_linux" -o patch
-            cp $GITHUB_WORKSPACE/kernel_patches/kpm/patch_linux ./patch
+            cp $GITHUB_WORKSPACE/kernel_patches/sukisu/patch_linux ./patch
             chmod 777 patch
             ./patch
             rm -rf Image
