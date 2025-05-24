@@ -1,0 +1,606 @@
+name: BUILD ALL
+permissions: write-all
+  #contents: write  # Allow writing to repository contents (for pushing tags)
+  #actions: write   # Allows triggering actions
+env:
+  GH_TOKEN: ${{ secrets.WORKFLOW_TOKEN }} 
+  
+concurrency:
+      group: staging_environment
+      cancel-in-progress: true
+on:
+  
+  workflow_call:
+  workflow_dispatch:
+    inputs:
+      #skip_run:
+      #  description: 'Function testing, no build?'
+      #  required: true
+      #  type: boolean
+      #  default: false
+      build_type:
+        type: choice
+        description: 'What should be built?'
+        default: 'build_all'
+        required: true
+        options:
+          - build_all
+          - only_kernel
+          - only_manager
+      ksu_fork:
+        type: choice
+        description: 'Which ksu fork should be made?'
+        default: 'SUKISU'
+        required: true
+        options:
+          - KSUN
+          - SUKISU
+      kernel_variant:
+        description: 'Which kernel should be built ?'
+        required: true
+        type: choice
+        default: topnotchfreaks-google
+        options:
+          - common-android-mainline
+          - chickernel
+          - topnotchfreaks-codelinaro
+          - topnotchfreaks-google
+        #If you choose to support other manager signature, a default signature will be added automatically.
+      additional_ksu_support:
+        description: 'Support for additional managers?'
+        required: true
+        type: choice
+        default: 'All managers'
+        options:
+          - 'All managers'
+          - 'none'
+          - 'official'
+          - 'rsuntk'
+          - 'backslashxx'
+          - 'kernelsu-next'
+          - 'mksu'
+          - 'sukisu'
+       
+      #chickernel contains the susfs patch built into the source code
+      include_susfs:
+        description: Includes susfs patch
+        type: boolean
+        required: true
+        default: false
+
+jobs:
+  fetch_patch:
+    strategy:
+      matrix:
+        include:
+          - ksu_fork: ${{ inputs.ksu_fork }}
+    uses: ./.github/workflows/fetch_patch.yml
+    secrets: inherit
+    with:
+      ksu_fork: ${{ matrix.ksu_fork }}
+      include_susfs: ${{ inputs.include_susfs }}
+    
+  calc_tag_version:
+    needs: 
+      - fetch_patch
+    runs-on: ubuntu-latest
+    outputs:
+      C_VERSION: ${{ steps.gen_outs.outputs.C_VERSION }}
+      C_LAST_COMMIT: ${{ steps.gen_outs.outputs.C_LAST_COMMIT}}
+      C_TAG_NAME: ${{ steps.gen_outs.outputs.C_TAG_NAME }}
+      C_KERNEL_SUBLEVEL: ${{ steps.gen_outs.outputs.C_KERNEL_SUBLEVEL }}
+      C_OS_PATCH_LEVEL: ${{ steps.gen_outs.outputs.C_OS_PATCH_LEVEL }}
+    steps:
+    #- name: Checkout code
+      #uses: actions/checkout@v4.2.2
+      #with:
+          #fetch-depth: 0 # fetch full history
+          #filter: tree:0     
+          
+    #- name: Test update_patch.yml
+    #  run: gh workflow run update_patch.yml
+    - name: download linuxpu with patched dir
+      uses: actions/download-artifact@v4.3.0
+      with:
+        name: linuxpu
+        path: .
+        github-token: '${{ env.GH_TOKEN }}'
+      
+    
+    - name: Calculate and apply tag and version values
+      id: gen_outs
+      run: |
+        #echo "getGitCommitCount: $(git rev-list --count HEAD)"
+        #echo "getGitDescribe: $(git describe --tags --always)"
+        #declare -a repo_commits=($(git log -n 100 --no-decorate | grep -E '^commit' | cut -d' ' -f2))
+        #git clone https://github.com/KernelSU-Next/KernelSU-Next
+        #cd KernelSU-Next
+        C_TAG_NAME=$(echo "$(git describe --tags --always)" | rev | cut -d'-' -f2- | rev)
+        #declare -a upstream_commits=($(git log -n 100 --no-decorate | grep -E '^commit' | cut -d' ' -f2))
+        #cd ..
+        #for item in "${repo_commits[@]}";do if [[ ${upstream_commits[*]} =~ ${item} ]]; then C_LAST_COMMIT=${item} && break;fi;done
+        C_LAST_COMMIT=$(git log -n 1 --no-decorate | grep -E '^commit' | cut -d' ' -f2)
+        #C_TAG_NAME="${C_TAG_NAME}-$(echo "$(git describe --tags --always)" | rev | cut -d'-' -f1 | rev)"
+        echo "C_TAG_NAME=${C_TAG_NAME}" >> $GITHUB_OUTPUT
+        echo "C_LAST_COMMIT=${C_LAST_COMMIT}" >> $GITHUB_OUTPUT
+        C_VERSION=$(echo "$(git log --oneline | wc -l) - $(git rev-list ${C_LAST_COMMIT}..HEAD --count)" | bc)
+        echo "C_VERSION=${C_VERSION}" >> $GITHUB_OUTPUT
+        #rm -rf KernelSU-Next
+        echo "C_TAG_NAME=${C_TAG_NAME}"
+        echo "C_LAST_COMMIT=${C_LAST_COMMIT}"
+        echo "C_VERSION=${C_VERSION}"
+        determine_os_patch_level() { declare -n result="$1";case "${result}" in 94) result=2023-05;;104) result=2023-07;;123) result=2023-11;;137) result=2024-01;;144) result=2024-03;;148) result=2024-05;;149) result=2024-07;;151) result=2024-08;;153) result=2024-09;;167) result=2024-11;;170) result=2025-01;;178) result=2025-03;;*) result=lts;;esac; }
+        C_KERNEL_SUBLEVEL=148
+        C_OS_PATCH_LEVEL=148
+        if "${{ inputs.kernel_variant == 'chickernel' }}";then
+          wget https://raw.githubusercontent.com/chickendrop89/device_xiaomi_unified-kernel/refs/heads/android13-5.15-lts/Makefile 2>/dev/null
+          if [ -f ./Makefile ];then
+            C_KERNEL_SUBLEVEL=$(head -n 10 Makefile  | grep SUBLEVEL | cut -d' ' -f 3)
+            [ -z ${C_KERNEL_SUBLEVEL} ] && C_KERNEL_SUBLEVEL=167
+          fi
+          #C_OS_PATCH_LEVEL="lts"
+          C_OS_PATCH_LEVEL="${C_KERNEL_SUBLEVEL}"
+        fi
+        if [[ "${{ inputs.kernel_variant }}" == *"topnotchfreaks"* ]];then
+          if "${{ inputs.kernel_variant == 'topnotchfreaks-codelinaro' }}";then
+            wget https://raw.githubusercontent.com/topnotchfreaks/kernel_msm-5.15/refs/heads/codelinaro/Makefile 2>/dev/null
+          else
+            wget https://raw.githubusercontent.com/topnotchfreaks/kernel_msm-5.15/refs/heads/google/Makefile 2>/dev/null
+          fi
+          if [ -f ./Makefile ];then
+            C_KERNEL_SUBLEVEL=$(head -n 10 Makefile  | grep SUBLEVEL | cut -d' ' -f 3)
+            [ -z ${C_KERNEL_SUBLEVEL} ] && C_KERNEL_SUBLEVEL=170
+          fi
+          #C_OS_PATCH_LEVEL="lts"
+          C_OS_PATCH_LEVEL="${C_KERNEL_SUBLEVEL}"
+        fi
+        determine_os_patch_level "C_OS_PATCH_LEVEL"
+        echo "C_KERNEL_SUBLEVEL=${C_KERNEL_SUBLEVEL}" >> $GITHUB_OUTPUT
+        echo "C_KERNEL_SUBLEVEL=${C_KERNEL_SUBLEVEL}"
+        echo "C_OS_PATCH_LEVEL=${C_OS_PATCH_LEVEL}" >> $GITHUB_OUTPUT
+        echo "C_OS_PATCH_LEVEL=${C_OS_PATCH_LEVEL}"
+        
+        
+  build-kernel:
+    if:  github.event.inputs.build_type == 'build_all' || github.event.inputs.build_type == 'only_kernel'
+    needs:
+      - calc_tag_version
+    strategy:
+      matrix:
+        include:
+          - sub_level: ${{needs.calc_tag_version.outputs.C_KERNEL_SUBLEVEL}}
+            os_patch_level: ${{needs.calc_tag_version.outputs.C_OS_PATCH_LEVEL}}
+            ksu_fork: ${{ inputs.ksu_fork }}
+            C_VERSION: ${{needs.calc_tag_version.outputs.C_VERSION}}
+            C_LAST_COMMIT: ${{needs.calc_tag_version.outputs.C_LAST_COMMIT}}
+            C_TAG_NAME: ${{needs.calc_tag_version.outputs.C_TAG_NAME}}
+            
+    uses: ./.github/workflows/MY-gki-kernel.yml
+    secrets: inherit
+    with:
+      kernel_variant: ${{ inputs.kernel_variant }}
+      include_susfs: ${{ inputs.include_susfs }}
+      android_version: "android13"
+      kernel_version: "5.15"
+      sub_level: ${{ matrix.sub_level }}
+      ksu_fork: ${{ inputs.ksu_fork }}
+      os_patch_level: ${{ matrix.os_patch_level }}
+      linuxpu_variant: Next
+      linuxpu_branch: Dev
+      #linuxpu_branch_other: ""
+      manager_supports: "${{ inputs.additional_ksu_support }}"
+      C_VERSION: ${{ matrix.C_VERSION }}
+      C_LAST_COMMIT: ${{ matrix.C_LAST_COMMIT }}
+      C_TAG_NAME: ${{ matrix.C_TAG_NAME }}
+      
+  build-susfsd:
+    if: github.event.inputs.build_type == 'build_all' ||  github.event.inputs.build_type == 'only_manager'
+    needs:
+      - calc_tag_version
+    strategy:
+      matrix:
+        include:
+          - target: aarch64-linux-android
+            os: ubuntu-latest
+            ksu_fork: ${{ inputs.ksu_fork }}
+            C_VERSION: ${{needs.calc_tag_version.outputs.C_VERSION}}
+            C_LAST_COMMIT: ${{needs.calc_tag_version.outputs.C_LAST_COMMIT}}
+            C_TAG_NAME: ${{needs.calc_tag_version.outputs.C_TAG_NAME}}
+    uses: ./.github/workflows/MY-susfsd.yml
+    with:
+      target: ${{ matrix.target }}
+      os: ${{ matrix.os }}
+      ksu_fork: ${{ matrix.ksu_fork }}
+      C_VERSION: ${{ matrix.C_VERSION }}
+      C_LAST_COMMIT: ${{ matrix.C_LAST_COMMIT }}
+      C_TAG_NAME: ${{ matrix.C_TAG_NAME }}
+
+  build-kpmmgr:
+    if: github.event.inputs.ksu_fork == 'SUKISU' && ( github.event.inputs.build_type == 'build_all' ||  github.event.inputs.build_type == 'only_manager' )
+    needs:
+      - calc_tag_version
+    strategy:
+      matrix:
+        include:
+          - target: aarch64-linux-android
+            os: ubuntu-latest
+    uses: ./.github/workflows/kpmmgr.yml
+    with:
+      target: ${{ matrix.target }}
+      os: ${{ matrix.os }}
+      
+  build-lpud:
+    if: ${{ ! failure() && ! cancelled() }} &&  github.event.inputs.build_type == 'build_all' || github.event.inputs.build_type == 'only_manager'
+    needs: 
+      - calc_tag_version
+      - build-susfsd
+      - build-kpmmgr
+    strategy:
+      matrix:
+        include:
+          - target: aarch64-linux-android
+            os: ubuntu-latest
+            ksu_fork: ${{ inputs.ksu_fork }}
+            C_VERSION: ${{needs.calc_tag_version.outputs.C_VERSION}}
+            C_LAST_COMMIT: ${{needs.calc_tag_version.outputs.C_LAST_COMMIT}}
+            C_TAG_NAME: ${{needs.calc_tag_version.outputs.C_TAG_NAME}}
+    uses: ./.github/workflows/MY-lpud.yml
+    with:
+      target: ${{ matrix.target }}
+      os: ${{ matrix.os }}
+      ksu_fork: ${{ matrix.ksu_fork }}
+      C_VERSION: ${{ matrix.C_VERSION }}
+      C_LAST_COMMIT: ${{ matrix.C_LAST_COMMIT }}
+      C_TAG_NAME: ${{ matrix.C_TAG_NAME }}
+
+  build-manager:
+    if: ${{ ! failure() && ! cancelled() }} && github.event.inputs.build_type == 'build_all' || github.event.inputs.build_type == 'only_manager'
+    needs: 
+      - calc_tag_version
+      - build-lpud
+    runs-on: ubuntu-latest
+    env:
+      ksu_fork: ${{ inputs.ksu_fork }}
+      C_VERSION: ${{needs.calc_tag_version.outputs.C_VERSION}}
+      C_LAST_COMMIT: ${{needs.calc_tag_version.outputs.C_LAST_COMMIT}}
+      C_TAG_NAME: ${{needs.calc_tag_version.outputs.C_TAG_NAME}}
+    defaults:
+      run:
+        working-directory: ./manager
+        
+    steps:
+      #- name: Checkout Repository
+        #uses: actions/checkout@v4.2.2
+        #with:
+          #fetch-depth: 0
+      - name: download linuxpu with patched dir
+        uses: actions/download-artifact@v4.3.0
+        with:
+          name: linuxpu
+          path: .
+          github-token: '${{ env.GH_TOKEN }}'
+
+      - name: Setup need_upload
+        id: need_upload
+        run: |
+          bash ${GITHUB_WORKSPACE}/.github/scripts/calc_patch_tg.sh
+          if [ ! -z "${{ secrets.BOT_TOKEN }}" ]; then
+            echo "UPLOAD=true" >> $GITHUB_OUTPUT
+          else
+            echo "UPLOAD=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Write Key
+        run: |
+          if [ ! -z "${{ secrets.KEYSTORE }}" ]; then
+            {
+              echo KEYSTORE_PASSWORD='${{ secrets.KEYSTORE_PASSWORD }}'
+              echo KEY_ALIAS='${{ secrets.KEY_ALIAS }}'
+              echo KEY_PASSWORD='${{ secrets.KEY_PASSWORD }}'
+              echo KEYSTORE_FILE='key.jks'
+            } >> gradle.properties
+            echo ${{ secrets.KEYSTORE }} | base64 -d > key.jks
+          fi
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Download arm64 susfsd
+        if: github.event.inputs.ksu_fork == 'KSUN'
+        uses: actions/download-artifact@v4.3.0
+        with:
+          name: susfsd-aarch64-linux-android
+          path: .
+
+      - name: Copy susfsd to app jniLibs
+        if: github.event.inputs.ksu_fork == 'KSUN'
+        run: |
+          mkdir -p app/src/main/jniLibs/arm64-v8a
+          cp -f ../arm64-v8a/susfsd ../manager/app/src/main/jniLibs/arm64-v8a/libsusfsd.so
+
+      - name: Download arm64 susfs
+        if: github.event.inputs.ksu_fork == 'SUKISU'
+        uses: actions/download-artifact@v4.3.0
+        with:
+          name: susfs-aarch64-linux-android
+          path: .
+          
+      - name: Copy susfs to app jniLibs
+        if: github.event.inputs.ksu_fork == 'SUKISU'
+        run: |
+          mkdir -p app/src/main/jniLibs/arm64-v8a
+          cp -f ../arm64-v8a/zakozakozako ../manager/app/src/main/jniLibs/arm64-v8a/libzakozakozako.so   
+          
+      - name: Download arm64 kpmmgr
+        if: github.event.inputs.ksu_fork == 'SUKISU'
+        uses: actions/download-artifact@v4.3.0
+        with:
+          name: kpmmgr-aarch64-linux-android
+          path: .   
+
+      - name: Copy kpmmgr to app jniLibs
+        if: github.event.inputs.ksu_fork == 'SUKISU'
+        run: |
+          mkdir -p app/src/main/jniLibs/arm64-v8a
+          cp -f ../arm64-v8a/kpmmgr ../manager/app/src/main/jniLibs/arm64-v8a/libkpmmgr.so
+          
+      - name: Download arm64 lpud
+        if: github.event.inputs.ksu_fork == 'SUKISU'
+        uses: actions/download-artifact@v4.3.0
+        with:
+          name: lpud-aarch64-linux-android
+          path: .
+
+      - name: Copy lpud to app jniLibs
+        if: github.event.inputs.ksu_fork == 'SUKISU'
+        run: |
+          cp -f ../aarch64-linux-android/release/zakozako ../manager/app/src/main/jniLibs/arm64-v8a/libzakozako.so
+          
+      - name: Download arm64 lpud_overlayfs
+        if: github.event.inputs.ksu_fork == 'KSUN'
+        uses: actions/download-artifact@v4.3.0
+        with:
+          name: lpud_overlayfs-aarch64-linux-android
+          path: lpud_overlayfs
+
+      - name: Copy lpud_overlayfs to app jniLibs
+        if: github.event.inputs.ksu_fork == 'KSUN'
+        run: |
+          cp -f ../lpud_overlayfs/aarch64-linux-android/release/lpud ../manager/app/src/main/jniLibs/arm64-v8a/liblpud_overlayfs.so
+
+      - name: Download arm64 lpud_magic
+        if: github.event.inputs.ksu_fork == 'KSUN'
+        uses: actions/download-artifact@v4.3.0
+        with:
+          name: lpud_magic-aarch64-linux-android
+          path: lpud_magic
+
+      - name: Copy lpud_magic to app jniLibs
+        if: github.event.inputs.ksu_fork == 'KSUN'
+        run: |
+          cp -f ../lpud_magic/aarch64-linux-android/release/lpud ../manager/app/src/main/jniLibs/arm64-v8a/liblpud_magic.so
+
+      - name: Build with Gradle
+        run: |
+          {
+            echo 'org.gradle.parallel=true'
+            echo 'org.gradle.vfs.watch=true'
+            echo 'org.gradle.jvmargs=-Xmx2048m'
+            echo 'android.native.buildOutput=verbose'
+          } >> gradle.properties
+          sed -i 's/org.gradle.configuration-cache=true//g' gradle.properties
+          chmod +x gradlew
+          ./gradlew versionCatalogUpdate
+          ./gradlew clean assembleRelease
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: Manager
+          path: manager/app/build/outputs/apk/release/*.apk
+
+      - name: Upload Mappings
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: Mappings
+          path: manager/app/build/outputs/mapping/release/
+
+      - name: Bot Session Cache
+        if: steps.need_upload.outputs.UPLOAD == 'true'
+        id: bot_session_cache
+        uses: actions/cache@v4
+        with:
+          path: scripts/lpunextbot.session
+          key: ${{ runner.os }}-bot-session
+      
+  trigger-release:
+    runs-on: ubuntu-latest  
+    needs:
+      - calc_tag_version
+      - build-kernel
+      - build-susfsd
+      - build-lpud
+      - build-manager
+    if: ${{ ! failure() && ! cancelled() }} #&& ! inputs.skip_run }} 
+    env:
+      C_VERSION: ${{needs.calc_tag_version.outputs.C_VERSION}}
+      C_LAST_COMMIT: ${{needs.calc_tag_version.outputs.C_LAST_COMMIT}}
+      C_TAG_NAME: ${{needs.calc_tag_version.outputs.C_TAG_NAME}}
+      REPO_OWNER: ${{ github.repository_owner }}
+      REPO_NAME: ${{ github.event.repository.name }}
+      build_type: ${{ inputs.build_type }}
+      ksu_fork: ${{ inputs.ksu_fork }}
+      kernel_variant: ${{ inputs.kernel_variant }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      susfs_version: "Susfs ඞ v1.5.7"
+      
+    steps:
+      ## Checkout the code
+      #- name: Checkout code
+        #uses: actions/checkout@v4.2.2
+        #with:
+          #fetch-depth: 0 # fetch full history
+          #filter: tree:0
+      - name: download linuxpu with patched dir
+        uses: actions/download-artifact@v4.3.0
+        with:
+          name: linuxpu
+          path: .
+          github-token: '${{ env.GH_TOKEN }}'
+          
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@v6.3.0
+        with:
+          git_config_global: true
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+          git_tag_gpgsign: true
+          #git_push_gpgsign: true
+          trust_level: 5
+        
+      - name: Get commit hash or tag and generate URL for LinuxPU
+        run: |
+          bash ${GITHUB_WORKSPACE}/.github/scripts/calc_patch_tg.sh
+          LPU_BRANCH=main
+          #TAG_NAME=$(git describe --tags)
+          echo "LPU_BRANCH=${LPU_BRANCH}" >> $GITHUB_ENV
+          #echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
+          REPO_URL="https://github.com/ahmad24shargh/LinuxPU.git"
+          REPO_URL2="ahmad24shargh/LinuxPU"
+          COMMIT_HASH=$(git ls-remote $REPO_URL refs/heads/$LPU_BRANCH | awk '{ print $1 }')
+          #COMMIT_HASH=${{ env.C_LAST_COMMIT }}
+            if [[ -z "$COMMIT_HASH" ]]; then
+              echo "Error: Could not fetch latest commit for Dev" >&2
+              exit 1
+            fi
+            LPU_REF=$COMMIT_HASH
+            LPU_URL="https://github.com/$REPO_URL2/commit/$COMMIT_HASH"
+
+          # Echo the values to GitHub environment for later use
+          echo "LPU_REF=$LPU_REF" >> $GITHUB_ENV
+          echo "LPU_URL=$LPU_URL" >> $GITHUB_ENV
+          echo "LinuxPU Reference: $LPU_REF"
+          echo "LinuxPU URL: $LPU_URL"
+
+      - name: Get commit hashes and generate commit URLs
+        if: ${{ inputs.include_susfs == true }}
+        run: |
+          GITLAB_OWNER="simonpunk"
+          GITLAB_REPO="susfs4ksu"
+
+          declare -A BRANCH_MAP=(
+            ["gki_android13_5_15"]="gki-android13-5.15"
+          )
+
+          for var_name in "${!BRANCH_MAP[@]}"; do
+            branch_name="${BRANCH_MAP[$var_name]}"
+            COMMIT_HASH=$(git ls-remote https://gitlab.com/$GITLAB_OWNER/$GITLAB_REPO.git refs/heads/$branch_name | awk '{ print $1 }')
+
+            if [[ -n "$COMMIT_HASH" ]]; then
+              COMMIT_URL="https://gitlab.com/$GITLAB_OWNER/$GITLAB_REPO/-/commit/$COMMIT_HASH"
+              echo "$branch_name Commit: $COMMIT_HASH"
+              echo "$branch_name Commit URL: $COMMIT_URL"
+
+              # Store commit hash and commit URL in GitHub environment
+              echo "COMMIT_HASH_${var_name}=$COMMIT_HASH" >> "$GITHUB_ENV"
+              echo "COMMIT_URL_${var_name}=$COMMIT_URL" >> "$GITHUB_ENV"
+            fi
+          done
+
+      - name: Append Commit Hashes & Links to `RELEASE_NOTES` & Append LinuxPU Reference to `RELEASE_NOTES`
+        run: |
+          echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
+          echo >> $GITHUB_ENV
+          echo -n 'This release contains LinuxPU DEV('${{ env.kernel_variant }}')' >> $GITHUB_ENV
+          [ ${{ inputs.include_susfs }} == 'true'  ] && echo " and ${{ env.susfs_version}}" >> $GITHUB_ENV || echo >> $GITHUB_ENV
+          echo -e "\nFeatures:\n" >> $GITHUB_ENV
+          if [ "${{ env.ksu_fork }}" == "SUKISU" ];then
+            echo "-> based on SUKISU ULTRA" >> $GITHUB_ENV
+          elif [ "${{ env.ksu_fork }}" == "KSUN" ];then 
+            echo "-> based on KERNELSU NEXT" >> $GITHUB_ENV
+          fi
+          echo '-> LinuxPU DEV('${{ env.kernel_variant }}')' >> $GITHUB_ENV
+          [ ${{ inputs.include_susfs }} == 'true'  ] && echo  "-> ${{ env.susfs_version}}" >> $GITHUB_ENV
+          echo "-> Manual Hooks for Better Hiding" >> $GITHUB_ENV
+          echo "-> Wireguard Support" >> $GITHUB_ENV
+          echo "-> Simple Maphide for LineageOS Detections" >> $GITHUB_ENV
+          echo "-> Futile Maphide for jit-zygote-cache Detections" >> $GITHUB_ENV
+          echo "-> Magic Mount Support" >> $GITHUB_ENV
+          echo -e "-> BBR Support\n\n" >> $GITHUB_ENV
+          if [ ${{ inputs.include_susfs }} == 'true'  ];then
+            echo -e "Notes:\n  -> SUS SU Mode 2 will show as disabled or not compatble due to non-kprobe hooks and is not needed anymore!\n\n" >> $GITHUB_ENV
+            echo -e "Module:\n  -> https://github.com/sidex15/ksu_module_susfs\n\n" >> $GITHUB_ENV
+          fi
+          echo "Commit Hashes and Links:" >> $GITHUB_ENV
+          echo 'LinuxPU-Dev: ['${LPU_REF}']('${LPU_URL}')' >> $GITHUB_ENV
+          if [ ${{ inputs.include_susfs }} == 'true'  ];then
+            echo "SUSFS4KSU:" >> $GITHUB_ENV
+            echo -e 'gki-android13-5.15: ['${COMMIT_HASH_gki_android13_5_15}']('${COMMIT_URL_gki_android13_5_15}')\n\"\"\n' >> $GITHUB_ENV
+          fi
+          [ "${{ env.ksu_fork }}" == "SUKISU" ] && echo "💡 If you need kpm, patch the kernel file manually." >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+          [[ "${{ env.kernel_variant }}" == "common-android-mainline" ]] &&  RELEASE_NAME="GKI Kernel "
+          [[ "${{ env.kernel_variant }}" == "chickernel" ]] &&  RELEASE_NAME="ChicKernel "
+          [[ "${{ env.kernel_variant }}" == "topnotchfreaks-codelinaro" ]] && RELEASE_NAME="TopNotchFreaks(codelinaro source) Kernel "
+          [[ "${{ env.kernel_variant }}" == "topnotchfreaks-google" ]] && RELEASE_NAME="TopNotchFreaks(google source) Kernel "
+          if [ "${{ env.ksu_fork }}" == "KSUN" ];then
+            RELEASE_NAME="${RELEASE_NAME}With LinuxPU DEV(KSUN based)"
+          elif [ "${{ env.ksu_fork }}" == "SUKISU" ];then
+            RELEASE_NAME="${RELEASE_NAME}With LinuxPU DEV(SukiSU based)"
+          fi
+          [ ${{ inputs.include_susfs }} == 'true'  ] && RELEASE_NAME="${RELEASE_NAME} and ${{ env.susfs_version}}"
+          echo "RELEASE_NAME=${RELEASE_NAME}" >> $GITHUB_ENV
+          
+     # Download Artifacts for A12 (Only if A12 Build is successful or input is true or empty)
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4.3.0
+        with:
+          path: ./downloaded-artifacts    
+
+      # Display Files Uploaded
+      - name: Display Files Uploaded
+        run: |
+          echo "GitHub release created with the following files:"
+          find  ./downloaded-artifacts/
+          zip -r ./downloaded-artifacts/linuxpu.zip ./downloaded-artifacts/linuxpu || true
+          if [ "${{ env.ksu_fork }}" == "SUKISU" ];then
+            mv ./downloaded-artifacts/susfs-aarch64-linux-android/arm64-v8a/zakozakozako  ./downloaded-artifacts/susfs-aarch64-linux-android/arm64-v8a/susfs-aarch64-linux-android || true
+            mv ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/zakozako  ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud-aarch64-linux-android || true
+          elif  [ "${{ env.ksu_fork }}" == "KSUN" ];then
+            zip ./downloaded-artifacts/lpud_overlayfs-aarch64-linux-android/aarch64-linux-android/release/lpud_overlayfs-aarch64-linux-android.zip ./downloaded-artifacts/lpud_overlayfs-aarch64-linux-android/aarch64-linux-android/release/lpud || true
+            zip ./downloaded-artifacts/lpud_magic-aarch64-linux-android/aarch64-linux-android/release/lpud_magic-aarch64-linux-android.zip ./downloaded-artifacts/lpud_magic-aarch64-linux-android/aarch64-linux-android/release/lpud || true
+            #[ -e ./downloaded-artifacts/lpud_overlayfs-aarch64-linux-android/aarch64-linux-android/release/lpud.d ] && rm -rf ./downloaded-artifacts/lpud_overlayfs-aarch64-linux-android/aarch64-linux-android/release/lpud.d
+          fi
+          
+          
+      - name: release
+        if: ${{ env.build_type == 'build_all' }}
+        uses: softprops/action-gh-release@v2.2.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: ${{ env.RELEASE_NAME }}
+          tag_name: ${{ env.C_TAG_NAME }}  # Use the generated tag for the release
+          prerelease: false  # Mark the release as a pre-release
+          draft: false
+          make_latest: true
+          fail_on_unmatched_files: false
+          #release_name: ${{ env.RELEASE_NAME }}  # Pass the RELEASE_NAME to the action
+          body: ${{ env.RELEASE_NOTES }}  # Pass the RELEASE_NOTES to the action
+          files: |
+            ./downloaded-artifacts/Manager/*.apk
+            ./downloaded-artifacts/kernel*/*.img
+            ./downloaded-artifacts/kernel*/*.zip
+            ./downloaded-artifacts/kpmmgr*/*/kpmmgr
+            ./downloaded-artifacts/lpud*/*/*/lpud*
+            ./downloaded-artifacts/susf*/*/susf*
+            ./downloaded-artifacts/linuxpu.zip
+            
+          
