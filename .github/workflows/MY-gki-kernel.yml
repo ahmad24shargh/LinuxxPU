@@ -741,8 +741,8 @@ jobs:
           
       - name: Compress all img files with gzip
         run: |
-          for image in *.img; do
-            gzip -vnf9 "$image"
+          for image in $(find . -type f -name "*.img" 2>/dev/null); do
+            [ -f $image ] && gzip -vnf9 $image
           done
           
       - name: Upload Build Artifacts
