@@ -64,6 +64,7 @@ on:
 jobs:
   build-kernel-kernelsu:
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     env:
       CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
       CCACHE_NOHASHDIR: "true"
@@ -77,16 +78,18 @@ jobs:
       ZRAM: true
 
     steps:
-      - name: Maximize build space
-        uses: easimon/maximize-build-space@master
+      - name: Maximize Build Space
+        uses: AdityaGarg8/remove-unwanted-software@v5
         with:
-          root-reserve-mb: 8192
-          temp-reserve-mb: 2048
-          swap-size-mb: 8192
-          remove-dotnet: "true"
-          remove-android: "false"
-          remove-haskell: "true"
-          remove-codeql: "true"
+          remove-dotnet: 'true'          # Frees ~2 GB
+          remove-android: 'false'        # Frees ~9 GB
+          remove-haskell: 'true'         # Frees ~5.2 GB
+          remove-codeql: 'true'          # Frees ~5.4 GB
+          remove-docker-images: 'true'   # Frees ~3.2 GB
+          remove-large-packages: 'true'  # Frees ~3.1 GB
+          remove-swapfile: 'true'        # Frees ~4 GB
+          remove-cached-tools: 'false'   # Avoid unless confirmed safe
+          verbose: 'true'                # Enable detailed logging
           
       #- name: Checkout Repository
         #uses: actions/checkout@v4.2.2
@@ -192,15 +195,11 @@ jobs:
           cp -r AnyKernel3 ../
           cd ..
 
-      - name: Set CONFIG Environment Variable
+
+      - name: Check Disk Space Before Sync
         run: |
-          # Set CONFIG dynamically based on inputs values
-          CONFIG="${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}"
-
-          # Set CONFIG as an environment variable for future steps
-          echo "CONFIG=$CONFIG" >> $GITHUB_ENV
-
-          echo "CONFIG set to: $CONFIG"
+          echo "Disk space before kernel source sync:"
+          df -h
 
       - name: Initialize and Sync Kernel Source
         run: |
@@ -335,6 +334,8 @@ jobs:
           cd ./$CONFIG/common
           if [[ "${{ env.kernel_variant }}" != "chickernel" ]];then patch -p1 < 50_add_susfs_in_gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch;fi
 
+          sed -i '/bool ksu_devpts_hook = false;/d' $GITHUB_WORKSPACE/kernel/sucompat.c
+
       - name: Apply New Hooks Patches
         run: |
           echo "Changing to configuration directory: $CONFIG..."
@@ -358,7 +359,7 @@ jobs:
           cp ../../kernel_patches/69_hide_stuff.patch ./
           patch -p1 -F 3 < 69_hide_stuff.patch
             
-      - name: Add KSU Configuration Settings
+      - name: Add Configuration Settings
         run: |
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG"
@@ -368,7 +369,7 @@ jobs:
           # Add KSU configuration settings
           echo "CONFIG_KSU=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_MANUAL_HOOK=y" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_HOOK_KPROBES=n" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_KPROBES_HOOK=n" >> ./common/arch/arm64/configs/gki_defconfig
           [ ${{ env.ksu_fork }} == 'SUKISU' ] && echo "CONFIG_KPM=y" >> ./common/arch/arm64/configs/gki_defconfig
           
           
@@ -384,6 +385,14 @@ jobs:
           echo "CONFIG_IP_NF_TARGET_TTL=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_IP6_NF_TARGET_HL=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_IP6_NF_MATCH_HL=y" >> ./common/arch/arm64/configs/gki_defconfig
+
+          # Add BBR Config
+          echo "CONFIG_TCP_CONG_ADVANCED=y" >> ./common/arch/arm64/configs/gki_defconfig 
+          echo "CONFIG_TCP_CONG_BBR=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NET_SCH_FQ=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_TCP_CONG_BIC=n" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_TCP_CONG_WESTWOOD=n" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_TCP_CONG_HTCP=n" >> ./common/arch/arm64/configs/gki_defconfig 
 
           # Remove check_defconfig
           sed -i 's/check_defconfig//' ./common/build.config.gki
@@ -484,7 +493,7 @@ jobs:
           echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=n" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> ./common/arch/arm64/configs/gki_defconfig
@@ -498,26 +507,6 @@ jobs:
           else
             echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> ./common/arch/arm64/configs/gki_defconfig
           fi
-          
-      
-
-          #MY CHANGES
-      - name: Add BBR net tcp configs
-        #if: ${{ inputs.kernel_version != '6.6' }}
-        run: |
-          cd "$CONFIG/common"
-          # Add bbr config setting
-          #cp ../../kernel_patches/bbr/tcp_bbr.c ./net/ipv4/
-
-          cd ..
-          echo "CONFIG_TCP_CONG_ADVANCED=y" >> ./common/arch/arm64/configs/gki_defconfig 
-          echo "CONFIG_TCP_CONG_BBR=y" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_NET_SCH_FQ=y" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_TCP_CONG_BIC=n" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_TCP_CONG_WESTWOOD=n" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_TCP_CONG_HTCP=n" >> ./common/arch/arm64/configs/gki_defconfig 
-          #echo 'CONFIG_DEFAULT_TCP_CONG="bbr"' >> ./common/arch/arm64/configs/gki_defconfig
-        
         
       - name: Build kernel
         run: |
@@ -773,7 +762,14 @@ jobs:
         with: 
           name: linuxpu
           failOnError: false
-        
+
+
+      - name: Compress all img files with gzip
+        run: |
+          for image in *.img; do
+            gzip -vnf9 "$image"
+          done
+          
       - name: Upload the linuxpu with the latest changes
         uses: actions/upload-artifact@v4.6.2
         with:
