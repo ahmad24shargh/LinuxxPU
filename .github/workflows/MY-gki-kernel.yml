@@ -741,7 +741,12 @@ jobs:
           zip boot.img.zip boot.img
           cp ./boot.img.zip ../${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-boot.img.zip
           
-
+      - name: Compress all img files with gzip
+        run: |
+          for image in *.img; do
+            gzip -vnf9 "$image"
+          done
+          
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4.6.2
         with:
@@ -762,13 +767,6 @@ jobs:
         with: 
           name: linuxpu
           failOnError: false
-
-
-      - name: Compress all img files with gzip
-        run: |
-          for image in *.img; do
-            gzip -vnf9 "$image"
-          done
           
       - name: Upload the linuxpu with the latest changes
         uses: actions/upload-artifact@v4.6.2
