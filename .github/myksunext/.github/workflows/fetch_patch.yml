@@ -185,7 +185,7 @@ jobs:
           for files in $(find ${repo_folder}/docs -type f  -name 'README_*');do rm -f ${files};done
           #rm -f ${repo_folder}/.github/workflows/*
           #rm -f ${repo_folder}/assets/kernelsu_next.png
-          rm -rf ${repo_folder}/manager/app/src/main/res/mipmap-*
+          #rm -rf ${repo_folder}/manager/app/src/main/res/mipmap-*
           #rm -rf ${repo_folder}/.github/ISSUE_TEMPLATE
           #rm -rf ${repo_folder}/.github/manifests
           #rm -rf ${repo_folder}/.github/scripts
