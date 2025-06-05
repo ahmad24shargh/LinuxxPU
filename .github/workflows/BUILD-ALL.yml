@@ -579,6 +579,8 @@ jobs:
             zip ./downloaded-artifacts/lpud_magic-aarch64-linux-android/aarch64-linux-android/release/lpud_magic-aarch64-linux-android.zip ./downloaded-artifacts/lpud_magic-aarch64-linux-android/aarch64-linux-android/release/lpud || true
             [ -e ./downloaded-artifacts/lpud_overlayfs-aarch64-linux-android/aarch64-linux-android/release/lpud.d ] && rm -rf ./downloaded-artifacts/lpud_overlayfs-aarch64-linux-android/aarch64-linux-android/release/lpud.d
           fi
+          mkdir -p releases
+          for file in $(find ./downloaded-artifacts -name \*.zip -o -name \*.apk -o -name \*.img);do cp $file ./releases/ ;done
           
           
       - name: release
@@ -595,12 +597,13 @@ jobs:
           #release_name: ${{ env.RELEASE_NAME }}  # Pass the RELEASE_NAME to the action
           body: ${{ env.RELEASE_NOTES }}  # Pass the RELEASE_NOTES to the action
           files: |
-            ./downloaded-artifacts/Manager/*.apk
-            ./downloaded-artifacts/kernel*/*.img
-            ./downloaded-artifacts/kernel*/*.zip
-            ./downloaded-artifacts/kpmmgr*/*/kpmmgr
-            ./downloaded-artifacts/lpud*/*/*/lpud*
-            ./downloaded-artifacts/susf*/*/susf*
-            ./downloaded-artifacts/linuxpu.zip
+            ./releases/*
+            #./downloaded-artifacts/Manager/*.apk
+            #./downloaded-artifacts/kernel*/*.img
+            #./downloaded-artifacts/kernel*/*.zip
+            #./downloaded-artifacts/kpmmgr*/*/kpmmgr
+            #./downloaded-artifacts/lpud*/*/*/lpud*
+            #./downloaded-artifacts/susf*/*/susf*
+            #./downloaded-artifacts/linuxpu.zip
             
           
