@@ -573,11 +573,17 @@ jobs:
           zip -r ./downloaded-artifacts/linuxpu.zip ./downloaded-artifacts/linuxpu || true
           if [ "${{ env.ksu_fork }}" == "SUKISU" ];then
             mv ./downloaded-artifacts/susfs-aarch64-linux-android/arm64-v8a/zakozakozako  ./downloaded-artifacts/susfs-aarch64-linux-android/arm64-v8a/susfs-aarch64-linux-android || true
+            [ -e ./downloaded-artifacts/susfs-aarch64-linux-android/arm64-v8a/susfs-aarch64-linux-android ] && zip ./downloaded-artifacts/susfs-aarch64-linux-android/arm64-v8a/susfs-aarch64-linux-android.zip ./downloaded-artifacts/susfs-aarch64-linux-android/arm64-v8a/susfs-aarch64-linux-android || true
             mv ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/zakozako  ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud-aarch64-linux-android || true
+            [ -e ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud-aarch64-linux-android ] && zip ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud-aarch64-linux-android.zip ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud-aarch64-linux-android || true
+            [ -e ./downloaded-artifacts/kpmmgr-aarch64-linux-android/arm64-v8a/kpmmgr ] && zip ./downloaded-artifacts/kpmmgr-aarch64-linux-android/arm64-v8a/kpmmgr.zip ./downloaded-artifacts/kpmmgr-aarch64-linux-android/arm64-v8a/kpmmgr || true
           elif  [ "${{ env.ksu_fork }}" == "KSUN" ];then
             zip ./downloaded-artifacts/lpud_overlayfs-aarch64-linux-android/aarch64-linux-android/release/lpud_overlayfs-aarch64-linux-android.zip ./downloaded-artifacts/lpud_overlayfs-aarch64-linux-android/aarch64-linux-android/release/lpud || true
             zip ./downloaded-artifacts/lpud_magic-aarch64-linux-android/aarch64-linux-android/release/lpud_magic-aarch64-linux-android.zip ./downloaded-artifacts/lpud_magic-aarch64-linux-android/aarch64-linux-android/release/lpud || true
             [ -e ./downloaded-artifacts/lpud_overlayfs-aarch64-linux-android/aarch64-linux-android/release/lpud.d ] && rm -rf ./downloaded-artifacts/lpud_overlayfs-aarch64-linux-android/aarch64-linux-android/release/lpud.d
+            [ -e ./downloaded-artifacts/susfsd-aarch64-linux-android/arm64-v8a/susfsd ] && zip ./downloaded-artifacts/susfsd-aarch64-linux-android/arm64-v8a/susfsd-arm64-v8a.zip ./downloaded-artifacts/susfsd-aarch64-linux-android/arm64-v8a/susfsd || true
+            [ -e ./downloaded-artifacts/susfsd-aarch64-linux-android/armeabi-v7a/susfsd ] && zip ./downloaded-artifacts/susfsd-aarch64-linux-android/armeabi-v7a/susfsd-armeabi-v7a.zip ./downloaded-artifacts/susfsd-aarch64-linux-android/armeabi-v7a/susfsd || true
+            [ -e ./downloaded-artifacts/susfsd-aarch64-linux-android/x86_64/susfsd ] && zip ./downloaded-artifacts/susfsd-aarch64-linux-android/x86_64/susfsd-x86_64.zip ./downloaded-artifacts/susfsd-aarch64-linux-android/x86_64/susfsd || true
           fi
           mkdir -p releases
           for file in $(find ./downloaded-artifacts -name \*.zip -o -name \*.apk -o -name \*.img);do cp $file ./releases/ ;done
