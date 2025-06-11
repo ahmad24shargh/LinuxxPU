@@ -239,7 +239,7 @@ jobs:
           for files in $(grep -R ${repo_folder} -e 'KSURC' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's#KSURC#LPURC#g' $files;done
           for files in $(find ${repo_folder} -type f -name 'KernelSUApplication*' 2>/dev/null );do mv $files $(echo $files | sed 's|KernelSUApplication|LinuxPUApplication|g' );done
           for file in $(grep -R ${repo_folder} -e 'KERNEL_SU' 2>/dev/null | cut -d':' -f1 | sort  | uniq);do sed -i 's|KERNEL_SU|LINUXPU|g' $file;done
-          for file in $(grep -R ${repo_folder} -e 'LPU' 2>/dev/null | grep -E '\.env\("LPU.+' | cut -d':' -f1 | sort | uniq);do sed -E -i 's#([[:space:]]+)(\.env\("LPU)(.+)#\1\2\3\n\1.env("KSU\3\1\2\3\n\1.env("KSUN\3#g' $file;done
+          for file in $(grep -R ${repo_folder} -e 'LPU' 2>/dev/null | grep -E '\.env\("LPU.+' | cut -d':' -f1 | sort | uniq);do sed -E -i 's#([[:space:]]+)(\.env\("LPU)(.+)#\1\2\3\n\1.env("KSU\3#g' $file;done
           sed -E -i 's|([[:space:]]+)mavenCentral\(\)|\1mavenCentral()\n\1gradlePluginPortal()|g' ${repo_folder}/manager/settings.gradle.kts
           #grep 'nl.littlerobots.vcu.resolver' ${repo_folder}/manager/gradle.properties || echo "nl.littlerobots.vcu.resolver=true" >> ${repo_folder}/manager/gradle.properties
           #------------------------------
