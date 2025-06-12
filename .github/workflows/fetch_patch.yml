@@ -74,7 +74,7 @@ jobs:
           if [ ${{ env.include_susfs }} == 'true' ];then
             cd KSU
             if [ ${{ env.ksu_fork }} == 'SUKISU' ];then
-              git clone -b susfs-dev https://github.com/ShirkNeko/SukiSU-Ultra
+              git clone -b susfs-main https://github.com/ShirkNeko/SukiSU-Ultra
               rm  -rf kernel
               mv SukiSU-Ultra/kernel .
               rm -rf SukiSU-Ultra
