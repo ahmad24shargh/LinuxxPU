@@ -332,6 +332,14 @@ jobs:
           cd ./$CONFIG/common
           if [[ "${{ env.kernel_variant }}" != "chickernel" ]];then patch -p1 < 50_add_susfs_in_gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch;fi
 
+          if ! grep -qxF '#define CMD_SUSFS_HIDE_SUS_MNTS_FOR_ALL_PROCS 0x55561' ./include/linux/susfs_def.h; then
+            #curl -Ls https://raw.githubusercontent.com/fatalcoder524/kernel_patches_additional/refs/heads/main/hide_sus_mnts_for_all_procs.patch  | patch -p1 -F 3
+            cp ../../kernel_patches/hide_sus_mnts_for_all_procs.patch ./
+            patch -p1 -F 3 < hide_sus_mnts_for_all_procs.patch
+          else
+            echo "Line already present. Skipping SUSFS_HIDE_SUS_MNTS_FOR_ALL_PROCS Patch."
+          fi
+
           sed -i '/bool ksu_devpts_hook = false;/d' $GITHUB_WORKSPACE/kernel/sucompat.c
 
       - name: Apply New Hooks Patches
@@ -397,6 +405,19 @@ jobs:
           if [ ! -f build/build.sh ];then
             tar -xzkf ${GITHUB_WORKSPACE}/.github/scripts/build.tar.gz -C build/
             for file in $(find build/ -type f -name '*.sh' 2>/dev/null);do sed -i 's|/\/build\/|build\/|g' $file;chmod +x $file;done
+          fi
+
+          KERNEL_VERSION="${{ inputs.kernel_version }}"
+          MIN_VERSION="5.16"
+          
+          if [ "$(printf '%s\n' "$KERNEL_VERSION" "$MIN_VERSION" | sort -V | head -n1)" = "$KERNEL_VERSION" ]; then
+            echo "Patching ptrace!"
+            #curl -Ls https://raw.githubusercontent.com/fatalcoder524/kernel_patches_additional/refs/heads/main/ptrace.patch  | patch -p1 -F 3
+            cd "$CONFIG/common"
+            cp $GITHUB_WORKSPACE/kernel_patches/ptrace.patch ./
+            patch -p1 -F 3 < ptrace.patch
+          else
+            echo "Kernel >= $MIN_VERSION, skipping ptrace patch"
           fi
 
           for file in $(grep -R ${repo_path}/kernel -e 'is_manager_apk' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -E -i 's/([[:space:]]+)is_manager_apk/\1lpu_is_manager_apk/g' $file;done
