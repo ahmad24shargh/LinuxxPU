@@ -81,8 +81,8 @@ jobs:
             elif [ ${{ env.ksu_fork }} == 'KSUN'  ];then
               #git clone -b next-susfs-dev https://github.com/KernelSU-Next/KernelSU-Next
               #rm  -rf kernel
-              wget https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/kernel-implement-susfs-v1.5.7-gki.patch
-              patch -p1 --forward < kernel-implement-susfs-v1.5.7-gki.patch
+              wget https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/0001-kernel-implement-susfs-v1.5.8-KernelSU-Next-v1.0.8.patch
+              patch -p1 --forward < 0001-kernel-implement-susfs-v1.5.8-KernelSU-Next-v1.0.8.patch
               #mv KernelSU-Next/kernel .
               #rm -rf KernelSU-Next
             else
