@@ -243,24 +243,20 @@ jobs:
             cp "$defconfig" $CONFIG/common/arch/arm64/configs/gki_defconfig
           elif [[ "${{ env.kernel_variant }}" == "chickernel" ]];then
             rm $CONFIG/common/arch/arm64/configs/gki_defconfig 
-            cp  $CONFIG/common/arch/arm64/configs/chickernel_defconfig $CONFIG/common/arch/arm64/configs/gki_defconfig
-            sed -i '/LOCALVERSION/d' $CONFIG/common/arch/arm64/configs/gki_defconfig
-            echo 'CONFIG_LOCALVERSION=""' >> $CONFIG/common/arch/arm64/configs/gki_defconfig
-            echo 'CONFIG_LOCALVERSION_AUTO=y' >> $CONFIG/common/arch/arm64/configs/gki_defconfig
-            sed -i '/CONFIG_WERROR/d' $CONFIG/common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_WERROR=n" >> $CONFIG/common/arch/arm64/configs/gki_defconfig
-            sed -i '/CONFIG_KSU/d' $CONFIG/common/arch/arm64/configs/gki_defconfig
+            cp $CONFIG/common/arch/arm64/configs/chickernel_defconfig $CONFIG/common/arch/arm64/configs/gki_defconfig
             rm -rf $CONFIG/common/KernelSU-Next
           elif [[ "${{ env.kernel_variant }}" == *"topnotchfreaks"* ]];then
-            #rm $CONFIG/common/arch/arm64/configs/gki_defconfig 
-            #cp  $CONFIG/common/arch/arm64/configs/generic_bengal_defconfig $CONFIG/common/arch/arm64/configs/gki_defconfig
-            sed -i '/LOCALVERSION/d' $CONFIG/common/arch/arm64/configs/gki_defconfig
-            echo 'CONFIG_LOCALVERSION=""' >> $CONFIG/common/arch/arm64/configs/gki_defconfig
-            echo 'CONFIG_LOCALVERSION_AUTO=y' >> $CONFIG/common/arch/arm64/configs/gki_defconfig
-            sed -i '/CONFIG_WERROR/d' $CONFIG/common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_WERROR=n" >> $CONFIG/common/arch/arm64/configs/gki_defconfig
-            sed -i '/CONFIG_KSU/d' $CONFIG/common/arch/arm64/configs/gki_defconfig
+            if [ -f $CONFIG/common/arch/arm64/configs/topaz_defconfig ];then
+              rm $CONFIG/common/arch/arm64/configs/gki_defconfig 
+              cp $CONFIG/common/arch/arm64/configs/topaz_defconfig $CONFIG/common/arch/arm64/configs/gki_defconfig
+            fi
           fi
+          sed -i '/LOCALVERSION/d' $CONFIG/common/arch/arm64/configs/gki_defconfig
+          echo 'CONFIG_LOCALVERSION=""' >> $CONFIG/common/arch/arm64/configs/gki_defconfig
+          echo 'CONFIG_LOCALVERSION_AUTO=y' >> $CONFIG/common/arch/arm64/configs/gki_defconfig
+          sed -i '/CONFIG_WERROR/d' $CONFIG/common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_WERROR=n" >> $CONFIG/common/arch/arm64/configs/gki_defconfig
+          sed -i '/CONFIG_KSU/d' $CONFIG/common/arch/arm64/configs/gki_defconfig
           #cp "${repo_path}/Kconfig" $CONFIG/common/
           #cp "${repo_path}/arch/arm64/Kconfig" $CONFIG/common/arch/arm64/
           #cp "${repo_path}/drivers/remoteproc/Kconfig" $CONFIG/common/drivers/remoteproc/
