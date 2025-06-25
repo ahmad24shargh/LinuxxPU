@@ -20,6 +20,12 @@ on:
       include_susfs:
         required: true
         type: boolean
+      android_version:
+        required: true
+        type: string
+      kernel_version:
+        required: true
+        type: string
   #workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
@@ -79,10 +85,27 @@ jobs:
               mv SukiSU-Ultra/kernel .
               rm -rf SukiSU-Ultra
             elif [ ${{ env.ksu_fork }} == 'KSUN'  ];then
+              SUSFS_BRANCH="gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}"
+              git clone https://gitlab.com/simonpunk/susfs4ksu.git -b "$SUSFS_BRANCH"
+              susfs_version=$(grep '#define SUSFS_VERSION' ./susfs4ksu/kernel_patches/include/linux/susfs.h | awk -F'"' '{print $2}')
+              echo "SusFS Version: $susfs_version"
+              case "$susfs_version" in
+                "v1.5.5"|"v1.5.6"|"v1.5.7")
+                  wget https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/0001-kernel-implement-susfs-v1.5.5-v1.5.7-KSUN-v1.0.8.patch
+                  cp "./0001-kernel-implement-susfs-v1.5.5-v1.5.7-KSUN-v1.0.8.patch" "./ksun_susfs_latest.patch"
+                  ;;
+                "v1.5.8")
+                  wget https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/0001-kernel-implement-susfs-v1.5.8-KernelSU-Next-v1.0.8.patch
+                  cp "./0001-kernel-implement-susfs-v1.5.8-KernelSU-Next-v1.0.8.patch" "./ksun_susfs_latest.patch"
+                  ;;
+                *)
+                  echo "Invalid version: $susfs_version"
+                  exit 1
+                  ;;
+              esac
+              patch -p1 --forward < ksun_susfs_latest.patch
               #git clone -b next-susfs-dev https://github.com/KernelSU-Next/KernelSU-Next
               #rm  -rf kernel
-              wget https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/0001-kernel-implement-susfs-v1.5.8-KernelSU-Next-v1.0.8.patch
-              patch -p1 --forward < 0001-kernel-implement-susfs-v1.5.8-KernelSU-Next-v1.0.8.patch
               #mv KernelSU-Next/kernel .
               #rm -rf KernelSU-Next
             else
