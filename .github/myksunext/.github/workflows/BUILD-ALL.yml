@@ -39,7 +39,7 @@ on:
         description: 'Which kernel should be built ?'
         required: true
         type: choice
-        default: topnotchfreaks-google
+        default: topnotchfreaks-codelinaro
         options:
           - common-android-mainline
           - chickernel
@@ -79,6 +79,8 @@ jobs:
     with:
       ksu_fork: ${{ matrix.ksu_fork }}
       include_susfs: ${{ inputs.include_susfs }}
+      android_version: "android13"
+      kernel_version: "5.15"
     
   calc_tag_version:
     needs: 
