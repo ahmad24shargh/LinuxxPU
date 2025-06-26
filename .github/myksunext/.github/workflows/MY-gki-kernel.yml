@@ -47,15 +47,15 @@ on:
       revision:
         required: false
         type: string
-      C_VERSION:
-        required: true
-        type: string
-      C_LAST_COMMIT:
-        required: true
-        type: string
-      C_TAG_NAME:
-        required: true
-        type: string
+      #C_VERSION:
+        #required: true
+        #type: string
+      #C_LAST_COMMIT:
+        #required: true
+        #type: string
+      #C_TAG_NAME:
+        #required: true
+        #type: string
       manager_supports:
         required: true
         type: string
@@ -72,9 +72,9 @@ jobs:
       kernel_variant: ${{ inputs.kernel_variant }}
       ksu_fork: ${{ inputs.ksu_fork }}
       include_susfs: ${{ inputs.include_susfs }}
-      C_VERSION: ${{ inputs.C_VERSION }}
-      C_LAST_COMMIT: ${{ inputs.C_LAST_COMMIT }}
-      C_TAG_NAME: ${{ inputs.C_TAG_NAME }}
+      #C_VERSION: ${{ inputs.C_VERSION }}
+      #C_LAST_COMMIT: ${{ inputs.C_LAST_COMMIT }}
+      #C_TAG_NAME: ${{ inputs.C_TAG_NAME }}
       ZRAM: true
 
     steps:

@@ -20,22 +20,22 @@ on:
         required: false
         type: boolean
         default: true
-      C_VERSION:
-        required: true
-        type: string
-      C_LAST_COMMIT:
-        required: true
-        type: string
-      C_TAG_NAME:
-        required: true
-        type: string
+      #C_VERSION:
+        #required: true
+        #type: string
+      #C_LAST_COMMIT:
+        #required: true
+        #type: string
+      #C_TAG_NAME:
+        #required: true
+        #type: string
 jobs:
   build:
     runs-on: ${{ inputs.os }}
-    env:
-      C_VERSION: ${{ inputs.C_VERSION }}
-      C_LAST_COMMIT: ${{ inputs.C_LAST_COMMIT }}
-      C_TAG_NAME: ${{ inputs.C_TAG_NAME }}
+    #env:
+      #C_VERSION: ${{ inputs.C_VERSION }}
+      #C_LAST_COMMIT: ${{ inputs.C_LAST_COMMIT }}
+      #C_TAG_NAME: ${{ inputs.C_TAG_NAME }}
     steps:
     #- name: Checkout Repository
       #uses: actions/checkout@v4.2.2
