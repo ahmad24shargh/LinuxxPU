@@ -32,7 +32,7 @@ on:
 jobs:
   build:
     runs-on: ${{ inputs.os }}
-    env:
+    #env:
       #C_VERSION: ${{ inputs.C_VERSION }}
       #C_LAST_COMMIT: ${{ inputs.C_LAST_COMMIT }}
       #C_TAG_NAME: ${{ inputs.C_TAG_NAME }}
