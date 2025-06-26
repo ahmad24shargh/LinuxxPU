@@ -145,7 +145,7 @@ jobs:
         fi
         if [[ "${{ inputs.kernel_variant }}" == *"topnotchfreaks"* ]];then
           if "${{ inputs.kernel_variant == 'topnotchfreaks-codelinaro' }}";then
-            wget https://raw.githubusercontent.com/topnotchfreaks/kernel_msm-5.15/refs/heads/codelinaro/Makefile 2>/dev/null
+            wget https://raw.githubusercontent.com/topnotchfreaks/kernel_msm-5.15/refs/heads/topnotchfreaks/vendetta/Makefile 2>/dev/null
           else
             wget https://raw.githubusercontent.com/topnotchfreaks/kernel_msm-5.15/refs/heads/google/Makefile 2>/dev/null
           fi
