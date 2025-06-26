@@ -689,7 +689,7 @@ jobs:
             export BUILD_SCRIPT_DIR=$(dirname $(realpath build/build.sh))
             sed -E -i 's|source .+_setup_env.sh.+|source "${ROOT_DIR}/build/_setup_env.sh";export PATH="${My_PATH}"|g' build/build.sh
             sed -E -i 's|.*export ROOT_DIR=.+dirname.+$|export ROOT_DIR=$($(find ${BUILD_SCRIPT_DIR} -type f -name "gettop.sh"))|g' build/build.sh
-            sed -E -i 's|(if \[ -n "\$\{MODULES_ORDER\}" \]\;.+)|\1\n  cp ${OUT_DIR}/modules.order ${KERNEL_DIR}/${MODULES_ORDER}\n|g' build/build.sh
+            sed -E -i 's|(if \[ -n \"\$\{MODULES_ORDER\}\" \]\;.+)|\1\n  cp ${OUT_DIR}/modules.order ${KERNEL_DIR}/${MODULES_ORDER}\n|g' build/build.sh
             
             
             #for ndk and arm-toolchain
