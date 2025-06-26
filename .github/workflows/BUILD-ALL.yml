@@ -87,9 +87,9 @@ jobs:
       - fetch_patch
     runs-on: ubuntu-latest
     outputs:
-      C_VERSION: ${{ steps.gen_outs.outputs.C_VERSION }}
-      C_LAST_COMMIT: ${{ steps.gen_outs.outputs.C_LAST_COMMIT}}
-      C_TAG_NAME: ${{ steps.gen_outs.outputs.C_TAG_NAME }}
+      #C_VERSION: ${{ steps.gen_outs.outputs.C_VERSION }}
+      #C_LAST_COMMIT: ${{ steps.gen_outs.outputs.C_LAST_COMMIT}}
+      #C_TAG_NAME: ${{ steps.gen_outs.outputs.C_TAG_NAME }}
       C_KERNEL_SUBLEVEL: ${{ steps.gen_outs.outputs.C_KERNEL_SUBLEVEL }}
       C_OS_PATCH_LEVEL: ${{ steps.gen_outs.outputs.C_OS_PATCH_LEVEL }}
     steps:
@@ -123,10 +123,10 @@ jobs:
         #for item in "${repo_commits[@]}";do if [[ ${upstream_commits[*]} =~ ${item} ]]; then C_LAST_COMMIT=${item} && break;fi;done
         C_LAST_COMMIT=$(git log -n 1 --no-decorate | grep -E '^commit' | cut -d' ' -f2)
         #C_TAG_NAME="${C_TAG_NAME}-$(echo "$(git describe --tags --always)" | rev | cut -d'-' -f1 | rev)"
-        echo "C_TAG_NAME=${C_TAG_NAME}" >> $GITHUB_OUTPUT
-        echo "C_LAST_COMMIT=${C_LAST_COMMIT}" >> $GITHUB_OUTPUT
+        #echo "C_TAG_NAME=${C_TAG_NAME}" >> $GITHUB_OUTPUT
+        #echo "C_LAST_COMMIT=${C_LAST_COMMIT}" >> $GITHUB_OUTPUT
         C_VERSION=$(echo "$(git log --oneline | wc -l) - $(git rev-list ${C_LAST_COMMIT}..HEAD --count)" | bc)
-        echo "C_VERSION=${C_VERSION}" >> $GITHUB_OUTPUT
+        #echo "C_VERSION=${C_VERSION}" >> $GITHUB_OUTPUT
         #rm -rf KernelSU-Next
         echo "C_TAG_NAME=${C_TAG_NAME}"
         echo "C_LAST_COMMIT=${C_LAST_COMMIT}"
@@ -173,9 +173,9 @@ jobs:
           - sub_level: ${{needs.calc_tag_version.outputs.C_KERNEL_SUBLEVEL}}
             os_patch_level: ${{needs.calc_tag_version.outputs.C_OS_PATCH_LEVEL}}
             ksu_fork: ${{ inputs.ksu_fork }}
-            C_VERSION: ${{needs.calc_tag_version.outputs.C_VERSION}}
-            C_LAST_COMMIT: ${{needs.calc_tag_version.outputs.C_LAST_COMMIT}}
-            C_TAG_NAME: ${{needs.calc_tag_version.outputs.C_TAG_NAME}}
+            #C_VERSION: ${{needs.calc_tag_version.outputs.C_VERSION}}
+            #C_LAST_COMMIT: ${{needs.calc_tag_version.outputs.C_LAST_COMMIT}}
+            #C_TAG_NAME: ${{needs.calc_tag_version.outputs.C_TAG_NAME}}
             
     uses: ./.github/workflows/MY-gki-kernel.yml
     secrets: inherit
@@ -191,9 +191,9 @@ jobs:
       linuxpu_branch: Dev
       #linuxpu_branch_other: ""
       manager_supports: "${{ inputs.additional_ksu_support }}"
-      C_VERSION: ${{ matrix.C_VERSION }}
-      C_LAST_COMMIT: ${{ matrix.C_LAST_COMMIT }}
-      C_TAG_NAME: ${{ matrix.C_TAG_NAME }}
+      #C_VERSION: ${{ matrix.C_VERSION }}
+      #C_LAST_COMMIT: ${{ matrix.C_LAST_COMMIT }}
+      #C_TAG_NAME: ${{ matrix.C_TAG_NAME }}
       
   build-susfsd:
     if: github.event.inputs.build_type == 'build_all' ||  github.event.inputs.build_type == 'only_manager'
@@ -205,17 +205,17 @@ jobs:
           - target: aarch64-linux-android
             os: ubuntu-latest
             ksu_fork: ${{ inputs.ksu_fork }}
-            C_VERSION: ${{needs.calc_tag_version.outputs.C_VERSION}}
-            C_LAST_COMMIT: ${{needs.calc_tag_version.outputs.C_LAST_COMMIT}}
-            C_TAG_NAME: ${{needs.calc_tag_version.outputs.C_TAG_NAME}}
+            #C_VERSION: ${{needs.calc_tag_version.outputs.C_VERSION}}
+            #C_LAST_COMMIT: ${{needs.calc_tag_version.outputs.C_LAST_COMMIT}}
+            #C_TAG_NAME: ${{needs.calc_tag_version.outputs.C_TAG_NAME}}
     uses: ./.github/workflows/MY-susfsd.yml
     with:
       target: ${{ matrix.target }}
       os: ${{ matrix.os }}
       ksu_fork: ${{ matrix.ksu_fork }}
-      C_VERSION: ${{ matrix.C_VERSION }}
-      C_LAST_COMMIT: ${{ matrix.C_LAST_COMMIT }}
-      C_TAG_NAME: ${{ matrix.C_TAG_NAME }}
+      #C_VERSION: ${{ matrix.C_VERSION }}
+      #C_LAST_COMMIT: ${{ matrix.C_LAST_COMMIT }}
+      #C_TAG_NAME: ${{ matrix.C_TAG_NAME }}
 
   build-kpmmgr:
     if: github.event.inputs.ksu_fork == 'SUKISU' && ( github.event.inputs.build_type == 'build_all' ||  github.event.inputs.build_type == 'only_manager' )
@@ -243,17 +243,17 @@ jobs:
           - target: aarch64-linux-android
             os: ubuntu-latest
             ksu_fork: ${{ inputs.ksu_fork }}
-            C_VERSION: ${{needs.calc_tag_version.outputs.C_VERSION}}
-            C_LAST_COMMIT: ${{needs.calc_tag_version.outputs.C_LAST_COMMIT}}
-            C_TAG_NAME: ${{needs.calc_tag_version.outputs.C_TAG_NAME}}
+            #C_VERSION: ${{needs.calc_tag_version.outputs.C_VERSION}}
+            #C_LAST_COMMIT: ${{needs.calc_tag_version.outputs.C_LAST_COMMIT}}
+            #C_TAG_NAME: ${{needs.calc_tag_version.outputs.C_TAG_NAME}}
     uses: ./.github/workflows/MY-lpud.yml
     with:
       target: ${{ matrix.target }}
       os: ${{ matrix.os }}
       ksu_fork: ${{ matrix.ksu_fork }}
-      C_VERSION: ${{ matrix.C_VERSION }}
-      C_LAST_COMMIT: ${{ matrix.C_LAST_COMMIT }}
-      C_TAG_NAME: ${{ matrix.C_TAG_NAME }}
+      #C_VERSION: ${{ matrix.C_VERSION }}
+      #C_LAST_COMMIT: ${{ matrix.C_LAST_COMMIT }}
+      #C_TAG_NAME: ${{ matrix.C_TAG_NAME }}
 
   build-manager:
     if: ${{ ! failure() && ! cancelled() }} && github.event.inputs.build_type == 'build_all' || github.event.inputs.build_type == 'only_manager'
@@ -263,9 +263,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ksu_fork: ${{ inputs.ksu_fork }}
-      C_VERSION: ${{needs.calc_tag_version.outputs.C_VERSION}}
-      C_LAST_COMMIT: ${{needs.calc_tag_version.outputs.C_LAST_COMMIT}}
-      C_TAG_NAME: ${{needs.calc_tag_version.outputs.C_TAG_NAME}}
+      #C_VERSION: ${{needs.calc_tag_version.outputs.C_VERSION}}
+      #C_LAST_COMMIT: ${{needs.calc_tag_version.outputs.C_LAST_COMMIT}}
+      #C_TAG_NAME: ${{needs.calc_tag_version.outputs.C_TAG_NAME}}
     defaults:
       run:
         working-directory: ./manager
@@ -431,9 +431,9 @@ jobs:
       - build-manager
     if: ${{ ! failure() && ! cancelled() }} #&& ! inputs.skip_run }} 
     env:
-      C_VERSION: ${{needs.calc_tag_version.outputs.C_VERSION}}
-      C_LAST_COMMIT: ${{needs.calc_tag_version.outputs.C_LAST_COMMIT}}
-      C_TAG_NAME: ${{needs.calc_tag_version.outputs.C_TAG_NAME}}
+      #C_VERSION: ${{needs.calc_tag_version.outputs.C_VERSION}}
+      #C_LAST_COMMIT: ${{needs.calc_tag_version.outputs.C_LAST_COMMIT}}
+      #C_TAG_NAME: ${{needs.calc_tag_version.outputs.C_TAG_NAME}}
       REPO_OWNER: ${{ github.repository_owner }}
       REPO_NAME: ${{ github.event.repository.name }}
       build_type: ${{ inputs.build_type }}
@@ -472,9 +472,9 @@ jobs:
         run: |
           bash ${GITHUB_WORKSPACE}/.github/scripts/calc_patch_tg.sh
           LPU_BRANCH=main
-          #TAG_NAME=$(git describe --tags)
+          TAG_NAME=$(git describe --tags)
           echo "LPU_BRANCH=${LPU_BRANCH}" >> $GITHUB_ENV
-          #echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
+          echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
           REPO_URL="https://github.com/ahmad24shargh/LinuxPU.git"
           REPO_URL2="ahmad24shargh/LinuxPU"
           COMMIT_HASH=$(git ls-remote $REPO_URL refs/heads/$LPU_BRANCH | awk '{ print $1 }')
@@ -601,7 +601,7 @@ jobs:
         with:
           token: ${{ env.GH_TOKEN }}
           name: ${{ env.RELEASE_NAME }}
-          tag_name: ${{ env.C_TAG_NAME }}  # Use the generated tag for the release
+          tag_name: ${{ env.TAG_NAME }}  # Use the generated tag for the release
           prerelease: false  # Mark the release as a pre-release
           draft: false
           make_latest: true
