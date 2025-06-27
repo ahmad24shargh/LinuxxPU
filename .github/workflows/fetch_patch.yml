@@ -338,9 +338,9 @@ jobs:
 
           #echo $separator
           [ -f ${temp_file} ] && rm ${temp_file} 
-          cp -af ${patched_folder} ${repo_folder}/.github/
+          cp -af ${patched_folder} ${repo_folder}/.github/ || true
           cp -af ${must_unchange_kernel_files}/.defconfig ${repo_folder}/
-          cp -af ${patched_folder}/.github/. ${repo_folder}/.github/
+          cp -af ${patched_folder}/.github/. ${repo_folder}/.github/ || true
           #unzip -o ${repo_folder}/.github/scripts/workflows.zip -d ${repo_folder}/.github/workflows
           #set -x
           #exit 0
