@@ -22,7 +22,6 @@ if [ -f ${GITHUB_WORKSPACE}/TAG_NAME.ME ];then
       exit 1
       false
     fi
-    echo 'inja'
     sed -E -i 's|val managerVersionName by extra.+|val managerVersionName by extra("'${tag_name}'")|g' "${GITHUB_WORKSPACE}/manager/build.gradle.kts"
   fi
 fi
