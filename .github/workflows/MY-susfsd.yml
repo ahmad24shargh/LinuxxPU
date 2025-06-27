@@ -39,12 +39,15 @@ jobs:
         name: linuxpu
         path: .
         #github-token: '${{ env.GH_TOKEN }}'
-         
+
+    - name: Implementing necessary changes to the source code 
+      run: |
+        bash ${GITHUB_WORKSPACE}/.github/scripts/calc_patch_tg.sh
+   
     - name: Build susfsd
       if: github.event.inputs.ksu_fork == 'KSUN'
       working-directory: ./userspace/susfsd
       run: |
-        bash ${GITHUB_WORKSPACE}/.github/scripts/calc_patch_tg.sh
         $ANDROID_NDK/ndk-build
       
     - name: Upload a Build Artifact
