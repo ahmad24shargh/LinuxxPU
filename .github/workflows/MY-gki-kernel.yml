@@ -683,6 +683,8 @@ jobs:
             #rm -f ./common/arch/arm64/configs/generic_bengal_defconfig ./common/arch/arm64/configs/defconfig
             #cp  ./common/arch/arm64/configs/gki_defconfig ./common/arch/arm64/configs/generic_bengal_defconfig
             cp  ./common/arch/arm64/configs/gki_defconfig ./common/arch/arm64/configs/defconfig
+            #revert commite 2030317  to unspoof /proc/config.gz
+            for file in $(grep -e 'arch/arm64/configs/topaz_defconfig' ./common/kernel/* 2>/dev/null | cut -d':' -f1);do sed -i 's|config_data\: arch/arm64/configs/topaz_defconfig|config_data\: \$\(KCONFIG_CONFIG\)|g' $file;grep 'KCONFIG_CONFIG' $file;done
             #ln -s common msm-kernel
           fi
             
