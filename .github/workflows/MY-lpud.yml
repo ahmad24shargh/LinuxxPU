@@ -50,6 +50,10 @@ jobs:
         path: .
         github-token: '${{ env.GH_TOKEN }}'
         
+    - name: Implementing necessary changes to the source code 
+      run: |
+        bash ${GITHUB_WORKSPACE}/.github/scripts/calc_patch_tg.sh
+        
     - name: Download susfsd
       if: ${{ inputs.ksu_fork == 'KSUN' }}
       uses: actions/download-artifact@v4.3.0
@@ -68,7 +72,6 @@ jobs:
     - name: Import susfsd Libraries
       if: ${{ inputs.ksu_fork == 'KSUN' }}
       run: |
-        bash ${GITHUB_WORKSPACE}/.github/scripts/calc_patch_tg.sh
         #cp susfsd-aarch64-linux-android/arm64-v8a/susfsd ./userspace/lpud_overlayfs/bin/aarch64/
         #cp susfsd-aarch64-linux-android/arm64-v8a/susfsd ./userspace/lpud_magic/bin/aarch64/
         cp arm64-v8a/susfsd ./userspace/lpud_overlayfs/bin/aarch64/
