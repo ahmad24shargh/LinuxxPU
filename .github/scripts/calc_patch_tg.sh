@@ -10,11 +10,13 @@ if [ -f ${GITHUB_WORKSPACE}/TAG_NAME.ME ];then
   for file in $(grep -R --exclude='.github' --exclude='.git' $GITHUB_WORKSPACE -e 'let version_name' 2>/dev/null | cut -d':' -f 1 | sort | uniq);do [ "$file" != "$0" ] && sed -E -i 's|(let version_name = )version_name(\.trim.+)|\1"'$(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME)'"\2|g' $file;cat $file | grep  'let version_';done
   for file in $(grep -R --exclude='.github' --exclude='.git' $GITHUB_WORKSPACE -e 'return getGitDescribe()' 2>/dev/null | cut -d':' -f 1 | sort | uniq);do [ "$file" != "$0" ] && sed -i 's|return getGitDescribe()|return "'$(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME)'"|g' $file;cat $file | grep  'return';done
   if [ -f "${GITHUB_WORKSPACE}/manager/build.gradle.kts" ];then
-    ksu_fork=$(cat "${GITHUB_WORKSPACE}/KSU_FORK.ME")
+    ksu_fork=$(cat "${GITHUB_WORKSPACE}/LPU_FORK.ME")
+    # S1NVTg== = KSUN
+    # U1VLSVNV = SUKISU
     echo $ksu_fork
-    if [ "${ksu_fork}" == "KSUN" ];then
+    if [ "${ksu_fork}" == 'S1NVTg==' ];then
       tag_name=$(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME)
-    elif [ "${ksu_fork}" == "SUKISU" ];then
+    elif [ "${ksu_fork}" == 'U1VLSVNV' ];then
       tag_name=$(echo $(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME) | cut -d'-' -f1)
     else
       exit 1
