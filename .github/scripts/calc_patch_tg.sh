@@ -11,6 +11,7 @@ if [ -f ${GITHUB_WORKSPACE}/TAG_NAME.ME ];then
   for file in $(grep -R --exclude='.github' --exclude='.git' $GITHUB_WORKSPACE -e 'return getGitDescribe()' 2>/dev/null | cut -d':' -f 1 | sort | uniq);do [ "$file" != "$0" ] && sed -i 's|return getGitDescribe()|return "'$(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME)'"|g' $file;cat $file | grep  'return';done
   if [ -f "${GITHUB_WORKSPACE}/manager/build.gradle.kts" ];then
     ksu_fork=$(cat "${GITHUB_WORKSPACE}/KSU_FORK.ME")
+    echo $ksu_fork
     if [ "${ksu_fork}" == "KSUN" ];then
       tag_name=$(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME)
     elif [ "${ksu_fork}" == "SUKISU" ];then
@@ -19,6 +20,7 @@ if [ -f ${GITHUB_WORKSPACE}/TAG_NAME.ME ];then
       exit 1
       false
     fi
+    echo 'inja'
     sed -E -i 's|val managerVersionName by extra.+|val managerVersionName = "'${tag_name}'"|g' "${GITHUB_WORKSPACE}/manager/build.gradle.kts"
   fi
 fi
