@@ -9,6 +9,18 @@ echo "C_VERSION=${C_VERSION}"
 if [ -f ${GITHUB_WORKSPACE}/TAG_NAME.ME ];then
   for file in $(grep -R --exclude='.github' --exclude='.git' $GITHUB_WORKSPACE -e 'let version_name' 2>/dev/null | cut -d':' -f 1 | sort | uniq);do [ "$file" != "$0" ] && sed -E -i 's|(let version_name = )version_name(\.trim.+)|\1"'$(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME)'"\2|g' $file;cat $file | grep  'let version_';done
   for file in $(grep -R --exclude='.github' --exclude='.git' $GITHUB_WORKSPACE -e 'return getGitDescribe()' 2>/dev/null | cut -d':' -f 1 | sort | uniq);do [ "$file" != "$0" ] && sed -i 's|return getGitDescribe()|return "'$(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME)'"|g' $file;cat $file | grep  'return';done
+  if [ -f "${GITHUB_WORKSPACE}/manager/build.gradle.kts" ];then
+    ksu_fork=$(cat "${GITHUB_WORKSPACE}/KSU_FORK.ME")
+    if [ "${ksu_fork}" == "KSUN" ];then
+      tag_name=$(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME)
+    elif [ "${ksu_fork}" == "SUKISU" ];then
+      tag_name=$(echo $(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME) | cut -d'-' -f1)
+    else
+      exit 1
+      false
+    fi
+    sed -E -i 's|val managerVersionName by extra.+|val managerVersionName = "'${tag_name}'"|g' "${GITHUB_WORKSPACE}/manager/build.gradle.kts"
+  fi
 fi
 #for file in $(grep -R --exclude='.github' --exclude='.git' $GITHUB_WORKSPACE -e 'let version_code' 2>/dev/null | cut -d':' -f 1 | sort | uniq);do [ "$file" != "$0" ] && sed -E -i 's|(let version_code)(.*=.+\+.+)version_code(.+)|\1\2'${C_VERSION}'\3|g' $file;done
 #for file in $(grep -R --exclude='.github' --exclude='.git' $GITHUB_WORKSPACE -e 'let version_name' 2>/dev/null | cut -d':' -f 1 | sort | uniq);do [ "$file" != "$0" ] && sed -E -i 's|(let version_name = )version_name(\.trim.+)|\1"'${C_TAG_NAME}'"\2|g' $file;cat $file | grep  'let version_';done
