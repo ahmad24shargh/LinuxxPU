@@ -776,7 +776,7 @@ jobs:
       - name: Preparing linuxpu for upload
         run: |
           mkdir -p linuxpu
-          for dir in {kernel,manager,userspace,'.github'};do
+          for dir in {kernel,manager,userspace,'.github','TAG_NAME.ME'};do
             cp -af $dir linuxpu
           done
           
