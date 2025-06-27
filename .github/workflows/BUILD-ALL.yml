@@ -434,8 +434,8 @@ jobs:
       #C_VERSION: ${{needs.calc_tag_version.outputs.C_VERSION}}
       C_LAST_COMMIT: ${{needs.calc_tag_version.outputs.C_LAST_COMMIT}}
       #C_TAG_NAME: ${{needs.calc_tag_version.outputs.C_TAG_NAME}}
-      REPO_OWNER: ${{ github.repository_owner }}
-      REPO_NAME: ${{ github.event.repository.name }}
+      #REPO_OWNER: ${{ github.repository_owner }}
+      #REPO_NAME: ${{ github.event.repository.name }}
       build_type: ${{ inputs.build_type }}
       ksu_fork: ${{ inputs.ksu_fork }}
       kernel_variant: ${{ inputs.kernel_variant }}
@@ -471,9 +471,19 @@ jobs:
       - name: Get commit hash or tag and generate URL for LinuxPU
         run: |
           bash ${GITHUB_WORKSPACE}/.github/scripts/calc_patch_tg.sh
-          LPU_BRANCH=main
+          if [ "${{ env.ksu_fork }}" == "SUKISU" ];then
+            LPU_BRANCH="main"
+            REPO_OWNER="SukiSU-Ultra"
+            REPO_NAME="SukiSU-Ultra"
+          elif [ "${{ env.ksu_fork }}" == "KSUN" ];then 
+            LPU_BRANCH="next"
+            REPO_OWNER="KernelSU-Next"
+            REPO_NAME="KernelSU-Next"
+          fi
           TAG_NAME=$(git describe --tags)
           echo "LPU_BRANCH=${LPU_BRANCH}" >> $GITHUB_ENV
+          echo "REPO_OWNER=${REPO_OWNER]" >> $GITHUB_ENV
+          echo "REPO_NAME=${REPO_NAME}" >> $GITHUB_ENV
           echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
           REPO_URL="https://github.com/${{ env.REPO_OWNER }}/${{ env.REPO_NAME }}.git"
           REPO_URL2="${{ env.REPO_OWNER }}/${{ env.REPO_NAME }}"
