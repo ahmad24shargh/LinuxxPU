@@ -69,6 +69,9 @@ jobs:
             exit 1
             false
           fi
+          cd KSU
+          git describe --tags > TAG_NAME.ME
+          cd ..
           #git clone https://github.com/KernelSU-Next/KernelSU-Next
           #cd KernelSU-Next
           #cp -af KernelSU-Next/* KernelSU-Next/.git .
