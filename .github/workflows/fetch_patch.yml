@@ -70,7 +70,7 @@ jobs:
             false
           fi
           cd KSU
-          git describe --tags > TAG_NAME.ME
+          git describe --tags > ${GITHUB_WORKSPACE}/TAG_NAME.ME
           cd ..
           #git clone https://github.com/KernelSU-Next/KernelSU-Next
           #cd KernelSU-Next
@@ -116,7 +116,7 @@ jobs:
               exit 78
               false
             fi
-            cd ..
+            cd ${GITHUB_WORKSPACE}
           fi
           cp -af KSU/* KSU/.* .
           rm -rf KSU
