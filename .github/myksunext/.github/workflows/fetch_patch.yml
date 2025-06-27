@@ -115,7 +115,7 @@ jobs:
             fi
             cd ..
           fi
-          cp -af KSU/. .
+          cp -af KSU/* KSU/.* .
           rm -rf KSU
           #for item in "${repo_commits[@]}";do if [[ ${upstream_last_commit} == ${item} ]]; then has_new_commits=false && break;fi;done
           #echo "has_new_commits=${has_new_commits}" >> $GITHUB_OUTPUT
