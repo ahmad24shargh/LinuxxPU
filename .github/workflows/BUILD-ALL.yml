@@ -480,10 +480,10 @@ jobs:
             REPO_OWNER="KernelSU-Next"
             REPO_NAME="KernelSU-Next"
           fi
-          TAG_NAME=$(git describe --tags)
           echo "LPU_BRANCH=${LPU_BRANCH}" >> $GITHUB_ENV
           echo "REPO_OWNER=${REPO_OWNER]" >> $GITHUB_ENV
           echo "REPO_NAME=${REPO_NAME}" >> $GITHUB_ENV
+          TAG_NAME=$(git describe --tags)
           echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
           REPO_URL="https://github.com/${REPO_OWNER}/${REPO_NAME}.git"
           REPO_URL2="${REPO_OWNER}/${REPO_NAME}"
