@@ -485,8 +485,8 @@ jobs:
           echo "REPO_OWNER=${REPO_OWNER]" >> $GITHUB_ENV
           echo "REPO_NAME=${REPO_NAME}" >> $GITHUB_ENV
           echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
-          REPO_URL="https://github.com/${{ env.REPO_OWNER }}/${{ env.REPO_NAME }}.git"
-          REPO_URL2="${{ env.REPO_OWNER }}/${{ env.REPO_NAME }}"
+          REPO_URL="https://github.com/${REPO_OWNER}/${REPO_NAME}.git"
+          REPO_URL2="${REPO_OWNER}/${REPO_NAME}"
           #COMMIT_HASH=$(git ls-remote $REPO_URL refs/heads/$LPU_BRANCH | awk '{ print $1 }')
           COMMIT_HASH=${{ env.C_LAST_COMMIT }}
             if [[ -z "$COMMIT_HASH" ]]; then
