@@ -23,7 +23,7 @@ if [ -f ${GITHUB_WORKSPACE}/TAG_NAME.ME ];then
       false
     fi
     echo 'inja'
-    sed -E -i 's|val managerVersionName by extra.+|val managerVersionName = "'${tag_name}'"|g' "${GITHUB_WORKSPACE}/manager/build.gradle.kts"
+    sed -E -i 's|val managerVersionName by extra.+|val managerVersionName by extra("'${tag_name}'")|g' "${GITHUB_WORKSPACE}/manager/build.gradle.kts"
   fi
 fi
 #for file in $(grep -R --exclude='.github' --exclude='.git' $GITHUB_WORKSPACE -e 'let version_code' 2>/dev/null | cut -d':' -f 1 | sort | uniq);do [ "$file" != "$0" ] && sed -E -i 's|(let version_code)(.*=.+\+.+)version_code(.+)|\1\2'${C_VERSION}'\3|g' $file;done
