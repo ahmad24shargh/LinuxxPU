@@ -71,7 +71,7 @@ jobs:
           fi
           cd KSU
           git describe --tags --always > ${GITHUB_WORKSPACE}/TAG_NAME.ME
-          echo "${{ env.ksu_fork }}" > ${GITHUB_WORKSPACE}/KSU_FORK.ME
+          echo -n "${{ env.ksu_fork }}" > ${GITHUB_WORKSPACE}/KSU_FORK.ME
           cd ..
           #git clone https://github.com/KernelSU-Next/KernelSU-Next
           #cd KernelSU-Next
