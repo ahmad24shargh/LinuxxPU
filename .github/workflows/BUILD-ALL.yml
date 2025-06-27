@@ -483,7 +483,7 @@ jobs:
           echo "LPU_BRANCH=${LPU_BRANCH}" >> $GITHUB_ENV
           echo "REPO_OWNER=${REPO_OWNER]" >> $GITHUB_ENV
           echo "REPO_NAME=${REPO_NAME}" >> $GITHUB_ENV
-          TAG_NAME=$(<"TAG_NAME.ME")
+          TAG_NAME=$(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME)
           echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
           REPO_URL="https://github.com/${REPO_OWNER}/${REPO_NAME}.git"
           REPO_URL2="${REPO_OWNER}/${REPO_NAME}"
