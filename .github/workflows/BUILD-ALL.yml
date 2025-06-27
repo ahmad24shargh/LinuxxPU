@@ -398,7 +398,7 @@ jobs:
           } >> gradle.properties
           sed -i 's/org.gradle.configuration-cache=true//g' gradle.properties
           chmod +x gradlew
-          ./gradlew versionCatalogUpdate
+          #./gradlew versionCatalogUpdate
           ./gradlew clean assembleRelease
 
       - name: Upload Build Artifact
