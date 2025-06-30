@@ -242,6 +242,7 @@ jobs:
           #mkdir -p $CONFIG/out
           #cp "$defconfig" $CONFIG/out/.config
           #mkdir -p $CONFIG/common/arch/arm64/configs
+          for file in $(find $CONFIG/common/arch/arm64/configs -type f 2>/dev/null);do sed -i '/CONFIG_LOCALVERSION/d' $file;done
           if [[ "${{ env.kernel_variant }}" == "common-android-mainline" ]];then
             cp "$defconfig" $CONFIG/common/arch/arm64/configs/gki_defconfig
           elif [[ "${{ env.kernel_variant }}" == "chickernel" ]];then
@@ -714,9 +715,7 @@ jobs:
             mkdir -p ./out/${CONFIG}/common && cp ./common/arch/arm64/configs/gki_defconfig ./out/${CONFIG}/common/.config
             mkdir -p ./out/$(echo ${CONFIG} | cut -d'-' -f1,2)/common && cp ./common/arch/arm64/configs/gki_defconfig ./out/$(echo ${CONFIG} | cut -d'-' -f1,2)/common/.config
             grep -Ei 'ksu|lpu|susfs' ./out/${CONFIG}/common/.config 
-            LTO=thin BUILD_CONFIG=${BUILD_CONFIG} SKIP_EXT_MODULES=1 SKIP_CP_KERNEL_HDR=1 SKIP_VENDOR_BOOT=1 SKIP_MRPROPER=1 SYSTEM_DLKM_RE_SIGN=0 BUILD_SYSTEM_DLKM=0 KMI_SYMBOL_LIST_STRICT_MODE=0 build/build.sh CC="${CC}"
-            
-              
+            LTO=thin BUILD_CONFIG=${BUILD_CONFIG} OUT_DIR=$GITHUB_WORKSPACE/${CONFIG}/out/$(echo ${CONFIG} | cut -d'-' -f1,2)/common  SKIP_EXT_MODULES=1 SKIP_CP_KERNEL_HDR=1 SKIP_VENDOR_BOOT=1 SKIP_MRPROPER=1 SYSTEM_DLKM_RE_SIGN=0 BUILD_SYSTEM_DLKM=0 KMI_SYMBOL_LIST_STRICT_MODE=0 build/build.sh CC="${CC}" 
           else
             rm -rf ./common/android/abi_gki_protected_exports_*
             sed -i "/stable_scmversion_cmd/s/-maybe-dirty//g" ./build/kernel/kleaf/impl/stamp.bzl
