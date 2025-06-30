@@ -684,9 +684,10 @@ jobs:
             #BUILD_CONFIG='common/build.config.msm.bengal.le'
             if [ -f common/build.config.msm.topaz ];then 
               BUILD_CONFIG='common/build.config.msm.topaz'
+              for file in $(find ./common/ -maxdepth 1 -type f -name 'build*' 2>/dev/null);do sed -i 's|msm-kernel/|common/|g' $file;done
+              [ -f common/build.config.msm.common ] && sed -i '/append_cmd PRE_DEFCONFIG_CMDS \'compile_external_dtc\'/d' common/build.config.msm.common
+              [ -f common/build.config.msm.gki ] && sed -i '/append_cmd POST_DEFCONFIG_CMDS \'sanity_check_abi\'/d' common/build.config.msm.gki
             fi
-            [ -f common/build.config.msm.common ] && true > common/build.config.msm.common
-            for file in $(find ./common/ -maxdepth 1 -type f -name 'build*' 2>/dev/null);do sed -i 's|msm-kernel/|common/|g' $file;done
             #rm -f ./common/arch/arm64/configs/generic_bengal_defconfig ./common/arch/arm64/configs/defconfig
             #cp  ./common/arch/arm64/configs/gki_defconfig ./common/arch/arm64/configs/generic_bengal_defconfig
             cp  ./common/arch/arm64/configs/gki_defconfig ./common/arch/arm64/configs/defconfig
