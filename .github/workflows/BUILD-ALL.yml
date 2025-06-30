@@ -232,7 +232,7 @@ jobs:
       os: ${{ matrix.os }}
       
   build-lpud:
-    if: ${{ ! failure() && ! cancelled() }} &&  github.event.inputs.build_type == 'build_all' || github.event.inputs.build_type == 'only_manager'
+    if: ${{ ! failure() && ! cancelled() }} &&  ${{ github.event.inputs.build_type == 'build_all' || github.event.inputs.build_type == 'only_manager' }}
     needs: 
       - calc_tag_version
       - build-susfsd
@@ -256,7 +256,7 @@ jobs:
       #C_TAG_NAME: ${{ matrix.C_TAG_NAME }}
 
   build-manager:
-    if: ${{ ! failure() && ! cancelled() }} && github.event.inputs.build_type == 'build_all' || github.event.inputs.build_type == 'only_manager'
+    if: ${{ ! failure() && ! cancelled() }} && ${{ github.event.inputs.build_type == 'build_all' || github.event.inputs.build_type == 'only_manager' }}
     needs: 
       - calc_tag_version
       - build-lpud
