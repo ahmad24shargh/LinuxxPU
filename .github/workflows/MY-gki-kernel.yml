@@ -537,7 +537,7 @@ jobs:
           export LIBRARY_PATH=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/lib64
           export CPATH=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/include
           export API=$(echo ${{ inputs.android_version }} | sed 's/android1/3/g')
-          My_Args=' -march=armv8-a+crc+crypto -mtune=cortex-a73 '
+          My_Args=' -mcpu=cortex-a53+crypto+crc -mtune=cortex-a73 -march=armv8-a+crypto+crc -O3 -funroll-loops '
           export KBUILD_BUILD_TIMESTAMP=$(date)
           export KBUILD_BUILD_USER='ahmad'
           export KBUILD_BUILD_HOST='Forozan'
