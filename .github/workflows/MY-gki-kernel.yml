@@ -681,7 +681,10 @@ jobs:
             for file in $(grep -e 'arch/arm64/configs/khaje-stock_defconfig' ./common/kernel/* 2>/dev/null | cut -d':' -f1);do sed -i 's|config_data\: arch/arm64/configs/khaje-stock_defconfig|config_data\: \$\(KCONFIG_CONFIG\)|g' $file;grep 'KCONFIG_CONFIG' $file;done
           elif [[ "${{ env.kernel_variant }}" == *"topnotchfreaks"* ]];then  
             #BUILD_CONFIG='common/build.config.msm.bengal.le'
-            [ -f common/build.config.msm.topaz ] && BUILD_CONFIG='common/build.config.msm.topaz'
+            if [ -f common/build.config.msm.topaz ];then 
+              BUILD_CONFIG='common/build.config.msm.topaz'
+              sed -i 's|/msm-kernel/|/common/|g' common/build.config.msm.topaz
+            fi
             #rm -f ./common/arch/arm64/configs/generic_bengal_defconfig ./common/arch/arm64/configs/defconfig
             #cp  ./common/arch/arm64/configs/gki_defconfig ./common/arch/arm64/configs/generic_bengal_defconfig
             cp  ./common/arch/arm64/configs/gki_defconfig ./common/arch/arm64/configs/defconfig
