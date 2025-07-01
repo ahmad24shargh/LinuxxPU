@@ -530,6 +530,8 @@ jobs:
           #fi
         
       - name: Build kernel
+        env:
+          ACTIONS_STEP_DEBUG: true
         run: |
           set -e
           set -x
