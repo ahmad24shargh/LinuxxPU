@@ -687,8 +687,8 @@ jobs:
             if [ -f common/build.config.msm.topaz ];then 
               BUILD_CONFIG='common/build.config.msm.topaz'
               for file in $(find ./common/ -maxdepth 1 -type f -name 'build*' 2>/dev/null);do sed -i 's|msm-kernel/|common/|g' $file;done
-              [ -f common/build.config.msm.common ] && sed -i 's/append_cmd PRE_DEFCONFIG_CMDS \'compile_external_dtc\'/function dummy_compile_external_dtc() \{ \( \:\; \) \}\nappend_cmd PRE_DEFCONFIG_CMDS \'dummy_compile_external_dtc\'/g' common/build.config.msm.common
-              [ -f common/build.config.msm.gki ] && sed -i 's/append_cmd POST_DEFCONFIG_CMDS \'sanity_check_abi\'/function dummy_sanity_check_abi() \{ \( \:\; \) \}\nappend_cmd POST_DEFCONFIG_CMDS \'dummy_sanity_check_abi\'/g' common/build.config.msm.gki
+              [ -f common/build.config.msm.common ] && sed -i 's/append_cmd PRE_DEFCONFIG_CMDS \'compile_external_dtc\'/function dummy_compile_external_dtc() \{ \:\; \}\nappend_cmd PRE_DEFCONFIG_CMDS \'dummy_compile_external_dtc\'/g' common/build.config.msm.common
+              [ -f common/build.config.msm.gki ] && sed -i 's/append_cmd POST_DEFCONFIG_CMDS \'sanity_check_abi\'/function dummy_sanity_check_abi() \{ \:\; \}\nappend_cmd POST_DEFCONFIG_CMDS \'dummy_sanity_check_abi\'/g' common/build.config.msm.gki
             fi
             #rm -f ./common/arch/arm64/configs/generic_bengal_defconfig ./common/arch/arm64/configs/defconfig
             #cp  ./common/arch/arm64/configs/gki_defconfig ./common/arch/arm64/configs/generic_bengal_defconfig
