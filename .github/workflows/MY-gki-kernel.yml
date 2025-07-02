@@ -242,7 +242,7 @@ jobs:
           #mkdir -p $CONFIG/out
           #cp "$defconfig" $CONFIG/out/.config
           #mkdir -p $CONFIG/common/arch/arm64/configs
-          for file in $(find $CONFIG/common/arch/arm64/configs -type f 2>/dev/null);do sed -E -i -e '/CONFIG_LOCALVERSION/d' -e '/=m[[:space:]]*$/d' $file;done
+          for file in $(find $CONFIG/common/arch/arm64/configs -type f 2>/dev/null);do sed -E -i -e '/CONFIG_LOCALVERSION/d' -e '/=m[[:space:]]*$/d' -e '/_LTO/d' $file;done
           if [[ "${{ env.kernel_variant }}" == "common-android-mainline" ]];then
             cp "$defconfig" $CONFIG/common/arch/arm64/configs/gki_defconfig
           elif [[ "${{ env.kernel_variant }}" == "chickernel" ]];then
@@ -261,6 +261,14 @@ jobs:
           sed -i '/CONFIG_WERROR/d' $CONFIG/common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_WERROR=n" >> $CONFIG/common/arch/arm64/configs/gki_defconfig
           sed -i '/CONFIG_KSU/d' $CONFIG/common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_LTO=y" >> $CONFIG/common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_LTO_CLANG=y" >> $CONFIG/common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_ARCH_SUPPORTS_LTO_CLANG=y" >> $CONFIG/common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_ARCH_SUPPORTS_LTO_CLANG_THIN=y" >> $CONFIG/common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_HAS_LTO_CLANG=y" >> $CONFIG/common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_LTO_NONE=n" >> $CONFIG/common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_LTO_CLANG_FULL=n" >> $CONFIG/common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_LTO_CLANG_THIN=y" >> $CONFIG/common/arch/arm64/configs/gki_defconfig
           #cp "${repo_path}/Kconfig" $CONFIG/common/
           #cp "${repo_path}/arch/arm64/Kconfig" $CONFIG/common/arch/arm64/
           #cp "${repo_path}/drivers/remoteproc/Kconfig" $CONFIG/common/drivers/remoteproc/
