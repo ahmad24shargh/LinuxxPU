@@ -662,7 +662,7 @@ jobs:
           #for ndk
           export TOOLCHAIN=${ANDROID_NDK_LATEST_HOME}/toolchains/llvm/prebuilt/linux-x86_64
           export TARGET=aarch64-linux-android
-          export CC="'/usr/bin/ccache clang --target=${TARGET}${API} ${My_Args}'"
+          export CC="/usr/bin/ccache clang --target=${TARGET}${API} ${My_Args}"
           export My_PATH="${ANDROID_NDK_LATEST_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin:${ANDROID_NDK_LATEST_HOME}/prebuilt/linux-x86_64/bin/:${PATH}:$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/bin"
             
           #export CC_ARG="${CC}"
