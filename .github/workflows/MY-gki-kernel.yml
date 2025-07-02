@@ -242,7 +242,7 @@ jobs:
           #mkdir -p $CONFIG/out
           #cp "$defconfig" $CONFIG/out/.config
           #mkdir -p $CONFIG/common/arch/arm64/configs
-          for file in $(find $CONFIG/common/arch/arm64/configs -type f 2>/dev/null);do sed -E -i -e '/CONFIG_LOCALVERSION/d' -e '/=m[[:space:]]*$/d' -e '/_LTO/d' $file;done
+          for file in $(find $CONFIG/common/arch/arm64/configs -type f 2>/dev/null);do sed -E -i -e '/CONFIG_LOCALVERSION/d' -e '/_LTO/d' $file;done
           if [[ "${{ env.kernel_variant }}" == "common-android-mainline" ]];then
             cp "$defconfig" $CONFIG/common/arch/arm64/configs/gki_defconfig
           elif [[ "${{ env.kernel_variant }}" == "chickernel" ]];then
