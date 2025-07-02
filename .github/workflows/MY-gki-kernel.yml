@@ -757,13 +757,13 @@ jobs:
           echo "Changing to configuration directory: $CONFIG..."
           mkdir bootimgs
 
-          bootimage_dir=$(dirname $(find ./$CONFIG -type f -name 'Image.lz4' 2>/dev/null))
+          bootimage_dir=$(dirname $(find ./$CONFIG -type f -name 'Image' 2>/dev/null))
 
           echo "Creating bootimgs folder and copying images..."
-          cp ${bootimage_dir}/Image ./bootimgs
-          cp ${bootimage_dir}/Image.lz4 ./bootimgs
-          cp ${bootimage_dir}/Image ./
-          cp ${bootimage_dir}/Image.lz4 ./
+          cp ${bootimage_dir}/Image* ./bootimgs
+          #cp ${bootimage_dir}/Image.lz4 ./bootimgs
+          cp ${bootimage_dir}/Image* ./
+          #cp ${bootimage_dir}/Image.lz4 ./
           #cp ./$CONFIG/out/${{ inputs.android_version }}-${{ inputs.kernel_version }}/dist/Image ./bootimgs
           #cp ./$CONFIG/out/${{ inputs.android_version }}-${{ inputs.kernel_version }}/dist/Image.lz4 ./bootimgs
           #cp ./$CONFIG/out/${{ inputs.android_version }}-${{ inputs.kernel_version }}/dist/Image ./
