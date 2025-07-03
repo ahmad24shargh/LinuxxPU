@@ -291,7 +291,7 @@ jobs:
           
       - name: Add KernelSU
         run: |
-          [ ${{ env.ksu_fork }} == 'KSUN' ]  && BRANCH="-s next"  || BRANCH="-s susfs-dev"
+          [ ${{ env.ksu_fork }} == 'KSUN' ]  && BRANCH="-s next"  || BRANCH="-s main"
           echo "BRANCH=${BRANCH}" >> $GITHUB_ENV;echo $BRANCH
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG"
