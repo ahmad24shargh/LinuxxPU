@@ -443,7 +443,7 @@ jobs:
       ksu_fork: ${{ inputs.ksu_fork }}
       kernel_variant: ${{ inputs.kernel_variant }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      susfs_version: "Susfs ඞ v1.5.8"
+      susfs_version: "Susfs ඞ v1.5.9"
       
     steps:
       ## Checkout the code
