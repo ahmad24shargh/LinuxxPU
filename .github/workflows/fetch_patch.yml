@@ -99,23 +99,9 @@ jobs:
                   wget https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/0001-kernel-implement-susfs-v1.5.5-v1.5.7-KSUN-v1.0.8.patch
                   cp "./0001-kernel-implement-susfs-v1.5.5-v1.5.7-KSUN-v1.0.8.patch" "./ksun_susfs_latest.patch"
                   ;;
-                "v1.5.8")
-                  wget https://raw.githubusercontent.com/WildKernels/kernel_patches/refs/heads/main/next/susfs_fix_patches/v1.5.8/fix_core_hook.c.patch
-                  patch -p1 --forward --fuzz=3 < fix_core_hook.c.patch
-                  wget https://raw.githubusercontent.com/WildKernels/kernel_patches/refs/heads/main/next/susfs_fix_patches/v1.5.8/fix_ksud.c.patch
-                  patch -p1 --forward --fuzz=3 < fix_ksud.c.patch
-                  wget https://raw.githubusercontent.com/WildKernels/kernel_patches/refs/heads/main/next/susfs_fix_patches/v1.5.8/fix_selinux.c.patch
-                  patch -p1 --forward --fuzz=3 < fix_selinux.c.patch
-                  ;;
-                "v1.5.9")
-                  wget https://raw.githubusercontent.com/WildKernels/kernel_patches/refs/heads/main/next/susfs_fix_patches/v1.5.9/fix_core_hook.c.patch
-                  patch -p1 --forward --fuzz=3 < fix_core_hook.c.patch
-                  wget https://raw.githubusercontent.com/WildKernels/kernel_patches/refs/heads/main/next/susfs_fix_patches/v1.5.9/fix_ksud.c.patch
-                  patch -p1 --forward --fuzz=3 < fix_ksud.c.patch
-                  wget https://raw.githubusercontent.com/WildKernels/kernel_patches/refs/heads/main/next/susfs_fix_patches/v1.5.9/fix_rules.c.patch
-                  patch -p1 --forward --fuzz=3 < fix_rules.c.patch
-                  wget https://raw.githubusercontent.com/WildKernels/kernel_patches/refs/heads/main/next/susfs_fix_patches/v1.5.9/fix_selinux.c.patch
-                  patch -p1 --forward --fuzz=3 < fix_selinux.c.patch
+                "v1.5.8"|"v1.5.9")
+                  wget https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/0001-kernel-implement-susfs-v1.5.8-KernelSU-Next-v1.0.8.patch
+                  cp "./0001-kernel-implement-susfs-v1.5.8-KernelSU-Next-v1.0.8.patch" "./ksun_susfs_latest.patch"
                   ;;
                 *)
                   echo "Invalid version: $susfs_version"
