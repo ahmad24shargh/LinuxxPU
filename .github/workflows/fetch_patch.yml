@@ -63,6 +63,16 @@ jobs:
           #declare -a repo_commits=($(git log -n 200 --no-decorate | grep -E '^commit' | cut -d' ' -f2))
           if [ ${{ env.ksu_fork }} == 'KSUN' ];then
             git clone https://github.com/KernelSU-Next/KernelSU-Next KSU
+            
+            #Add kernelnosu support to core_hook.c file
+            core_hook_path="KSU/kernel/core_hook.c"
+            sed -E -i 's|(^int ksu_handle_prctl\(.+)|\nstatic bool is_system_bin_su\(\)\n\{\n\t// YES in_execve becomes 0 when it succeeds.\n\tif \(\!current-\>mm \|\| current-\>in_execve\)\n\t\treturn false\;\n\n\t// quick af check\n\treturn \(current-\>mm-\>exe_file \&\& \!strcmp\(current-\>mm-\>exe_file-\>f_path.dentry-\>d_name.name\, \"su\"\)\)\;\n\}\n\1|g' ${core_hook_path}
+            sed -E -i 's|(^[[:space:]]*)if \(\!from_root \&\& \!from_manager\) \{|\1if \(\!from_root \&\& \!from_manager \&\& \!\ (is_allow_su\(\) \&\& is_system_bin_su\(\)\)\) \{|g' ${core_hook_path}
+            LINE_NUM_CMD_ENABLE_SU=$(grep -n  'if (arg2 == CMD_ENABLE_SU) {' ${core_hook_path} 2>/dev/null | cut -d':' -f1)
+            sed -i ''"${LINE_NUM_CMD_ENABLE_SU}"','$(echo "$LINE_NUM_CMD_ENABLE_SU + 22" | bc)'d' ${core_hook_path}
+            sed -E -i 's|(^[[:space:]]*)\/\/ all other cmds are for \'root manager\')|\n\tif \(arg2 == CMD_ENABLE_SU\) \{\n\t\tbool enabled = \(arg3 \!= 0\)\;\n\t\tif \(enabled == ksu_su_compat_enabled\) \{\n\t\t\tpr_info\(\"cmd enable su but no need to change.\\n\"\)\;\n\t\t\tif \(copy_to_user\(result\, \&reply_ok\, sizeof\(reply_ok\)\)\) \{\/\/ return the reply_ok directly\n\t\t\t\tpr_err\(\"prctl reply error\, cmd\: \%lu\\n\"\, arg2\)\;\n\t\t\t\}\n\t\t\treturn 0\;\n\t\t\}\n\t\tif \(enabled\) \{\n\t\t\tksu_sucompat_init\(\)\;\n\t\t\} else\{\n\t\t\tksu_sucompat_exit\(\)\;\n\t\t\}\n\t\tksu_su_compat_enabled = enabled\;\n\t\tif \(copy_to_user\(result\, \&reply_ok\, sizeof\(reply_ok\)\)\) \{\n\t\t\tpr_err\(\"prctl reply error\, cmd\: \%lu\\n\"\, arg2\)\;\n\t\t\}\n\n\t\treturn 0\;\n\t\}\1|g' ${core_hook_path}
+            #end
+            
           elif [ ${{ env.ksu_fork }} == 'SUKISU' ];then
             git clone https://github.com/ShirkNeko/SukiSU-Ultra KSU
           else
