@@ -129,7 +129,7 @@ jobs:
                     ;;
                 esac
               else
-                git clone https://github.com/pershoot/KernelSU-Next/tree/next-susfs PERSHOOT
+                git clone -b next-susfs https://github.com/pershoot/KernelSU-Next PERSHOOT
                 rm -rf kernel/
                 cp -a PERSHOOT/kernel .
                 rm -rf PERSHOOT
