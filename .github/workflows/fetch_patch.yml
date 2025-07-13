@@ -70,6 +70,7 @@ jobs:
             LINE_NUM_CMD_ENABLE_SU=$(grep -n  'if (arg2 == CMD_ENABLE_SU) {' ${core_hook_path} 2>/dev/null | cut -d':' -f1)
             sed -i ''"${LINE_NUM_CMD_ENABLE_SU}"','$(echo "$LINE_NUM_CMD_ENABLE_SU + 22" | bc)'d' ${core_hook_path}
             sed -E -i 's|(^[[:space:]]*\/\/ all other cmds are for .root manager.+$)|\tif \(arg2 == CMD_ENABLE_SU\) \{\n\t\tbool enabled = \(arg3 \!= 0\)\;\n\t\tif \(enabled == ksu_su_compat_enabled\) \{\n\t\t\tpr_info\(\"cmd enable su but no need to change.\\n\"\)\;\n\t\t\tif \(copy_to_user\(result\, \&reply_ok\, sizeof\(reply_ok\)\)\) \{\/\/ return the reply_ok directly\n\t\t\t\tpr_err\(\"prctl reply error\, cmd\: \%lu\\n\"\, arg2\)\;\n\t\t\t\}\n\t\t\treturn 0\;\n\t\t\}\n\t\tif \(enabled\) \{\n\t\t\tksu_sucompat_init\(\)\;\n\t\t\} else\{\n\t\t\tksu_sucompat_exit\(\)\;\n\t\t\}\n\t\tksu_su_compat_enabled = enabled\;\n\t\tif \(copy_to_user\(result\, \&reply_ok\, sizeof\(reply_ok\)\)\) \{\n\t\t\tpr_err\(\"prctl reply error\, cmd\: \%lu\\n\"\, arg2\)\;\n\t\t\}\n\n\t\treturn 0\;\n\t\}\n\1|g' ${core_hook_path}
+            kernelnosu=true
             #end
             
           elif [ ${{ env.ksu_fork }} == 'SUKISU' ];then
@@ -113,8 +114,9 @@ jobs:
                   cp "./0001-kernel-implement-susfs-v1.5.8-KernelSU-Next-v1.0.8.patch" "./ksun_susfs_latest.patch"
                   ;;
                 "v1.5.9")
-                  wget https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/0001-kernel-implement-susfs-v1.5.9-KernelSU-Next-v1.0.8.patch
-                  cp "./0001-kernel-implement-susfs-v1.5.9-KernelSU-Next-v1.0.8.patch" "./ksun_susfs_latest.patch"
+                  [ "${kernelnosu}" == "true" ] && patch_file="https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/0001-kernel-implement-susfs-v1.5.9-KernelSU-Next-v1.0.8-kernelnosu.patch" || patch_file="https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/0001-kernel-implement-susfs-v1.5.9-KernelSU-Next-v1.0.8.patch"
+                  wget ${patch_file}
+                  cp ${patch_file} "./ksun_susfs_latest.patch"
                   ;;
                 *)
                   echo "Invalid version: $susfs_version"
