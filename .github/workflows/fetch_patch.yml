@@ -117,7 +117,7 @@ jobs:
                 "v1.5.9")
                   [ "${kernelnosu}" == "true" ] && patch_file="https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/0001-kernel-implement-susfs-v1.5.9-KernelSU-Next-v1.0.8-kernelnosu.patch" || patch_file="https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/0001-kernel-implement-susfs-v1.5.9-KernelSU-Next-v1.0.8.patch"
                   wget ${patch_file}
-                  cp ${patch_file} "./ksun_susfs_latest.patch"
+                  cp $(echo ${patch_file} | rev | cut -d '/' -f1 | rev) "./ksun_susfs_latest.patch"
                   ;;
                 *)
                   echo "Invalid version: $susfs_version"
