@@ -544,8 +544,8 @@ jobs:
             echo "-> based on KERNELSU NEXT" >> $GITHUB_ENV
           fi
           echo '-> LinuxPU DEV('${{ env.kernel_variant }}')' >> $GITHUB_ENV
-          [ ${{ inputs.include_susfs }} == 'true'  ] && echo  "-> ${{ env.susfs_version}}" >> $GITHUB_ENV
-          echo "-> Manual Hooks [scope_min_manual_hooks_v1.4]" >> $GITHUB_ENV
+          [ ${{ inputs.include_susfs }} == 'true'  ] && echo  "-> ${{ env.susfs_version}} (from pershoot repo)" >> $GITHUB_ENV
+          echo "-> Manual Hooks (synchronize with the latest 'scope-minimized manual hooks')" >> $GITHUB_ENV
           #echo "-> Manual Hooks for Better Hiding" >> $GITHUB_ENV
           echo "-> Wireguard Support" >> $GITHUB_ENV
           echo "-> Simple Maphide for LineageOS Detections" >> $GITHUB_ENV
