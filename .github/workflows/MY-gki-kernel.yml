@@ -378,8 +378,6 @@ jobs:
             
       - name: Add Configuration Settings
         run: |
-          set -e
-          set -x
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG"
 
@@ -406,8 +404,7 @@ jobs:
           echo "CONFIG_IP6_NF_MATCH_HL=y" >> ./common/arch/arm64/configs/gki_defconfig
 
           # Add BBR Config
-          grep -q 'CONFIG_TCP_CONG_ADVANCED=y' ./common/arch/arm64/configs/gki_defconfig 
-          if [ $? -ne 0 ];then
+          if [ $(grep -q 'CONFIG_TCP_CONG_ADVANCED=y' ./common/arch/arm64/configs/gki_defconfig;echo $?) -ne 0 ];then
             echo "CONFIG_TCP_CONG_ADVANCED=y" >> ./common/arch/arm64/configs/gki_defconfig 
             echo "CONFIG_TCP_CONG_BIC=n" >> ./common/arch/arm64/configs/gki_defconfig
             echo "CONFIG_TCP_CONG_WESTWOOD=n" >> ./common/arch/arm64/configs/gki_defconfig
