@@ -253,6 +253,8 @@ jobs:
           #rm -rf ${repo_folder}/.github/manifests
           #rm -rf ${repo_folder}/.github/scripts
           #rm -f ${repo_folder}/.github/dependabot.yml
+          for file in $(find ${repo_folder} -name 'libmagiskboot.so' 2>/dev/null);do mv -f $file $(dirname $file)/liblpuboot.so;done
+          for file in $(grep -R ${repo_folder}  -e 'libmagiskboot.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libmagiskboot.so|liblpuboot.so|g' $file;done
           rm -rf ${must_unchange_kernel_files}/* ${must_unchange_kernel_files}/.* 
 
 
