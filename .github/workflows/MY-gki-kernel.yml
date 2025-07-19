@@ -92,7 +92,7 @@ jobs:
         uses: AdityaGarg8/remove-unwanted-software@v5
         with:
           remove-dotnet: 'true'          # Frees ~2 GB
-          remove-android: 'false'         # Frees ~9 GB
+          remove-android: 'false'        # Frees ~9 GB
           remove-haskell: 'true'         # Frees ~5.2 GB
           remove-codeql: 'true'          # Frees ~5.4 GB
           remove-docker-images: 'true'   # Frees ~3.2 GB
