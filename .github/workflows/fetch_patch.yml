@@ -271,8 +271,9 @@ jobs:
           for dir in $(find ${repo_folder} -type d -name 'ksunext' 2>/dev/null);do bn="$( cd -- "$(dirname "$dir")" >/dev/null 2>&1 ; pwd -P )";mv $dir "${bn}/linuxpu";mv "${bn}" "$(echo ${bn} | rev | cut -d'/' -f2- | rev)/ahmad";done
           for dir in $(find ${repo_folder} -type d -name 'ultra' 2>/dev/null);do bn="$( cd -- "$(dirname "$dir")" >/dev/null 2>&1 ; pwd -P )";mv $dir "${bn}/linuxpu";mv "${bn}" "$(echo ${bn} | rev | cut -d'/' -f2- | rev)/ahmad";done
           #for dir in $(find ${repo_folder} -type d -name 'zako' 2>/dev/null);do bn="$( cd -- "$(dirname "$dir")" >/dev/null 2>&1 ; pwd -P )";mv $dir "${bn}/linuxpu";mv "${bn}" "$(echo ${bn} | rev | cut -d'/' -f2- | rev)/ahmad";done
-          sed -E -i 's|(KSU[^[:space:]]+EXPECTED_SIZE).+0x.+|\1 := 0x373|g' ${repo_folder}/kernel/Makefile
-          sed -E -i 's|(KSU[^[:space:]]+EXPECTED_HASH) := .+|\1 := 5028506331f6c9f189e2f6500d90c3d6972bd7033e960fed4b5dda1fe31a5e95|g' ${repo_folder}/kernel/Makefile
+          #sed -E -i 's|(KSU[^[:space:]]+EXPECTED_SIZE).+0x.+|\1 := 0x373|g' ${repo_folder}/kernel/Makefile
+          #sed -E -i 's|(KSU[^[:space:]]+EXPECTED_HASH) := .+|\1 := 5028506331f6c9f189e2f6500d90c3d6972bd7033e960fed4b5dda1fe31a5e95|g' ${repo_folder}/kernel/Makefile
+          sed -E -i -e 's#(KSU[^[:space:]]+(EXPECTED|MANAGER)_SIZE).+0x.+#\1 := 0x373#g' -e  's#(KSU[^[:space:]]+(EXPECTED|MANAGER)_HASH) := .+#\1 := 5028506331f6c9f189e2f6500d90c3d6972bd7033e960fed4b5dda1fe31a5e95#g' ${repo_folder}/kernel/Makefile
           sed -E -i 's|^([[:space:]]+)android\:label\=.+|\1android:label="LinuxPU"|g' ${repo_folder}/manager/app/src/main/AndroidManifest.xml
           sed -E -i 's|(ic_launcher)_alt([^[:space:]]*)|\1\2|g' ${repo_folder}/manager/app/src/main/AndroidManifest.xml
           #mv ${repo_folder}/userspace/ksud_magic/src/ksucalls.rs ${repo_folder}/userspace/ksud_magic/src/lpucalls.rs
