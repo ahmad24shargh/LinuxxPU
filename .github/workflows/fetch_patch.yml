@@ -256,16 +256,16 @@ jobs:
           for file in $(find ${repo_folder} -name 'libmagiskboot.so' 2>/dev/null);do mv -f $file $(dirname $file)/liblpuboot.so;done
           for file in $(grep -R ${repo_folder}  -e 'libmagiskboot.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libmagiskboot.so|liblpuboot.so|g' $file;done
           echo 'find and replace libsusfsd.so in source code ...'
-          [ -z $(grep -R ${repo_folder}  -e 'libsusfsd.so' 2>/dev/null) ] && exit 5
+          [ -z $(grep -R ${repo_folder}  -e 'libsusfsd.so' 2>/dev/null | base64 | head -n 1) ] && exit 5
           for file in $(grep -R ${repo_folder}  -e 'libsusfsd.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libsusfsd.so|libsuslpufsd.so|g' $file;done
           echo 'find and replace libzakozakozako.so in source code ...'
-          [ -z $(grep -R ${repo_folder}  -e 'libzakozakozako.so' 2>/dev/null) ] && exit 5
+          [ -z $(grep -R ${repo_folder}  -e 'libzakozakozako.so' 2>/dev/null | base64 | head -n 1) ] && exit 5
           for file in $(grep -R ${repo_folder}  -e 'libzakozakozako.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libzakozakozako.so|libsuslpufsd.so|g' $file;done
           echo 'find and replace libkpmmgr.so in source code ...'
-          [ -z $(grep -R ${repo_folder}  -e 'libkpmmgr.so' 2>/dev/null) ] && exit 5
+          [ -z $(grep -R ${repo_folder}  -e 'libkpmmgr.so' 2>/dev/null | base64 | head -n 1) ] && exit 5
           for file in $(grep -R ${repo_folder}  -e 'libkpmmgr.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libkpmmgr.so|liblpukpmg.so|g' $file;done
           echo 'find and replace libzakozako.so in source code ...'
-          [ -z $(grep -R ${repo_folder}  -e 'libzakozako.so' 2>/dev/null) ] && exit 5
+          [ -z $(grep -R ${repo_folder}  -e 'libzakozako.so' 2>/dev/null | base64 | head -n 1) ] && exit 5
           for file in $(grep -R ${repo_folder}  -e 'libzakozako.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libzakozako.so|liblpud.so|g' $file;done
           rm -rf ${must_unchange_kernel_files}/* ${must_unchange_kernel_files}/.* 
 
