@@ -190,6 +190,9 @@ jobs:
          include-hidden-files: true
           
   patch:
+    env:
+      ksu_fork: ${{ inputs.ksu_fork }}
+      
     runs-on: ubuntu-latest
     #needs: rebase
     needs: fetch_upstream
@@ -234,6 +237,7 @@ jobs:
       - name: patch ...
         shell: /usr/bin/bash -e -o pipefail {0}
         run: |
+          set -x
           must_unchange_kernel_files='/home/runner/mylinuxpu'
           mkdir -p ${must_unchange_kernel_files}
           patched_folder='/home/runner/myksunext'
