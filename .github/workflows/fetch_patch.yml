@@ -237,7 +237,7 @@ jobs:
       - name: patch ...
         shell: /usr/bin/bash -e -o pipefail {0}
         run: |
-          set -x
+          #set -x
           must_unchange_kernel_files='/home/runner/mylinuxpu'
           mkdir -p ${must_unchange_kernel_files}
           patched_folder='/home/runner/myksunext'
