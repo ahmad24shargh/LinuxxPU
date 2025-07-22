@@ -551,7 +551,7 @@ jobs:
           echo '-> LinuxPU DEV('${{ env.kernel_variant }}')' >> $GITHUB_ENV
           [ ${{ inputs.include_susfs }} == 'true'  ] && echo  "-> ${{ env.susfs_version}}" >> $GITHUB_ENV
           echo "-> Manual Hooks (scope-minimized v1.4) for Better Hiding" >> $GITHUB_ENV
-          echo "-> Rename libmagiskboot.so to liblpuboot.so in the app lib dir for better hiding" >> $GITHUB_ENV
+          echo "-> Rename all library in the App lib dir for better hiding." >> $GITHUB_ENV
           echo "-> Wireguard Support" >> $GITHUB_ENV
           echo "-> Simple Maphide for LineageOS Detections" >> $GITHUB_ENV
           echo "-> Futile Maphide for jit-zygote-cache Detections" >> $GITHUB_ENV
