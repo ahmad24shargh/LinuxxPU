@@ -76,7 +76,8 @@ jobs:
       #C_LAST_COMMIT: ${{ inputs.C_LAST_COMMIT }}
       #C_TAG_NAME: ${{ inputs.C_TAG_NAME }}
       ZRAM: true
-      selinux_permissive: true
+      #permissive cause bootloop
+      selinux_permissive: false 
 
     steps:
       - name: Maximize build space
