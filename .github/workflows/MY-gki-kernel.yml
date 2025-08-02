@@ -76,6 +76,7 @@ jobs:
       #C_LAST_COMMIT: ${{ inputs.C_LAST_COMMIT }}
       #C_TAG_NAME: ${{ inputs.C_TAG_NAME }}
       ZRAM: true
+      selinux_permissive: true
 
     steps:
       - name: Maximize build space
@@ -682,6 +683,15 @@ jobs:
           #export CC_ARG="${CC}"
           BUILD_CONFIG='common/build.config.gki.aarch64'
           #BUILD_CONFIG='nothing'
+
+          if [ ${{ env.selinux_permissive }} == 'true' ];then
+            if grep -Eq '^CONFIG_CMDLINE=.+' ./common/arch/arm64/configs/gki_defconfig;then cmdline_str=$(echo "CONFIG_CMDLINE=\"$(grep -E '^CONFIG_CMDLINE=.+' ./common/arch/arm64/configs/gki_defconfig | cut -d '"' -f2) selinux=0\"");else cmdline_str='CONFIG_CMDLINE="selinux=0"';fi
+            echo $cmdline_str
+            sed -i -e '/CONFIG_CMDLINE=/d' -e '/CONFIG_SECURITY_SELINUX_BOOTPARAM/d' ./common/arch/arm64/configs/gki_defconfig
+            echo "$cmdline_str" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_CMDLINE_EXTEND=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_SECURITY_SELINUX_BOOTPARAM=y" >> ./common/arch/arm64/configs/gki_defconfig
+          fi
 
           if [[ "${{ env.kernel_variant }}" == "chickernel" ]];then
             sed -i '/kernelsu/d' ./common/drivers/Kconfig
