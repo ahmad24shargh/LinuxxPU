@@ -571,10 +571,12 @@ jobs:
             #options="${{ inputs.manager_supports }}" 
             echo "${options}"
             if [[ ${options[*]} =~ true ]];then
-              default_size=$(grep -Eo '[^[:space:]]+_(EXPECTED|MANAGER)_SIZE := [0-9a-fA-FXx]+' ${repo_path}/kernel/Makefile 2>/dev/null | cut -d' ' -f3)
-              test -z ${default_size} && exit 1
-              default_hash=$(grep -Eo '[^[:space:]]+_(EXPECTED|MANAGER)_HASH := .+' ${repo_path}/kernel/Makefile 2>/dev/null | cut -d' ' -f 3)
-              test -z ${default_hash} && exit 1
+              #default_size=$(grep -Eo '[^[:space:]]+_(EXPECTED|MANAGER)_SIZE := [0-9a-fA-FXx]+' ${repo_path}/kernel/Makefile 2>/dev/null | cut -d' ' -f3)
+              #test -z ${default_size} && exit 1
+              default_size='0x373'
+              #default_hash=$(grep -Eo '[^[:space:]]+_(EXPECTED|MANAGER)_HASH := .+' ${repo_path}/kernel/Makefile 2>/dev/null | cut -d' ' -f 3)
+              #test -z ${default_hash} && exit 1
+              default_hash='5028506331f6c9f189e2f6500d90c3d6972bd7033e960fed4b5dda1fe31a5e95'
               declare -a managers_size;
               declare -a managers_hash;
               managers_size=(${default_size})
