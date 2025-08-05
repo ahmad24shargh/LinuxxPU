@@ -80,7 +80,7 @@ jobs:
     - name: Setup Rust
       run: |
         rustup update stable
-        if [ ${{ inputs.ksu_fork }} == KSUN  ];then rustup target add x86_64-apple-darwin;fi
+        #if [ ${{ inputs.ksu_fork }} == KSUN  ];then rustup target add x86_64-apple-darwin;fi
         rustup target add aarch64-apple-darwin
 
     - name: Cache lpud_overlayfs
