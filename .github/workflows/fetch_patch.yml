@@ -63,7 +63,8 @@ jobs:
           #declare -a repo_commits=($(git log -n 200 --no-decorate | grep -E '^commit' | cut -d' ' -f2))
           if [ ${{ env.ksu_fork }} == 'KSUN' ];then
             git clone --single-branch https://github.com/KernelSU-Next/KernelSU-Next KSU
-            use_pershoot_susfs=false
+            use_pershoot_susfs=true
+            use_wild_manager_dir=true
             
             #Add kernelnosu support to core_hook.c file
             kernelnosu=false
@@ -141,7 +142,13 @@ jobs:
                   wget https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/pershoot.patch
                   patch -p1 --forward < pershoot.patch
                 fi
-              fi  
+              fi
+              if [ "${use_wild_manager_dir}" == "true" ];then
+                git clone --single-branch https://github.com/TheWildJames/KernelSU-Next TheWildJames
+                rm -rf manager/
+                cp -a TheWildJames/manager .
+                rm -rf TheWildJames
+              fi
               #git clone -b next-susfs-dev https://github.com/KernelSU-Next/KernelSU-Next
               #rm  -rf kernel
               #mv KernelSU-Next/kernel .
