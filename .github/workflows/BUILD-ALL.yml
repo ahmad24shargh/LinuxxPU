@@ -625,7 +625,7 @@ jobs:
             [ -e ./downloaded-artifacts/susfsd-aarch64-linux-android/armeabi-v7a/susfsd ] && zip ./downloaded-artifacts/susfsd-aarch64-linux-android/armeabi-v7a/susfsd-armeabi-v7a.zip ./downloaded-artifacts/susfsd-aarch64-linux-android/armeabi-v7a/susfsd || true
             [ -e ./downloaded-artifacts/susfsd-aarch64-linux-android/x86_64/susfsd ] && zip ./downloaded-artifacts/susfsd-aarch64-linux-android/x86_64/susfsd-x86_64.zip ./downloaded-artifacts/susfsd-aarch64-linux-android/x86_64/susfsd || true
           fi
-          [ -e ./downloaded-artifacts/lpuinit-aarch64-linux-android/arm64-v8a/lpuinit ] && zip ./downloaded-artifacts/lpuinit-aarch64-linux-android/arm64-v8a/lpuinit-arm64-v8a.zip ./downloaded-artifacts/lpuinit-aarch64-linux-android/arm64-v8a/lpuinit || true
+          [ -e ./downloaded-artifacts/aarch64-linux-android/release/lpuinit ] && zip ./downloaded-artifacts/lpuinit-aarch64-linux-android/arm64-v8a/lpuinit-aarch64-linux-android.zip ./downloaded-artifacts/aarch64-linux-android/release/lpuinit || true
           mkdir -p releases
           for file in $(find ./downloaded-artifacts -name \*.zip -o -name \*.apk -o -name \*.img);do cp $file ./releases/ ;done
           
