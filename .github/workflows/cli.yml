@@ -170,15 +170,10 @@ jobs:
         if: true
         run: |
           echo '.....'
-          owner=KernelSU-Next
-          repo=KernelSU-Next
-          name='Build Manager CI'
-          RUN_ID=$(gh api repos/${owner}/${repo}/actions/runs  --jq ".workflow_runs | map(select(.status == \"completed\" and .conclusion == \"success\" and .name == \"${name}\")) | sort_by(.created_at) | reverse | .[0]" | tr ',' '\n' | grep -Eo '"id":[0-9]{11}' | cut -d':' -f2)
-          if [ -z "${RUN_ID}" ];then
-            echo "action run ID could not be extracted."
-            false
-          fi
-          echo $RUN_ID
+          ls ${ANDROID_NDK_HOME}
+          echo ......
+          ls ${ANDROID_NDK_LATEST_HOME}
+           
           
 
           
