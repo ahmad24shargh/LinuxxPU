@@ -40,8 +40,7 @@ jobs:
       - name: Build kpmmgr
         working-directory: ./userspace/kpmmgr
         run: |
-          bash ${GITHUB_WORKSPACE}/.github/scripts/calc_patch_tg.sh
-          $ANDROID_NDK_HOME/ndk-build
+          ${ANDROID_NDK_LATEST_HOME}/ndk-build
 
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v4.6.2
