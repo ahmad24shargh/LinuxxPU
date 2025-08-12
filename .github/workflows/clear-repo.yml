@@ -1,0 +1,39 @@
+name: Delete Workflow Runs
+#name: Delete All Releases and Tags
+
+on:
+  workflow_dispatch:  # Allows manual triggering
+    inputs:
+      del_type:
+        type: choice
+        description: 'Select the deletion type:'
+        default: 'rebase_patch'
+        required: true
+        options:
+          - all
+          - rebase_patch
+          - unsuccess
+          - del_workflow_runs
+
+jobs:
+  #delete-releases-and-tags:
+  delete-workflow-runs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+
+      #- name: Install GitHub CLI
+      #  run: |
+      #    sudo apt update
+      #    sudo apt install gh -y
+
+      - name: Delete all workflow runs via GitHub API
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          del_type: ${{ inputs.del_type }}
+        run: |
+          [[ "${{ env.del_type }}" == "rebase_patch" ]] && gh api repos/${{ github.repository }}/actions/runs --paginate -q '.workflow_runs[] | select(.name | contains("rebase_patch")) | "\(.id)"' | xargs -n1 -I % gh api repos/${{ github.repository }}/actions/runs/% -X DELETE || true
+          [[ "${{ env.del_type }}" == "del_workflow_runs" ]] &&  gh run list --limit 100000 --json databaseId,conclusion --jq '.[] | select(.name="Delete Workflow Runs") | (.databaseId | tostring)' | xargs -n1 -I % gh run delete % || true
+          [[ "${{ env.del_type }}" == "unsuccess" ]] &&  gh run list --limit 100000 --json databaseId,conclusion --jq '.[] | select(.conclusion!="success") | (.databaseId | tostring)' | xargs -n1 -I % gh run delete % || true
+          [[ "${{ env.del_type }}" == "all" ]] && gh api repos/${{ github.repository }}/actions/runs --paginate -q '.workflow_runs[] | select(.head_branch != "master") | "\(.id)"' | xargs -n1 -I % gh api repos/${{ github.repository }}/actions/runs/% -X DELETE || true
