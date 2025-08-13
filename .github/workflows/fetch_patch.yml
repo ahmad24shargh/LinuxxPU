@@ -67,8 +67,14 @@ jobs:
             
             if $use_wild_manager_dir ;then
               git clone --single-branch https://github.com/TheWildJames/KernelSU-Next KSU
+              owner=TheWildJames
+              repo=KernelSU-Next
+              workflow=build-manager-ci.yml
             else
               git clone --single-branch https://github.com/KernelSU-Next/KernelSU-Next KSU
+              owner=KernelSU-Next
+              repo=KernelSU-Next
+              workflow=build-manager-ci.yml
             fi
             
             
@@ -86,11 +92,16 @@ jobs:
             
           elif [ ${{ env.ksu_fork }} == 'SUKISU' ];then
             git clone --single-branch https://github.com/ShirkNeko/SukiSU-Ultra KSU
+            owner=SukiSU-Ultra
+            repo=SukiSU-Ultra
+            workflow='build-manager.yml'
           else
             exit 1
             false
           fi
           cd KSU
+          HEADSHA=($(gh run list --limit 50 --repo ${owner}/${repo} --workflow ${workflow}  --json databaseId,createdAt,conclusion,status,headSha --jq 'map(select(.status == "completed" and .conclusion == "success")) | sort_by(.created_at)' | tr ',' '\n' | grep -Eo '[[:alnum:]]{40}'))
+          for (( i=0; i<${#HEADSHA[@]}; i++ )); do if $(git cat-file -e ${HEADSHA[$i]});then git reset --hard ${HEADSHA[$i]};break;fi;done
           git describe --tags --always > ${GITHUB_WORKSPACE}/TAG_NAME.ME
           echo -n "${{ env.ksu_fork }}" | base64 > ${GITHUB_WORKSPACE}/LPU_FORK.ME
           cd ..
