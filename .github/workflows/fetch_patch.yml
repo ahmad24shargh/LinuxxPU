@@ -74,8 +74,8 @@ jobs:
                 echo "tag_ver=${tag_ver}"
                 cd ..
                 rm -rf KernelSU-Next
-                sed -i 's/return getGitDescribe()/return "'$tag_ver'"/g' ./manager/build.gradle.kts
-                grep "return \"$tag_ver\"" ./manager/build.gradle.kts
+                sed -i 's/return getGitDescribe()/return "'$tag_ver'"/g' ./KSU/manager/build.gradle.kts
+                grep "return \"$tag_ver\"" ./KSU/manager/build.gradle.kts
               fi
               exit
               owner=TheWildJames
