@@ -113,7 +113,7 @@ jobs:
           echo -n "${{ env.ksu_fork }}" | base64 > ${GITHUB_WORKSPACE}/LPU_FORK.ME
           if [ ! -z $tag_ver ];then
             echo "tag_ver=${tag_ver}"
-            sed -i 's/return getGitDescribe()/return "'$tag_ver'"/g' ./manager/build.gradle.kts
+            sed -i -e 's/return getGitDescribe()/return "'$tag_ver'"/g' -e 's/versionName = managerVersionName/versionName = "'$tag_ver'"/g' ./manager/build.gradle.kts
             grep "return \"$tag_ver\"" ./manager/build.gradle.kts
             for file in $(grep -R ./userspace -e ' version_name.' 2>/dev/null | cut -d':' -f1 | sort | uniq);do echo $file;sed -i 's/ version_name\./ "'$tag_ver'"./g' $file;done
           fi
