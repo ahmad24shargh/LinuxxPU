@@ -70,7 +70,7 @@ jobs:
               if ! [[ $(git describe --tags --always) =~ ^v[0-9]+\..+ ]] ; then
                 git clone --single-branch https://github.com/KernelSU-Next/KernelSU-Next
                 cd KernelSU-Next
-                tag_ver="$(echo $(git describe --tags --always) | rev | cut-d'-' -f2- | rev)+wild"
+                tag_ver="$(echo $(git describe --tags --always) | rev | cut -d'-' -f2- | rev)+wild"
                 echo "tag_ver=${tag_ver}"
                 cd ..
                 rm -rf KernelSU-Next
