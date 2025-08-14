@@ -77,7 +77,6 @@ jobs:
                 sed -i 's/return getGitDescribe()/return "'$tag_ver'"/g' ./KSU/manager/build.gradle.kts
                 grep "return \"$tag_ver\"" ./KSU/manager/build.gradle.kts
               fi
-              exit
               owner=TheWildJames
               repo=KernelSU-Next
               workflow=build-manager-ci.yml
