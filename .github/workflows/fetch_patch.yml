@@ -115,7 +115,7 @@ jobs:
           if [ ! -z $tag_ver ];then
             sed -i 's/return getGitDescribe()/return "'$tag_ver'"/g' ./manager/build.gradle.kts
             grep "return \"$tag_ver\"" ./manager/build.gradle.kts
-            for file in $(grep -R ./ -e ' version_name.' 2>dev/null | cut -d':' -f1 | sort | uniq);do sed -i 's/ version_name./ "'$tag_ver'"./g' $file;done
+            for file in $(grep -R ./userspace -e ' version_name.' 2>dev/null | cut -d':' -f1 | sort | uniq);do sed -i 's/ version_name./ "'$tag_ver'"./g' $file;done
           fi
           cd ..
           #git clone https://github.com/KernelSU-Next/KernelSU-Next
