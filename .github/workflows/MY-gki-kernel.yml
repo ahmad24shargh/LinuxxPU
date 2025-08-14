@@ -786,7 +786,7 @@ jobs:
             #sed -E -i '/^CONFIG_LOCALVERSION=/ s/(.*)"$/\1-Wild+"/' ./common/arch/arm64/configs/gki_defconfig
             tools/bazel build --disk_cache=/home/runner/.cache/bazel --config=fast --lto=thin //common:kernel_aarch64_dist || exit 1
           fi
-          ccache --show-stats
+          #ccache --show-stats
 
       - name: Patch Image File A12 & A13
         if: ${{ env.ksu_fork  == 'SUKISU' &&  (inputs.android_version == 'android12' || inputs.android_version == 'android13') }}
