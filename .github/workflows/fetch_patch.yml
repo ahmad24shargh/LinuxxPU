@@ -69,8 +69,9 @@ jobs:
               git clone --single-branch https://github.com/TheWildJames/KernelSU-Next KSU
               if ! [[ $(git describe --tags --always) =~ ^v[0-9]+\..+ ]] ; then
                 git clone --single-branch https://github.com/KernelSU-Next/KernelSU-Next
+                wild_tag_ver=$(git describe --tags --always)
                 cd KernelSU-Next
-                tag_ver="$(echo $(git describe --tags --always) | rev | cut -d'-' -f2- | rev)-Wild"
+                tag_ver="$(echo $(git describe --tags --always) | rev | cut -d'-' -f2- | rev)-Wild-_{wild_tag_ver}"
                 cd ..
                 rm -rf KernelSU-Next
               fi
