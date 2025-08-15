@@ -116,7 +116,6 @@ jobs:
             #[[ ${wild_tag_ver:0:1} == '_' ]] && wild_tag_ver=${wild_tag_ver:1}
             echo "tag_ver=${tag_ver}-Wild-${wild_tag_ver}"
             echo "${tag_ver}-Wild-${wild_tag_ver}" > ${GITHUB_WORKSPACE}/TAG_NAME.ME
-            false
           fi
           cd ..
           #git clone https://github.com/KernelSU-Next/KernelSU-Next
