@@ -443,10 +443,10 @@ jobs:
       - build-manager
     if: ${{ ! failure() && ! cancelled() }} #&& ! inputs.skip_run }} 
     env:
-      #C_VERSION: ${{needs.calc_tag_version.outputs.C_VERSION}}
+      C_VERSION: ${{needs.calc_tag_version.outputs.C_VERSION}}
       C_LAST_COMMIT: ${{needs.calc_tag_version.outputs.C_LAST_COMMIT}}
       C_KERNEL_SUBLEVEL: ${{needs.calc_tag_version.outputs.C_KERNEL_SUBLEVEL}}
-      #C_TAG_NAME: ${{needs.calc_tag_version.outputs.C_TAG_NAME}}
+      C_TAG_NAME: ${{needs.calc_tag_version.outputs.C_TAG_NAME}}
       #REPO_OWNER: ${{ github.repository_owner }}
       #REPO_NAME: ${{ github.event.repository.name }}
       build_type: ${{ inputs.build_type }}
@@ -496,7 +496,10 @@ jobs:
           echo "LPU_BRANCH=${LPU_BRANCH}" >> $GITHUB_ENV
           echo "REPO_OWNER=${REPO_OWNER}" >> $GITHUB_ENV
           echo "REPO_NAME=${REPO_NAME}" >> $GITHUB_ENV
-          TAG_NAME=$(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME | cut -d'-' -f1,2)
+          TAG_NAME=${{ env.C_TAG_NAME }}
+          if [ $(echo ${{ env.C_TAG_NAME }} | grep -qi 'wild';echo $?) != 0 ];then
+            TAG_NAME=$(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME | cut -d'-' -f1,2)
+          fi
           echo TAG_NAME=$TAG_NAME
           echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
           REPO_URL="https://github.com/${REPO_OWNER}/${REPO_NAME}.git"
