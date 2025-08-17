@@ -114,9 +114,19 @@ jobs:
           if [ ! -z $tag_ver ];then
             wild_tag_ver=$(git describe --tags --always)
             #[[ ${wild_tag_ver:0:1} == '_' ]] && wild_tag_ver=${wild_tag_ver:1}
-            echo "tag_ver=${tag_ver}-Wild-${wild_tag_ver}"
+            echo "C_TAG_NAME=${tag_ver}-Wild-${wild_tag_ver}"
             echo "${tag_ver}-Wild-${wild_tag_ver}" > ${GITHUB_WORKSPACE}/TAG_NAME.ME
+          else
+            C_TAG_NAME=$(echo "$(git describe --tags --always)" | rev | cut -d'-' -f2- | rev)
+            echo "C_TAG_NAME=${C_TAG_NAME}"
+            echo "${C_TAG_NAME}" > ${GITHUB_WORKSPACE}/TAG_NAME.ME
           fi
+          C_LAST_COMMIT=$(git log -n 1 --no-decorate | grep -E '^commit' | cut -d' ' -f2)
+          echo "C_LAST_COMMIT=${C_LAST_COMMIT}"
+          echo "${C_LAST_COMMIT}" > ${GITHUB_WORKSPACE}/LAST_COMMIT.ME
+          C_VERSION=$(echo "$(git log --oneline | wc -l) - $(git rev-list ${C_LAST_COMMIT}..HEAD --count)" | bc)
+          echo "C_VERSION=${C_VERSION}"
+          echo "${C_VERSION}" > ${GITHUB_WORKSPACE}/VERSION.ME
           cd ..
           #git clone https://github.com/KernelSU-Next/KernelSU-Next
           #cd KernelSU-Next
