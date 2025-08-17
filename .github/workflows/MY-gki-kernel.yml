@@ -572,7 +572,7 @@ jobs:
           export KBUILD_BUILD_TIMESTAMP='Tue May 14 09:27:18 UTC 2024'
           export KBUILD_BUILD_USER='ahmad'
           export KBUILD_BUILD_HOST='Forozan'
-          sed -i 's|LC_ALL=C|LC_ALL=C;KBUILD_BUILD_TIMESTAMP="'"${KBUILD_BUILD_TIMESTAMP}"'";KBUILD_BUILD_USER="'"${KBUILD_BUILD_USER}"'";KBUILD_BUILD_HOST="'"${KBUILD_BUILD_HOST}"'";|g' ./common/scripts/mkcompile_h
+          sed -E -i -e 's|LC_ALL=C|LC_ALL=C;KBUILD_BUILD_TIMESTAMP="'"${KBUILD_BUILD_TIMESTAMP}"'";KBUILD_BUILD_USER="'"${KBUILD_BUILD_USER}"'";KBUILD_BUILD_HOST="'"${KBUILD_BUILD_HOST}"'";|g' -e 's|LINUX_COMPILE_BY=.+|LINUX_COMPILE_BY="'${KBUILD_BUILD_USER}'"|g' -e 's|LINUX_COMPILE_HOST=.+|LINUX_COMPILE_HOST="'${KBUILD_BUILD_HOST}'"|g' ./common/scripts/mkcompile_h
           if test -d ${repo_path}/manager ;then
             set +e
             set +x
@@ -727,8 +727,6 @@ jobs:
             grep -E -i 'CONFIG_(KSU|LPU)' ./common/drivers/Makefile
             rm -f ./common/drivers/kernelsu || true
             BUILD_CONFIG='common/build.config.gki.aarch64.chickernel'
-            grep -q 'LINUX_COMPILE_BY=' ./common/scripts/mkcompile_h && sed -E -i 's|LINUX_COMPILE_BY=.+|LINUX_COMPILE_BY="'${KBUILD_BUILD_USER}'"|g' ./common/scripts/mkcompile_h
-            grep -q 'LINUX_COMPILE_HOST=' ./common/scripts/mkcompile_h && sed -E -i 's|LINUX_COMPILE_HOST=.+|LINUX_COMPILE_HOST="'${KBUILD_BUILD_HOST}'"|g' ./common/scripts/mkcompile_h
             rm -f ./common/arch/arm64/configs/chickernel_defconfig ./common/arch/arm64/configs/defconfig
             cp  ./common/arch/arm64/configs/gki_defconfig ./common/arch/arm64/configs/chickernel_defconfig
             cp  ./common/arch/arm64/configs/gki_defconfig ./common/arch/arm64/configs/defconfig
