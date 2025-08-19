@@ -63,8 +63,7 @@ jobs:
           #declare -a repo_commits=($(git log -n 200 --no-decorate | grep -E '^commit' | cut -d' ' -f2))
           if [ ${{ env.ksu_fork }} == 'KSUN' ];then
             use_pershoot_susfs=false
-            use_wild_manager_dir=false
-            use_sukisu_manager_dir=true
+            use_wild_manager_dir=true
             
             if $use_wild_manager_dir ;then
               git clone --single-branch https://github.com/TheWildJames/KernelSU-Next KSU
@@ -79,18 +78,6 @@ jobs:
               fi
               cd ..
               owner=TheWildJames
-              repo=KernelSU-Next
-              workflow=build-manager-ci.yml
-            elif $use_sukisu_manager_dir ;then
-              git clone --single-branch https://github.com/KernelSU-Next/KernelSU-Next KSU
-              git clone --single-branch https://github.com/ShirkNeko/SukiSU-Ultra
-              rm -rf KSU/manager
-              cp -a SukiSU-Ultra/manager KSU
-              cd SukiSU-Ultra
-              tag_ver="Sukisu-$(git describe --tags --always | cut -d'-' -f2-)"
-              cd ..
-              rm -rf SukiSU-Ultra
-              owner=KernelSU-Next
               repo=KernelSU-Next
               workflow=build-manager-ci.yml
             else
@@ -131,14 +118,12 @@ jobs:
           echo "${C_LAST_COMMIT}" > ${GITHUB_WORKSPACE}/LAST_COMMIT.ME
           C_VERSION=$(echo "$(git log --oneline | wc -l) - $(git rev-list ${C_LAST_COMMIT}..HEAD --count)" | bc)
           echo "${C_VERSION}" > ${GITHUB_WORKSPACE}/VERSION.ME
-          if [ $tag_ver == 'Wild' ];then
+          if [ ! -z $tag_ver ];then
             wild_tag_ver=$(git describe --tags --always)
             #[[ ${wild_tag_ver:0:1} == '_' ]] && wild_tag_ver=${wild_tag_ver:1}
             #echo "C_TAG_NAME=${tag_ver}-Wild-${wild_tag_ver}"
             #echo "${tag_ver}-Wild-${wild_tag_ver}" > ${GITHUB_WORKSPACE}/TAG_NAME.ME
             C_TAG_NAME="${tag_ver}-${C_VERSION}-${wild_tag_ver}"
-          elif  [[ $tag_ver =~ Sukisu.+ ]];then
-            C_TAG_NAME=${tag_ver}
           else
             C_TAG_NAME=$(echo "$(git describe --tags --always)" | rev | cut -d'-' -f2- | rev)
           fi
