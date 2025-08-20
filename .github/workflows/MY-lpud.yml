@@ -180,4 +180,4 @@ jobs:
       uses: actions/upload-artifact@v4.6.2
       with:
         name: lpud-${{ inputs.target }}
-        path: userspace/lpud/target/**/release/lpuxlpux*
+        path: userspace/lpud/target/**/release/lpulpu*
