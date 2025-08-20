@@ -371,10 +371,10 @@ jobs:
           for files in $(grep -R ${repo_folder} -e 'SUKISU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|SUKISU|LinuxxPU|g' $files;done
           for files in $(grep -R ${repo_folder} -e 'SukiSU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|SukiSU|LinuxxPU|g' $files;done
           for files in $(grep -R ${repo_folder} -e 'sukisu' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|sukisu|linuxxpu|g' $files;done
-          for files in $(grep -R ${repo_folder} -e 'zakoui' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|zakoui|lpuui|g' $files;done
-          for files in $(grep -R ${repo_folder} -e 'zako' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|zako|lpu|g' $files;done
-          for files in $(grep -R ${repo_folder} -e 'ZAKO' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|ZAKO|LPU|g' $files;done
-          for files in $(grep -R ${repo_folder} -e 'Zako' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|Zako|Lpu|g' $files;done
+          for files in $(grep -R ${repo_folder} -e 'zakoui' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei '/extern /!s/zakoui/lpuui/g' $files;done
+          for files in $(grep -R ${repo_folder} -e 'zako' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei '/extern /!s/zako/lpu/g' $files;done
+          for files in $(grep -R ${repo_folder} -e 'ZAKO' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei '/extern /!s/ZAKO/LPU/g' $files;done
+          for files in $(grep -R ${repo_folder} -e 'Zako' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei '/extern /!s/Zako/Lpu/g' $files;done
           for file in $(find ${repo_folder}/manager/app/src/main/jniLibs/ -type f -name 'liblpusign.so' 2>/dev/null);do bash ${repo_folder}/.github/scripts/hex_patch.sh $file zakosign lpuxsign;done
           for files in $(grep -R ${repo_folder} -e 'KernelSU.Next' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|KernelSU.Next|LinuxxPU|g' $files;done
           for files in $(grep -R ${repo_folder} -e 'kernelsu.next' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|kernelsu.next|linuxxpu|g' $files;done
