@@ -83,9 +83,9 @@ jobs:
           false
         else
           for lkms in $(find . -type f -name 'android*.ko' 2>/dev/null);do 
-            bash ${GITHUB_WORKSPACE}/.github/scripts/hex_patch.sh $lkms ksu lpu
-            bash ${GITHUB_WORKSPACE}/.github/scripts/hex_patch.sh $lkms KernelSU LinuxxPU
-            bash ${GITHUB_WORKSPACE}/.github/scripts/hex_patch.sh $lkms kernelsu linuxxpu
+            #bash ${GITHUB_WORKSPACE}/.github/scripts/hex_patch.sh $lkms ksu lpu
+            #bash ${GITHUB_WORKSPACE}/.github/scripts/hex_patch.sh $lkms KernelSU LinuxxPU
+            #bash ${GITHUB_WORKSPACE}/.github/scripts/hex_patch.sh $lkms kernelsu linuxxpu
             mv $lkms $(echo $lkms | sed 's/kernelsu/linuxxpu/g')
           done
         fi
