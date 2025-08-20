@@ -316,6 +316,7 @@ jobs:
             for file in $(grep -R ${repo_folder}  -e 'libsusfsd.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libsusfsd.so|libsuslpufsd.so|g' $file;done
           fi
           if [ ${{ env.ksu_fork }} == 'SUKISU' ];then
+            if [ -d ${repo_folder}/manager/app/src/main/java/zako/zako/zako/zakoui ];then dir="${repo_folder}/manager/app/src/main/java/zako/zako/zako/zakoui";mv $dir "$(dirname $dir)/lpuxui";dir="$(dirname $dir)";mv $dir "$(dirname $dir)/lpux";dir="$(dirname $dir)";mv $dir "$(dirname $dir)/lpux";dir="$(dirname $dir)";mv $dir "$(dirname $dir)/lpux";fi
             for file in $(find ${repo_folder}/manager/app/src/main/jniLibs -name 'libzakoboot.so' 2>/dev/null);do mv -f $file $(dirname $file)/liblpuboot.so;done
             for file in $(grep -R ${repo_folder}/manager  -e 'libzakoboot.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libzakoboot.so|liblpuboot.so|g' $file;done
             for file in $(find ${repo_folder}/manager/app/src/main/jniLibs -name 'libzakosign.so' 2>/dev/null);do mv -f $file $(dirname $file)/liblpusign.so;done
@@ -349,7 +350,6 @@ jobs:
           for file in $(grep -R ${repo_folder}/manager ${repo_folder}/userspace -e 'sukisu' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -i 's#sukisu#ahmad#g' $file;done
           for dir in $(find ${repo_folder} -type d -name 'ksunext' 2>/dev/null);do bn="$( cd -- "$(dirname "$dir")" >/dev/null 2>&1 ; pwd -P )";mv $dir "${bn}/linuxxpu";mv "${bn}" "$(echo ${bn} | rev | cut -d'/' -f2- | rev)/ahmad";done
           for dir in $(find ${repo_folder} -type d -name 'ultra' 2>/dev/null);do bn="$( cd -- "$(dirname "$dir")" >/dev/null 2>&1 ; pwd -P )";mv $dir "${bn}/linuxxpu";mv "${bn}" "$(echo ${bn} | rev | cut -d'/' -f2- | rev)/ahmad";done
-          #for dir in $(find ${repo_folder} -type d -name 'zako' 2>/dev/null);do bn="$( cd -- "$(dirname "$dir")" >/dev/null 2>&1 ; pwd -P )";mv $dir "${bn}/linuxxpu";mv "${bn}" "$(echo ${bn} | rev | cut -d'/' -f2- | rev)/ahmad";done
           #sed -E -i 's|(KSU[^[:space:]]+EXPECTED_SIZE).+0x.+|\1 := 0x373|g' ${repo_folder}/kernel/Makefile
           #sed -E -i 's|(KSU[^[:space:]]+EXPECTED_HASH) := .+|\1 := 5028506331f6c9f189e2f6500d90c3d6972bd7033e960fed4b5dda1fe31a5e95|g' ${repo_folder}/kernel/Makefile
           sed -E -i -e 's#(KSU[^[:space:]]+(EXPECTED|MANAGER)_SIZE).+0x.+#\1 := 0x373#g' -e  's#(KSU[^[:space:]]+(EXPECTED|MANAGER)_HASH) := .+#\1 := 5028506331f6c9f189e2f6500d90c3d6972bd7033e960fed4b5dda1fe31a5e95#g' ${repo_folder}/kernel/Makefile
@@ -370,6 +370,11 @@ jobs:
           for files in $(grep -R ${repo_folder} -e 'SUKISU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|SUKISU|LinuxxPU|g' $files;done
           for files in $(grep -R ${repo_folder} -e 'SukiSU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|SukiSU|LinuxxPU|g' $files;done
           for files in $(grep -R ${repo_folder} -e 'sukisu' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|sukisu|linuxxpu|g' $files;done
+          for files in $(grep -R ${repo_folder} -e 'zakoui' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|zakoui|lpuxui|g' $files;done
+          for files in $(grep -R ${repo_folder} -e 'zako' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|zako|lpux|g' $files;done
+          for files in $(grep -R ${repo_folder} -e 'ZAKO' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|ZAKO|LPUX|g' $files;done
+          for files in $(grep -R ${repo_folder} -e 'Zako' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|Zako|Lpux|g' $files;done
+          bash ${repo_folder}/.github/
           for files in $(grep -R ${repo_folder} -e 'KernelSU.Next' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|KernelSU.Next|LinuxxPU|g' $files;done
           for files in $(grep -R ${repo_folder} -e 'kernelsu.next' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|kernelsu.next|linuxxpu|g' $files;done
           for files in $(grep -R ${repo_folder} -e 'KSU.NEXT' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|KSU.NEXT|LinuxxPU|g' $files;done
