@@ -374,7 +374,7 @@ jobs:
         if: github.event.inputs.ksu_fork == 'SUKISU'
         run: |
           #cp -f ../aarch64-linux-android/release/zakozako ../manager/app/src/main/jniLibs/arm64-v8a/libzakozako.so
-          cp -f ../aarch64-linux-android/release/lpuxlpux ../manager/app/src/main/jniLibs/arm64-v8a/liblpud.so
+          cp -f ../aarch64-linux-android/release/lpulpu ../manager/app/src/main/jniLibs/arm64-v8a/liblpud.so
           
       - name: Download arm64 lpud_overlayfs
         if: github.event.inputs.ksu_fork == 'KSUN'
