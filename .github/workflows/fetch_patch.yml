@@ -375,7 +375,7 @@ jobs:
           for files in $(grep -R ${repo_folder} -e 'zako' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|zako|lpux|g' $files;done
           for files in $(grep -R ${repo_folder} -e 'ZAKO' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|ZAKO|LPUX|g' $files;done
           for files in $(grep -R ${repo_folder} -e 'Zako' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|Zako|Lpux|g' $files;done
-          for file in $(find ${repo_folder}/manager/app/src/main/jniLibs/ -type f -name 'liblpusign.so' 2>/dev/null);do bash ${repo_folder}/.github/scripts/hex_patch.sh $file Zako Lpux;bash ${repo_folder}/.github/scripts/hex_patch.sh $file zako lpux;bash ${repo_folder}/.github/scripts/hex_patch.sh $file const_lpux const_zako;done
+          for file in $(find ${repo_folder}/manager/app/src/main/jniLibs/ -type f -name 'liblpuxsign.so' 2>/dev/null);do bash ${repo_folder}/.github/scripts/hex_patch.sh $file Zako Lpux;bash ${repo_folder}/.github/scripts/hex_patch.sh $file zako lpux;bash ${repo_folder}/.github/scripts/hex_patch.sh $file const_lpux const_zako;done
           for files in $(grep -R ${repo_folder} -e 'KernelSU.Next' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|KernelSU.Next|LinuxxPU|g' $files;done
           for files in $(grep -R ${repo_folder} -e 'kernelsu.next' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|kernelsu.next|linuxxpu|g' $files;done
           for files in $(grep -R ${repo_folder} -e 'KSU.NEXT' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|KSU.NEXT|LinuxxPU|g' $files;done
