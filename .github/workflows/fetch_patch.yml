@@ -324,13 +324,16 @@ jobs:
             for file in $(grep -R ${repo_folder}/manager  -e 'zakosign' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|zakosign|lpuxsign|g' $file;done
             echo 'find and replace libzakozakozako.so in source code ...'
             [ -z $(grep -R ${repo_folder}  -e 'libzakozakozako.so' 2>/dev/null | base64 | head -n 1) ] && false
-            for file in $(grep -R ${repo_folder}  -e 'libzakozakozako.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libzakozakozako.so|libsuslpufsd.so|g' $file;done
+            for file in $(grep -R ${repo_folder}  -e 'zakozakozako' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|zakozakozako|suslpufsd|g' $file;done
             echo 'find and replace libkpmmgr.so in source code ...'
             [ -z $(grep -R ${repo_folder}  -e 'libkpmmgr.so' 2>/dev/null | base64 | head -n 1) ] && false
             for file in $(grep -R ${repo_folder}  -e 'libkpmmgr.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libkpmmgr.so|liblpukpmg.so|g' $file;done
+            [ -d ${repo_folder}/userspace/kpmmgr ] && mv ${repo_folder}/userspace/kpmmgr ${repo_folder}/userspace/lpukpmg
+            [ -f ${repo_folder}/userspace/kpmmgr/jni/kpmmgr.c ] && mv ${repo_folder}/userspace/kpmmgr/jni/kpmmgr.c ${repo_folder}/userspace/kpmmgr/jni/lpukpmg.c
+            for file in $(grep -R ${repo_folder} -e 'kpmmgr' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -i 's|kpmmgr|lpukpmg|g' $file;done
             echo 'find and replace libzakozako.so in source code ...'
             [ -z $(grep -R ${repo_folder}  -e 'libzakozako.so' 2>/dev/null | base64 | head -n 1) ] && false
-            for file in $(grep -R ${repo_folder}  -e 'libzakozako.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libzakozako.so|liblpud.so|g' $file;done
+            for file in $(grep -R ${repo_folder}  -e 'zakozako' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|zakozako|lpud|g' $file;done
           fi
           rm -rf ${must_unchange_kernel_files}/* ${must_unchange_kernel_files}/.* 
 
