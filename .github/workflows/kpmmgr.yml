@@ -5,7 +5,7 @@ on:
     branches: [ "mian" ]
     paths:
       - '.github/workflows/kpmmgr.yml'
-      - 'userspace/kpmmgr/**'
+      - 'userspace/lpukpmg/**'
   workflow_dispatch:
   workflow_call:
     inputs:
@@ -38,12 +38,12 @@ jobs:
           bash ${GITHUB_WORKSPACE}/.github/scripts/calc_patch_tg.sh
     
       - name: Build kpmmgr
-        working-directory: ./userspace/kpmmgr
+        working-directory: ./userspace/lpukpmg
         run: |
           ${ANDROID_NDK_LATEST_HOME}/ndk-build
 
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v4.6.2
         with:
-          name: kpmmgr-aarch64-linux-android
-          path: ./userspace/kpmmgr/libs
+          name: lpukpmg-aarch64-linux-android
+          path: ./userspace/lpukpmg/libs
