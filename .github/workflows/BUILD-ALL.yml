@@ -353,15 +353,15 @@ jobs:
         if: github.event.inputs.ksu_fork == 'SUKISU'
         uses: actions/download-artifact@v4.3.0
         with:
-          name: kpmmgr-aarch64-linux-android
+          name: lpukpmg-aarch64-linux-android
           path: .   
 
       - name: Copy kpmmgr to app jniLibs
         if: github.event.inputs.ksu_fork == 'SUKISU'
         run: |
           mkdir -p app/src/main/jniLibs/arm64-v8a
-          #cp -f ../arm64-v8a/kpmmgr ../manager/app/src/main/jniLibs/arm64-v8a/libkpmmgr.so
-          cp -f ../arm64-v8a/kpmmgr ../manager/app/src/main/jniLibs/arm64-v8a/liblpukpmg.so
+          #cp -f ../arm64-v8a/lpukpmg ../manager/app/src/main/jniLibs/arm64-v8a/liblpukpmg.so
+          cp -f ../arm64-v8a/lpukpmg ../manager/app/src/main/jniLibs/arm64-v8a/liblpukpmg.so
           
       - name: Download arm64 lpud
         if: github.event.inputs.ksu_fork == 'SUKISU'
