@@ -21,7 +21,7 @@
     <linkfile src="static_analysis" dest="build/static_analysis" />
   </project>
 
-  <project path="common" name="kernel_msm-5.15" remote="common-repo" revision="refs/heads/zepharo-rebase" >
+  <project path="common" name="kernel_msm-5.15" remote="common-repo" revision="refs/heads/codelinaro" >
    <linkfile src="." dest=".source_date_epoch_dir" />
   </project>
 
