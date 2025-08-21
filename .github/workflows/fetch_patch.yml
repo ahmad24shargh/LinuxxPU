@@ -321,7 +321,7 @@ jobs:
             for file in $(find ${repo_folder}/manager/app/src/main/jniLibs -name 'libzakoboot.so' 2>/dev/null);do mv -f $file $(dirname $file)/liblpuboot.so;done
             for file in $(grep -R ${repo_folder}/manager  -e 'libzakoboot.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libzakoboot.so|liblpuboot.so|g' $file;done
             for file in $(find ${repo_folder}/manager/app/src/main/jniLibs -name 'libzakosign.so' 2>/dev/null);do mv -f $file $(dirname $file)/liblpuxsign.so;done
-            for file in $(grep -R ${repo_folder}/manager  -e 'libzakosign.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libzakosign.so|liblpuxsign.so|g' $file;done
+            for file in $(grep -R ${repo_folder}/manager  -e 'zakosign' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|zakosign|lpuxsign|g' $file;done
             echo 'find and replace libzakozakozako.so in source code ...'
             [ -z $(grep -R ${repo_folder}  -e 'libzakozakozako.so' 2>/dev/null | base64 | head -n 1) ] && false
             for file in $(grep -R ${repo_folder}  -e 'libzakozakozako.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libzakozakozako.so|libsuslpufsd.so|g' $file;done
@@ -372,9 +372,9 @@ jobs:
           for files in $(grep -R ${repo_folder} -e 'SukiSU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|SukiSU|LinuxxPU|g' $files;done
           for files in $(grep -R ${repo_folder} -e 'sukisu' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|sukisu|linuxxpu|g' $files;done
           for files in $(grep -R ${repo_folder} -e 'zakoui' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei '/extern /!s/zakoui/lpuui/g' $files;done
-          for files in $(grep -R ${repo_folder} -e 'zako' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei '/extern /!s/zako/lpu/g' $files;done
-          for files in $(grep -R ${repo_folder} -e 'ZAKO' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei '/extern /!s/ZAKO/LPU/g' $files;done
-          for files in $(grep -R ${repo_folder} -e 'Zako' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei '/extern /!s/Zako/Lpu/g' $files;done
+          for files in $(grep -R ${repo_folder} -e 'zako' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's/zako/lpu/g' $files;done
+          for files in $(grep -R ${repo_folder} -e 'ZAKO' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's/ZAKO/LPU/g' $files;done
+          for files in $(grep -R ${repo_folder} -e 'Zako' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's/Zako/Lpu/g' $files;done
           for file in $(find ${repo_folder}/manager/app/src/main/jniLibs/ -type f -name 'liblpuxsign.so' 2>/dev/null);do bash ${repo_folder}/.github/scripts/hex_patch.sh $file zakosign lpuxsign;done
           for files in $(grep -R ${repo_folder} -e 'KernelSU.Next' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|KernelSU.Next|LinuxxPU|g' $files;done
           for files in $(grep -R ${repo_folder} -e 'kernelsu.next' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|kernelsu.next|linuxxpu|g' $files;done
