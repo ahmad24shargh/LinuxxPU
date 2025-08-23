@@ -400,9 +400,14 @@ jobs:
           
           # Add KSU configuration settings
           echo "CONFIG_KSU=y" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_MANUAL_HOOK=y" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_KPROBES_HOOK=n" >> ./common/arch/arm64/configs/gki_defconfig
-          [ ${{ env.ksu_fork }} == 'SUKISU' ] && echo "CONFIG_KPM=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_LSM_SECURITY_HOOKS=y" >> ./common/arch/arm64/configs/gki_defconfig
+          if [ ${{ env.ksu_fork }} == 'SUKISU' ];then
+            echo "CONFIG_KPM=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_TRACEPOINTS=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo "CONFIG_KSU_TRACEPOINT_HOOK=y" >> ./common/arch/arm64/configs/gki_defconfig
+          else
+            echo "CONFIG_KSU_MANUAL_HOOK=y" >> ./common/arch/arm64/configs/gki_defconfig
+          fi
           
           
           #if [ "${{ inputs.linuxxpu_variant }}" == "Next" ]; then
