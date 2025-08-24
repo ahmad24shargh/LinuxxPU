@@ -96,6 +96,7 @@ jobs:
       C_TAG_NAME: ${{ steps.gen_outs.outputs.C_TAG_NAME }}
       C_KERNEL_SUBLEVEL: ${{ steps.gen_outs.outputs.C_KERNEL_SUBLEVEL }}
       C_OS_PATCH_LEVEL: ${{ steps.gen_outs.outputs.C_OS_PATCH_LEVEL }}
+      hook_method: ${{ steps.gen_outs.outputs.hook_method }}
     steps:
     #- name: Checkout code
       #uses: actions/checkout@v4.2.2
@@ -169,6 +170,8 @@ jobs:
         echo "C_KERNEL_SUBLEVEL=${C_KERNEL_SUBLEVEL}"
         echo "C_OS_PATCH_LEVEL=${C_OS_PATCH_LEVEL}" >> $GITHUB_OUTPUT
         echo "C_OS_PATCH_LEVEL=${C_OS_PATCH_LEVEL}"
+        echo "hook_method=$HOOK_METHOD" 
+        echo "hook_method=$HOOK_METHOD" >> $GITHUB_OUTPUT
         
         
   build-kernel:
@@ -180,6 +183,7 @@ jobs:
         include:
           - sub_level: ${{needs.calc_tag_version.outputs.C_KERNEL_SUBLEVEL}}
             os_patch_level: ${{needs.calc_tag_version.outputs.C_OS_PATCH_LEVEL}}
+            hook_method: ${{needs.calc_tag_version.outputs.hook_method}}
             ksu_fork: ${{ inputs.ksu_fork }}
             #C_VERSION: ${{needs.calc_tag_version.outputs.C_VERSION}}
             #C_LAST_COMMIT: ${{needs.calc_tag_version.outputs.C_LAST_COMMIT}}
@@ -194,7 +198,7 @@ jobs:
       kernel_version: "5.15"
       sub_level: ${{ matrix.sub_level }}
       ksu_fork: ${{ inputs.ksu_fork }}
-      hook_method: $HOOK_METHOD
+      hook_method: ${{ matrix.hook_method }}
       os_patch_level: ${{ matrix.os_patch_level }}
       linuxxpu_variant: Next
       linuxxpu_branch: Dev
