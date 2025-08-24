@@ -194,7 +194,7 @@ jobs:
       kernel_version: "5.15"
       sub_level: ${{ matrix.sub_level }}
       ksu_fork: ${{ inputs.ksu_fork }}
-      hook_method: ${{ env.hook_method }}
+      hook_method: ${{ vars.hook_method }}
       os_patch_level: ${{ matrix.os_patch_level }}
       linuxxpu_variant: Next
       linuxxpu_branch: Dev
