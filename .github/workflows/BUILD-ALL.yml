@@ -6,7 +6,7 @@ env:
   GH_TOKEN: ${{ secrets.WORKFLOW_TOKEN }} 
   #for sukisu only
   # manual or tracepoint
-  hook_method: 'tracepoint'
+  HOOK_METHOD: 'tracepoint'
   
 concurrency:
       group: staging_environment
@@ -194,7 +194,7 @@ jobs:
       kernel_version: "5.15"
       sub_level: ${{ matrix.sub_level }}
       ksu_fork: ${{ inputs.ksu_fork }}
-      hook_method: ${{ vars.hook_method }}
+      hook_method: $HOOK_METHOD
       os_patch_level: ${{ matrix.os_patch_level }}
       linuxxpu_variant: Next
       linuxxpu_branch: Dev
@@ -562,7 +562,7 @@ jobs:
           fi
           echo '-> LinuxxPU DEV('${{ env.kernel_variant }}')' >> $GITHUB_ENV
           [ ${{ inputs.include_susfs }} == 'true'  ] && echo  "-> ${{ env.susfs_version}}" >> $GITHUB_ENV
-          if [ "${{ env.hook_method }}" == "tracepoint" -a "${{ env.ksu_fork }}" == "SUKISU" ];then
+          if [ "$HOOK_METHOD" == "tracepoint" -a "${{ env.ksu_fork }}" == "SUKISU" ];then
             echo "-> TracePoints Hooks for Better Hiding" >> $GITHUB_ENV
           else
             echo "-> Manual Hooks (scope-minimized v1.4) for Better Hiding" >> $GITHUB_ENV
