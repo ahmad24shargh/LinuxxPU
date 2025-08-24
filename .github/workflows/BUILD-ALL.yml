@@ -571,7 +571,11 @@ jobs:
           else
             echo "-> Manual Hooks (scope-minimized v1.4) for Better Hiding" >> $GITHUB_ENV
           fi
-          echo "-> Rename all library in the App lib dir for better hiding." >> $GITHUB_ENV
+          if [ "${{ env.ksu_fork }}" == "SUKISU" ];then
+            echo "-> Rename most libraries in the App lib dir for better hiding." >> $GITHUB_ENV
+          else
+            echo "-> Rename all libraries in the App lib dir for better hiding." >> $GITHUB_ENV
+          fi
           echo "-> Wireguard Support" >> $GITHUB_ENV
           echo "-> Simple Maphide for LineageOS Detections" >> $GITHUB_ENV
           echo "-> Futile Maphide for jit-zygote-cache Detections" >> $GITHUB_ENV
