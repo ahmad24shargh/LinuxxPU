@@ -4,6 +4,9 @@ permissions: write-all
   #actions: write   # Allows triggering actions
 env:
   GH_TOKEN: ${{ secrets.WORKFLOW_TOKEN }} 
+  #for sukisu only
+  # manual or tracepoint
+  hook_method: 'tracepoint'
   
 concurrency:
       group: staging_environment
@@ -191,6 +194,7 @@ jobs:
       kernel_version: "5.15"
       sub_level: ${{ matrix.sub_level }}
       ksu_fork: ${{ inputs.ksu_fork }}
+      hook_method: ${{ env.hook_method }}
       os_patch_level: ${{ matrix.os_patch_level }}
       linuxxpu_variant: Next
       linuxxpu_branch: Dev
@@ -558,7 +562,11 @@ jobs:
           fi
           echo '-> LinuxxPU DEV('${{ env.kernel_variant }}')' >> $GITHUB_ENV
           [ ${{ inputs.include_susfs }} == 'true'  ] && echo  "-> ${{ env.susfs_version}}" >> $GITHUB_ENV
-          echo "-> Manual Hooks (scope-minimized v1.4) for Better Hiding" >> $GITHUB_ENV
+          if [ "${{ env.hook_method }}" == "tracepoint" -a "${{ env.ksu_fork }}" == "SUKISU" ];then
+            echo "-> TracePoints Hooks for Better Hiding" >> $GITHUB_ENV
+          else
+            echo "-> Manual Hooks (scope-minimized v1.4) for Better Hiding" >> $GITHUB_ENV
+          fi
           echo "-> Rename all library in the App lib dir for better hiding." >> $GITHUB_ENV
           echo "-> Wireguard Support" >> $GITHUB_ENV
           echo "-> Simple Maphide for LineageOS Detections" >> $GITHUB_ENV
