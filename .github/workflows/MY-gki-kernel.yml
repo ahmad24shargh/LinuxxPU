@@ -20,6 +20,9 @@ on:
       ksu_fork:
         required: true
         type: string
+      hook_method:
+        required: true
+        type: string   
       include_susfs:
         required: true
         type: boolean
@@ -71,6 +74,7 @@ jobs:
       #CCACHE_HARDLINK: "true"
       kernel_variant: ${{ inputs.kernel_variant }}
       ksu_fork: ${{ inputs.ksu_fork }}
+      hook_method: ${{ inputs.hook_method }}
       include_susfs: ${{ inputs.include_susfs }}
       #C_VERSION: ${{ inputs.C_VERSION }}
       #C_LAST_COMMIT: ${{ inputs.C_LAST_COMMIT }}
@@ -374,13 +378,17 @@ jobs:
           cd "$CONFIG/common"
 
           if [ "${{ inputs.ksu_fork }}" == "KSUN" -a "${{ env.kernel_variant }}" != "chickernel" ]; then
-            echo "Applying hooks for KernelSU-Next..."
+            echo "Applying manual hooks for KernelSU-Next..."
             cp ../../kernel_patches/next/syscall_hooks.patch ./
             patch -p1 -F 3 < syscall_hooks.patch
-          elif [ "${{ inputs.ksu_fork }}" == "SUKISU" -a "${{ env.kernel_variant }}" != "chickernel" ]; then
-            echo "Applying hooks for SukiSU Ultra..."
+          elif [ "${{ inputs.ksu_fork }}" == "SUKISU" -a "${{ env.kernel_variant }}" != "chickernel"  -a "${{ env.hook_method }}" == "manual" ]; then
+            echo "Applying manual hooks for SukiSU Ultra..."
             cp ../../kernel_patches/sukisu/syscall_hooks.patch ./
             patch -p1 -F 3 < syscall_hooks.patch
+          elif [ "${{ inputs.ksu_fork }}" == "SUKISU" -a "${{ env.kernel_variant }}" != "chickernel"  -a "${{ env.hook_method }}" == "tracepoint" ]; then
+            echo "Applying tracepoint hooks for SukiSU Ultra..."
+            cp ../../kernel_patches/sukisu/sukisu_tracepoint_hooks.patch ./
+            patch -p1 -F 3 < sukisu_tracepoint_hooks.patch
           fi
           
       - name: Apply Hide Stuff Patches
@@ -401,8 +409,8 @@ jobs:
           # Add KSU configuration settings
           echo "CONFIG_KSU=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_LSM_SECURITY_HOOKS=y" >> ./common/arch/arm64/configs/gki_defconfig
-          if [ ${{ env.ksu_fork }} == 'SUKISU' ];then
-            echo "CONFIG_KPM=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KPM=y" >> ./common/arch/arm64/configs/gki_defconfig
+          if [ ${{ env.ksu_fork }} == 'SUKISU' -a "${{ env.hook_method }}" == "tracepoint" ];then
             echo "CONFIG_TRACEPOINTS=y" >> ./common/arch/arm64/configs/gki_defconfig
             echo "CONFIG_KSU_TRACEPOINT_HOOK=y" >> ./common/arch/arm64/configs/gki_defconfig
           else
