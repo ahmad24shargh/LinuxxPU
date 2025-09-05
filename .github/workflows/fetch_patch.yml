@@ -204,6 +204,7 @@ jobs:
             fi
             cd ${GITHUB_WORKSPACE}
           fi
+          sed -E 's/KSU_VERSION_FULL :=.+get_ksu_version_full.+/KSU_VERSION_FULL := "'"$C_TAG_NAME ($(expr $(echo "$(grep -E 'shell expr' KSU/kernel/Makefile 2>/dev/null | head -n 1 | grep -Eo '[0-9]*' | tr '\n' '+')$C_VERSION" | sed 's/\+/ + /g')))"'"/g' KSU/kernel/Makefile
           cp -af KSU/* KSU/.* .
           rm -rf KSU
           #for item in "${repo_commits[@]}";do if [[ ${upstream_last_commit} == ${item} ]]; then has_new_commits=false && break;fi;done
