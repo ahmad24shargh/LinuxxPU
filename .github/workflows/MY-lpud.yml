@@ -1,0 +1,183 @@
+name: MY Build lpud
+env:
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+on:
+  workflow_call:
+    inputs:
+      target:
+        required: true
+        type: string
+      ksu_fork:
+        required: true
+        type: string
+      os:
+        required: false
+        type: string
+        default: ubuntu-latest
+      pack_lkm:
+        required: false
+        type: boolean
+        default: true
+      use_cache:
+        required: false
+        type: boolean
+        default: true
+      #C_VERSION:
+        #required: true
+        #type: string
+      #C_LAST_COMMIT:
+        #required: true
+        #type: string
+      #C_TAG_NAME:
+        #required: true
+        #type: string
+jobs:
+  build:
+    runs-on: ${{ inputs.os }}
+    #env:
+      #C_VERSION: ${{ inputs.C_VERSION }}
+      #C_LAST_COMMIT: ${{ inputs.C_LAST_COMMIT }}
+      #C_TAG_NAME: ${{ inputs.C_TAG_NAME }}
+    steps:
+    #- name: Checkout Repository
+      #uses: actions/checkout@v4.2.2
+      #with:
+        #fetch-depth: 0
+      
+    
+    - name: download linuxxpu with patched dir
+      uses: actions/download-artifact@v4.3.0
+      with:
+        name: linuxxpu
+        path: .
+        github-token: ${{ env.GITHUB_TOKEN }}
+        
+    - name: Implementing necessary changes to the source code 
+      run: |
+        bash ${GITHUB_WORKSPACE}/.github/scripts/calc_patch_tg.sh
+
+    - name: Prepare LKM Files
+      #if: ${{ inputs.pack_lkm }}
+      run: |
+        if ${{ inputs.ksu_fork == 'KSUN' }};then
+          owner=KernelSU-Next
+          repo=KernelSU-Next
+          workflow='build-manager-ci.yml'
+        elif ${{ inputs.ksu_fork == 'SUKISU' }};then
+          owner=SukiSU-Ultra
+          repo=SukiSU-Ultra
+          workflow='build-manager.yml'
+        fi
+        declare -a RUN_IDs
+        RUN_IDs=($(gh run list --limit 50 --repo ${owner}/${repo} --workflow ${workflow}  --json databaseId,createdAt,conclusion,status --jq 'map(select(.status == "completed" and .conclusion == "success")) | sort_by(.created_at)' | tr ',' '\n' | grep "databaseId" | cut -d':' -f 2))
+        if [ ${#RUN_IDs[@]} -eq 0 ];then
+          echo "action run IDs could not be extracted."
+          false
+        fi
+        for (( i=0; i<${#RUN_IDs[@]}; i++ )); do
+          for lkms in $(gh api -H "Accept: application/vnd.github+json"       "/repos/${owner}/${repo}/actions/runs/${RUN_IDs[$i]}/artifacts" | jq '.artifacts[] | .name, .id' | grep -Eo '[^( |")]+-lkm');do gh run download ${RUN_IDs[$i]} -n "${lkms}" --repo "${owner}/$repo" ;done
+          if compgen -G "android*.ko" >/dev/null;then break;fi
+        done
+        if ! compgen -G "android*.ko" >/dev/null;then 
+          echo "The lkm files(.ko) could not be downloaded."
+          false
+        else
+          for lkms in $(find . -type f -name 'android*.ko' 2>/dev/null);do 
+            #bash ${GITHUB_WORKSPACE}/.github/scripts/hex_patch.sh $lkms ksu lpu
+            #bash ${GITHUB_WORKSPACE}/.github/scripts/hex_patch.sh $lkms KernelSU LinuxxPU
+            #bash ${GITHUB_WORKSPACE}/.github/scripts/hex_patch.sh $lkms kernelsu linuxxpu
+            mv $lkms $(echo $lkms | sed 's/kernelsu/linuxxpu/g')
+          done
+        fi
+        find . -type f -name 'android*.ko' 2>/dev/null
+        if ${{ inputs.ksu_fork == 'KSUN' }};then
+          cp android*.ko ./userspace/lpud_overlayfs/bin/aarch64/
+          cp android*.ko ./userspace/lpud_magic/bin/aarch64/
+        elif ${{ inputs.ksu_fork == 'SUKISU' }};then
+          cp android*.ko ./userspace/lpud/bin/aarch64/
+        fi
+        
+    - name: Download susfsd
+      if: ${{ inputs.ksu_fork == 'KSUN' }}
+      uses: actions/download-artifact@v4.3.0
+      with:
+        name: susfsd-aarch64-linux-android
+        path: .
+        github-token: ${{ env.GITHUB_TOKEN }}
+        
+        
+    #- name: Prepare LKM Files
+    #  if: ${{ inputs.pack_lkm }}
+    #  run: |
+    #    cp android*-lkm/*_kernelsu.ko ./userspace/lpud_overlayfs/bin/aarch64/
+    #    cp android*-lkm/*_kernelsu.ko ./userspace/lpud_magic/bin/aarch64/
+
+    - name: Import susfsd Libraries
+      if: ${{ inputs.ksu_fork == 'KSUN' }}
+      run: |
+        #cp susfsd-aarch64-linux-android/arm64-v8a/susfsd ./userspace/lpud_overlayfs/bin/aarch64/
+        #cp susfsd-aarch64-linux-android/arm64-v8a/susfsd ./userspace/lpud_magic/bin/aarch64/
+        cp arm64-v8a/susfsd ./userspace/lpud_overlayfs/bin/aarch64/
+        cp arm64-v8a/susfsd ./userspace/lpud_magic/bin/aarch64/
+        
+    - name: Setup Rust
+      run: |
+        rustup update stable
+        #if [ ${{ inputs.ksu_fork }} == KSUN  ];then rustup target add x86_64-apple-darwin;fi
+        rustup target add aarch64-apple-darwin
+
+    - name: Cache lpud_overlayfs
+      if: ${{ inputs.ksu_fork == 'KSUN' }}
+      uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: userspace/lpud_overlayfs
+        cache-targets: false
+
+    - name: Cache lpud_magic
+      if: ${{ inputs.ksu_fork == 'KSUN' }}
+      uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: userspace/lpud_magic
+        cache-targets: false
+
+    - name: Cache lpud
+      if: ${{ inputs.ksu_fork == 'SUKISU' }}
+      uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: userspace/lpud
+        cache-targets: false
+
+    - name: Setup Cross
+      run: |
+        RUSTFLAGS="" cargo install cross --git https://github.com/cross-rs/cross --rev 66845c1 --force
+
+    - name: Build lpud
+      if: ${{ inputs.ksu_fork == 'KSUN' }}
+      run: |
+        CROSS_NO_WARNINGS=0 cross build --target ${{ inputs.target }} --release --manifest-path ./userspace/lpud_overlayfs/Cargo.toml
+        CROSS_NO_WARNINGS=0 cross build --target ${{ inputs.target }} --release --manifest-path ./userspace/lpud_magic/Cargo.toml
+
+    - name: Build lpud
+      if: ${{ inputs.ksu_fork == 'SUKISU' }}
+      run: CROSS_NO_WARNINGS=0 cross build --target ${{ inputs.target }} --release --manifest-path ./userspace/lpud/Cargo.toml
+
+    - name: Upload lpud_overlayfs artifact
+      if: ${{ inputs.ksu_fork == 'KSUN' }}
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        name: lpud_overlayfs-${{ inputs.target }}
+        path: userspace/lpud_overlayfs/target/**/release/lpud*
+
+    - name: Upload lpud_magic artifact
+      if: ${{ inputs.ksu_fork == 'KSUN' }}
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        name: lpud_magic-${{ inputs.target }}
+        path: userspace/lpud_magic/target/**/release/lpud*
+
+    - name: Upload ksud artifact
+      if: ${{ inputs.ksu_fork == 'SUKISU' }}
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        name: lpud-${{ inputs.target }}
+        path: userspace/lpud/target/**/release/lpud*
