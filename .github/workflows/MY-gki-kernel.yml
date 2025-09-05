@@ -67,7 +67,7 @@ on:
 jobs:
   build-kernel-kernelsu:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     env:
       #CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
       #CCACHE_NOHASHDIR: "true"
