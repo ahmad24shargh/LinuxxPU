@@ -471,8 +471,7 @@ jobs:
           [ -f ${temp_file} ] && rm ${temp_file} 
           cp -af ${patched_folder} ${repo_folder}/.github/ || true
           cp -af ${must_unchange_kernel_files}/.defconfig ${repo_folder}/
-          ls -lRa ${patched_folder}
-          cp -af "${patched_folder}/.github/." ${repo_folder}/.github/ || true
+          [ -d "${patched_folder}/.github" ] &&  cp -af ${patched_folder}/.github/. ${repo_folder}/.github/
           [ -f ${repo_folder}/manager/app/src/main/cpp/lpu.c ] && sed -i -e 's/lpu_sys_file_open/zako_sys_file_open/g' -e 's/lpu_file_verify_esig/zako_file_verify_esig/g' -e 's/lpu_file_verrcidx2str/zako_file_verrcidx2str/g' ${repo_folder}/manager/app/src/main/cpp/lpu.c
           #unzip -o ${repo_folder}/.github/scripts/workflows.zip -d ${repo_folder}/.github/workflows
           #set -x
