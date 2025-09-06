@@ -308,6 +308,7 @@ jobs:
           #git remote set-url origin ${repo_url}
           cd  ${repo_folder}
           for dirs in $(find ${repo_folder}/manager/app/src/main/res -maxdepth 1 -type d  -name 'values-*');do [ "$(echo $dirs | rev | cut -d'-' -f1 | rev)" != "night" ] && rm -rf $dirs;done
+          sed -i '/app_name_wild_ksu/d' ${repo_folder}/manager/app/src/main/res/values/strings.xml
           for files in $(find ${repo_folder}/docs -type f  -name 'README_*');do rm -f ${files};done
           #rm -f ${repo_folder}/.github/workflows/*
           #rm -f ${repo_folder}/assets/kernelsu_next.png
