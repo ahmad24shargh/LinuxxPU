@@ -260,15 +260,13 @@ jobs:
       
       - name: replacing stock gki_defconfig with custom .defconfig and others
         run: |
-          repo_path=$(realpath .)
-          echo "repo_path=${repo_path}" >> $GITHUB_ENV
           #mkdir -p $CONFIG/out
           #cp "$defconfig" $CONFIG/out/.config
           #mkdir -p $CONFIG/common/arch/arm64/configs
           for file in $(find $CONFIG/common/arch/arm64/configs -type f 2>/dev/null);do sed -E -i -e '/CONFIG_LOCALVERSION/d' -e '/_LTO/d' $file;done
           if [[ "${{ env.kernel_variant }}" == "common-android-mainline" ]];then
             #cp "$defconfig" $CONFIG/common/arch/arm64/configs/gki_defconfig
-            defconfig="${repo_path}/.defconfig"
+            defconfig="${GITHUB_WORKSPACE}/.defconfig"
           elif [[ "${{ env.kernel_variant }}" == "chickernel" ]];then
             #rm $CONFIG/common/arch/arm64/configs/gki_defconfig 
             #cp $CONFIG/common/arch/arm64/configs/chickernel_defconfig $CONFIG/common/arch/arm64/configs/gki_defconfig
@@ -313,15 +311,15 @@ jobs:
           sed -E -i 's#(^[[:space:]]+)(\$\(call if_changed,gzip\))#\1\$(srctree)/kernel/manipulating_conf_data.sh $(realpath kernel/config_data)\; \\\n\1\2#g' $CONFIG/common/kernel/Makefile
 
           # for clang-22
-          if [ -d $repo_path/clang-22 ];then
-            pushd $repo_path/$CONFIG
+          if [ -d $GITHUB_WORKSPACE/clang-22 ];then
+            pushd $GITHUB_WORKSPACE/$CONFIG
             #Remove old clang revisions and create a link to clang-22
-            clang_bin=$(find $repo_path/clang-22 -type l -name 'clang' 2>/dev/null | head -n 1)
-            [ -z $clang_bin ] && clang_bin=$(find $repo_path/clang-22 -type f -name 'clang' 2>/dev/null | head -n 1)
-            [ -e $repo_path/clang-22/bin/clang ] && clang_bin="$repo_path/clang-22/bin/clang"
+            clang_bin=$(find $GITHUB_WORKSPACE/clang-22 -type l -name 'clang' 2>/dev/null | head -n 1)
+            [ -z $clang_bin ] && clang_bin=$(find $GITHUB_WORKSPACE/clang-22 -type f -name 'clang' 2>/dev/null | head -n 1)
+            [ -e $GITHUB_WORKSPACE/clang-22/bin/clang ] && clang_bin="$GITHUB_WORKSPACE/clang-22/bin/clang"
             [ -z $clang_bin ] && echo "clang not found" && false
             rm -rf prebuilts/clang/host/linux-x86/clang-*
-            cd prebuilts/clang/host/linux-x86/ && ln -s -T $repo_path/clang-22 clang-$($clang_bin -dumpversion)
+            cd prebuilts/clang/host/linux-x86/ && ln -s -T $GITHUB_WORKSPACE/clang-22 clang-$($clang_bin -dumpversion)
             #echo 'clang -print-runtime-dir'
             #$clang_bin -print-runtime-dir
             #echo 'clang -print-search-dirs'
@@ -332,31 +330,31 @@ jobs:
             sed -i \
              -e 's/^BRANCH=.*/BRANCH=android13-5.15/' \
              -e 's/^CLANG_VERSION=.*/CLANG_VERSION='$($clang_bin -dumpversion)'/' \
-             ${repo_path}/$CONFIG/common/build.config.constants
+             ${GITHUB_WORKSPACE}/$CONFIG/common/build.config.constants
 
              # Remove defconfig check (if exists)
-             sed -i '/^POST_DEFCONFIG_CMDS="check_defconfig"/d' ${repo_path}/$CONFIG/common/build.config.gki
+             sed -i '/^POST_DEFCONFIG_CMDS="check_defconfig"/d' ${GITHUB_WORKSPACE}/$CONFIG/common/build.config.gki
 
              ##this fix the error that present on clang 21,22 and so on.
-             #cp ${repo_path}/kernel_patches/0001-treewide-clang-compilation-fixup.patch ${repo_path}/$CONFIG/common
-             #cd ${repo_path}/$CONFIG/common
+             #cp ${GITHUB_WORKSPACE}/kernel_patches/0001-treewide-clang-compilation-fixup.patch ${GITHUB_WORKSPACE}/$CONFIG/common
+             #cd ${GITHUB_WORKSPACE}/$CONFIG/common
              #patch -p1 < 0001-treewide-clang-compilation-fixup.patch || true
 
              popd
           fi
           
           #cat $CONFIG/common/kernel/Makefile
-          #cp "${repo_path}/Kconfig" $CONFIG/common/
-          #cp "${repo_path}/arch/arm64/Kconfig" $CONFIG/common/arch/arm64/
-          #cp "${repo_path}/drivers/remoteproc/Kconfig" $CONFIG/common/drivers/remoteproc/
-          #cp "${repo_path}/drivers/soc/qcom/Kconfig" $CONFIG/common/drivers/soc/qcom/
-          #cp -a "${repo_path}/drivers/soc/qcom/hab" $CONFIG/common/drivers/soc/qcom/
-          #cp -a "${repo_path}/drivers/power" $CONFIG/common/drivers/
-          #cp "${repo_path}/kernel/irq/Kconfig" $CONFIG/common/kernel/irq/
-          #cp "${repo_path}/net/wireless/Kconfig" $CONFIG/common/net/wireless/
-          #cp -a "${repo_path}/arch/arm64/configs/vendor" $CONFIG/common/arch/arm64/configs/
-          #find ${repo_path}/ -type f -name 'build*' -exec cp {} $CONFIG/common/ \;
-          #find ${repo_path}/ -type f -name 'modules*' -exec cp {} $CONFIG/common/ \;
+          #cp "${GITHUB_WORKSPACE}/Kconfig" $CONFIG/common/
+          #cp "${GITHUB_WORKSPACE}/arch/arm64/Kconfig" $CONFIG/common/arch/arm64/
+          #cp "${GITHUB_WORKSPACE}/drivers/remoteproc/Kconfig" $CONFIG/common/drivers/remoteproc/
+          #cp "${GITHUB_WORKSPACE}/drivers/soc/qcom/Kconfig" $CONFIG/common/drivers/soc/qcom/
+          #cp -a "${GITHUB_WORKSPACE}/drivers/soc/qcom/hab" $CONFIG/common/drivers/soc/qcom/
+          #cp -a "${GITHUB_WORKSPACE}/drivers/power" $CONFIG/common/drivers/
+          #cp "${GITHUB_WORKSPACE}/kernel/irq/Kconfig" $CONFIG/common/kernel/irq/
+          #cp "${GITHUB_WORKSPACE}/net/wireless/Kconfig" $CONFIG/common/net/wireless/
+          #cp -a "${GITHUB_WORKSPACE}/arch/arm64/configs/vendor" $CONFIG/common/arch/arm64/configs/
+          #find ${GITHUB_WORKSPACE}/ -type f -name 'build*' -exec cp {} $CONFIG/common/ \;
+          #find ${GITHUB_WORKSPACE}/ -type f -name 'modules*' -exec cp {} $CONFIG/common/ \;
           #if test -d $CONFIG/common/drivers; then
              # cd $CONFIG/common/
               #yes "" | make gki_defconfig $defconfig ARCH=arm64 O="$CONFIG/common/out/"
@@ -382,15 +380,15 @@ jobs:
           DRIVER_KCONFIG=$DRIVER_DIR/Kconfig
           [ ! -d $DRIVER_DIR ] && exit 123
           cd "$DRIVER_DIR"
-          ln -sf "${repo_path}/kernel" "linuxxpu" && echo "[+] Symlink created."
+          ln -sf "${GITHUB_WORKSPACE}/kernel" "linuxxpu" && echo "[+] Symlink created."
           # Add entries in Makefile and Kconfig if not already existing
           grep -q "linuxxpu" "$DRIVER_MAKEFILE" || printf "\nobj-\$(CONFIG_LPU) += linuxxpu/\n" >> "$DRIVER_MAKEFILE" && echo "[+] Modified Makefile."
           grep -q "source \"drivers/linuxxpu/Kconfig\"" "$DRIVER_KCONFIG" || sed -i "/endmenu/i\source \"drivers/linuxxpu/Kconfig\"" "$DRIVER_KCONFIG" && echo "[+] Modified Kconfig."
           echo '[+] Done.'
           #fi
-          cd "${repo_path}/$CONFIG"
-          ln -s ${repo_path} ./KernelSU-Next
-          ln -s ${repo_path} ./kernelsu
+          cd "${GITHUB_WORKSPACE}/$CONFIG"
+          ln -s ${GITHUB_WORKSPACE} ./KernelSU-Next
+          ln -s ${GITHUB_WORKSPACE} ./kernelsu
           for files in $(grep -R ../kernel_patches -e 'ksud' 2>/dev/null | grep -v 'https' | grep -v 'rustix::' | cut -d':' -f1 | sort | uniq);do sed -i 's|ksud|lpud|g' $files;done
           for files in $(grep -R ../kernel_patches -e 'ksu' 2>/dev/null | grep -v 'https' | grep -v 'rustix::' | cut -d':' -f1 | sort | uniq);do sed -i 's|ksu|lpu|g' $files;done
           
@@ -542,7 +540,7 @@ jobs:
             echo "Kernel >= $MIN_VERSION, skipping ptrace patch"
           fi
 
-          #for file in $(grep -R ${repo_path}/kernel -e 'is_manager_apk' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -E -i 's/([[:space:]]+)is_manager_apk/\1lpu_is_manager_apk/g' $file;done
+          #for file in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'is_manager_apk' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -E -i 's/([[:space:]]+)is_manager_apk/\1lpu_is_manager_apk/g' $file;done
           
       - name: Copy source files & apply LZ4KD & ZSTDN patches
         run: |
@@ -684,7 +682,7 @@ jobs:
           set -x
           cd "$CONFIG"
 
-          if [ ! -d $repo_path/clang-22 ];then
+          if [ ! -d $GITHUB_WORKSPACE/clang-22 ];then
             export LIBRARY_PATH=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/lib64
             export CPATH=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/include
           fi
@@ -696,7 +694,7 @@ jobs:
           export KBUILD_BUILD_USER='ahmad'
           export KBUILD_BUILD_HOST='Forozan'
           sed -E -i -e 's|LC_ALL=C|LC_ALL=C;KBUILD_BUILD_TIMESTAMP="'"${KBUILD_BUILD_TIMESTAMP}"'";KBUILD_BUILD_USER="'"${KBUILD_BUILD_USER}"'";KBUILD_BUILD_HOST="'"${KBUILD_BUILD_HOST}"'";|g' -e 's|LINUX_COMPILE_BY=.+|LINUX_COMPILE_BY="'${KBUILD_BUILD_USER}'"|g' -e 's|LINUX_COMPILE_HOST=.+|LINUX_COMPILE_HOST="'${KBUILD_BUILD_HOST}'"|g' ./common/scripts/mkcompile_h
-          if test -d ${repo_path}/manager ;then
+          if test -d ${GITHUB_WORKSPACE}/manager ;then
             set +e
             set +x
             declare -a options
@@ -706,10 +704,10 @@ jobs:
             #options="${{ inputs.manager_supports }}" 
             #echo "${options}"
             if [[ ${options[*]} =~ true ]];then
-              #default_size=$(grep -Eo '[^[:space:]]+_(EXPECTED|MANAGER)_SIZE := [0-9a-fA-FXx]+' ${repo_path}/kernel/Makefile 2>/dev/null | cut -d' ' -f3)
+              #default_size=$(grep -Eo '[^[:space:]]+_(EXPECTED|MANAGER)_SIZE := [0-9a-fA-FXx]+' ${GITHUB_WORKSPACE}/kernel/Makefile 2>/dev/null | cut -d' ' -f3)
               #test -z ${default_size} && exit 1
               default_size='0x373'
-              #default_hash=$(grep -Eo '[^[:space:]]+_(EXPECTED|MANAGER)_HASH := .+' ${repo_path}/kernel/Makefile 2>/dev/null | cut -d' ' -f 3)
+              #default_hash=$(grep -Eo '[^[:space:]]+_(EXPECTED|MANAGER)_HASH := .+' ${GITHUB_WORKSPACE}/kernel/Makefile 2>/dev/null | cut -d' ' -f 3)
               #test -z ${default_hash} && exit 1
               default_hash='5028506331f6c9f189e2f6500d90c3d6972bd7033e960fed4b5dda1fe31a5e95'
               declare -a managers_size;
@@ -767,23 +765,23 @@ jobs:
               fi
               SUPPORTED_MANAGER_COUNT="${#managers_size[@]}"
               #for (( i=0; i<$SUPPORTED_MANAGER_COUNT; i++ )); do echo "${managers_size[$i]}:${managers_hash[$i]}" ; done
-              grep -Eq 'apk_sign_keys\[\] =.+' ${repo_path}/kernel/apk_sign.c
+              grep -Eq 'apk_sign_keys\[\] =.+' ${GITHUB_WORKSPACE}/kernel/apk_sign.c
               if [ $? -eq 0 ];then
-                temp_str="$(grep -E '.+apk_sign_keys\[\] = .*' ${repo_path}/kernel/apk_sign.c 2>/dev/null)\n"
+                temp_str="$(grep -E '.+apk_sign_keys\[\] = .*' ${GITHUB_WORKSPACE}/kernel/apk_sign.c 2>/dev/null)\n"
                 for (( i=0; i<$SUPPORTED_MANAGER_COUNT; i++ )); do 
                   temp_str="${temp_str}\t\{${managers_size[$i]}, \"${managers_hash[$i]}\"\},\n"
                 done
-                sed -E -i -e '/.*\{(EXPECTED|MANAGER)_SIZE.*\,.*(EXPECTED|MANAGER)_HASH.*\}.+/d' -e '/.*\{(expected|manager)_size.*\,.*(expected|manager)_hash.*\}.+/d' ${repo_path}/kernel/apk_sign.c
-                sed -E -i 's/(.+apk_sign_keys\[\] \=.*)/'"${temp_str}"'/g' ${repo_path}/kernel/apk_sign.c
-                for file in $(grep -R {repo_path}/kernel -e 'define MAX_MANAGERS' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -E -i 's|#define MAX_MANAGERS.+|#define MAX_MANAGERS '$SUPPORTED_MANAGER_COUNT'|g' $file;cat $file;done
+                sed -E -i -e '/.*\{(EXPECTED|MANAGER)_SIZE.*\,.*(EXPECTED|MANAGER)_HASH.*\}.+/d' -e '/.*\{(expected|manager)_size.*\,.*(expected|manager)_hash.*\}.+/d' ${GITHUB_WORKSPACE}/kernel/apk_sign.c
+                sed -E -i 's/(.+apk_sign_keys\[\] \=.*)/'"${temp_str}"'/g' ${GITHUB_WORKSPACE}/kernel/apk_sign.c
+                for file in $(grep -R {GITHUB_WORKSPACE}/kernel -e 'define MAX_MANAGERS' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -E -i 's|#define MAX_MANAGERS.+|#define MAX_MANAGERS '$SUPPORTED_MANAGER_COUNT'|g' $file;cat $file;done
               else
-                #sed -E -i 's|(bool .*is_manager_apk\(char \*path\)\;)|#define SUPPORTED_MANAGER_COUNT '${SUPPORTED_MANAGER_COUNT}'\nextern unsigned MANAGER_SIZE[SUPPORTED_MANAGER_COUNT];\nextern const char *MANAGER_HASH[SUPPORTED_MANAGER_COUNT];\n\n\1|g' ${repo_path}/kernel/apk_sign.h
-                #sed -E -i '/bool .*is_manager_apk\(char \*.+/,/}/d' ${repo_path}/kernel/apk_sign.c
-                #sed -E -i -e 's|(bool .*is_manager_apk\(char \*.+\))|\nunsigned MANAGER_SIZE\[SUPPORTED_MANAGER_COUNT\]=\{'$(echo "${managers_size[*]}" | tr ' ' ', ')'\}\;\nconst char *MANAGER_HASH\[SUPPORTED_MANAGER_COUNT\]=\{'$(echo $(for i in "${managers_hash[@]}" ; do printf '"%s" ' "$i";done) | tr ' ' ', ')'\}\;\n\nbool lpu_is_manager_apk(char *path)|g' -e 's|return [^[:space:]]?check_v2_signature\(.+|int i\;\n        bool result = false\;\n\n        for \(i = 0\; i \< SUPPORTED_MANAGER_COUNT\; i++\)\n        \{\n           result = check_v2_signature\(path, MANAGER_SIZE[i], MANAGER_HASH[i]\)\;\n           if (result\)  \{ return result\;\}\n        \}\n     return result\;\n|g' ${repo_path}/kernel/apk_sign.c
-                sed -E -i -e 's|(bool .*)(is_manager_apk\(char \*.+\))|\n#define SUPPORTED_MANAGER_COUNT '${SUPPORTED_MANAGER_COUNT}'\nunsigned MANAGER_SIZE\[SUPPORTED_MANAGER_COUNT\]=\{'$(echo "${managers_size[*]}" | tr ' ' ', ')'\}\;\nconst char *MANAGER_HASH\[SUPPORTED_MANAGER_COUNT\]=\{'$(echo $(for i in "${managers_hash[@]}" ; do printf '"%s" ' "$i";done) | tr ' ' ', ')'\}\;\n\n\1is_manager_apk(char *path)|g' -e 's|return [^[:space:]]?check_v2_signature\([^\;]+;|int i\;\n        bool result = false\;\n\n        for \(i = 0\; i \< SUPPORTED_MANAGER_COUNT\; i++\)\n        \{\n           result = check_v2_signature\(path, MANAGER_SIZE[i], MANAGER_HASH[i]\)\;\n           if (result\)  \{ return result\;\}\n        \}\n     return result\;\n|g' ${repo_path}/kernel/apk_sign.c
-                #echo -e '\nunsigned MANAGER_SIZE[SUPPORTED_MANAGER_COUNT]={'$(echo "${managers_size[*]}" | tr ' ' ', ')'};\nconst char *MANAGER_HASH[SUPPORTED_MANAGER_COUNT]={'$(echo $(for i in "${managers_hash[@]}" ; do printf '"%s" ' "$i";done) | tr ' ' ', ')'};\n\nbool lpu_is_manager_apk(char *path)\n{\n        int i;\n        bool result = false;\n\n        for (i = 0; i < SUPPORTED_MANAGER_COUNT; i++)\n     {\n             result = check_v2_signature(path, MANAGER_SIZE[i], MANAGER_HASH[i]);\n           if (result)  { return result;}\n        }\n     return result;\n}\n' >> ${repo_path}/kernel/apk_sign.c
+                #sed -E -i 's|(bool .*is_manager_apk\(char \*path\)\;)|#define SUPPORTED_MANAGER_COUNT '${SUPPORTED_MANAGER_COUNT}'\nextern unsigned MANAGER_SIZE[SUPPORTED_MANAGER_COUNT];\nextern const char *MANAGER_HASH[SUPPORTED_MANAGER_COUNT];\n\n\1|g' ${GITHUB_WORKSPACE}/kernel/apk_sign.h
+                #sed -E -i '/bool .*is_manager_apk\(char \*.+/,/}/d' ${GITHUB_WORKSPACE}/kernel/apk_sign.c
+                #sed -E -i -e 's|(bool .*is_manager_apk\(char \*.+\))|\nunsigned MANAGER_SIZE\[SUPPORTED_MANAGER_COUNT\]=\{'$(echo "${managers_size[*]}" | tr ' ' ', ')'\}\;\nconst char *MANAGER_HASH\[SUPPORTED_MANAGER_COUNT\]=\{'$(echo $(for i in "${managers_hash[@]}" ; do printf '"%s" ' "$i";done) | tr ' ' ', ')'\}\;\n\nbool lpu_is_manager_apk(char *path)|g' -e 's|return [^[:space:]]?check_v2_signature\(.+|int i\;\n        bool result = false\;\n\n        for \(i = 0\; i \< SUPPORTED_MANAGER_COUNT\; i++\)\n        \{\n           result = check_v2_signature\(path, MANAGER_SIZE[i], MANAGER_HASH[i]\)\;\n           if (result\)  \{ return result\;\}\n        \}\n     return result\;\n|g' ${GITHUB_WORKSPACE}/kernel/apk_sign.c
+                sed -E -i -e 's|(bool .*)(is_manager_apk\(char \*.+\))|\n#define SUPPORTED_MANAGER_COUNT '${SUPPORTED_MANAGER_COUNT}'\nunsigned MANAGER_SIZE\[SUPPORTED_MANAGER_COUNT\]=\{'$(echo "${managers_size[*]}" | tr ' ' ', ')'\}\;\nconst char *MANAGER_HASH\[SUPPORTED_MANAGER_COUNT\]=\{'$(echo $(for i in "${managers_hash[@]}" ; do printf '"%s" ' "$i";done) | tr ' ' ', ')'\}\;\n\n\1is_manager_apk(char *path)|g' -e 's|return [^[:space:]]?check_v2_signature\([^\;]+;|int i\;\n        bool result = false\;\n\n        for \(i = 0\; i \< SUPPORTED_MANAGER_COUNT\; i++\)\n        \{\n           result = check_v2_signature\(path, MANAGER_SIZE[i], MANAGER_HASH[i]\)\;\n           if (result\)  \{ return result\;\}\n        \}\n     return result\;\n|g' ${GITHUB_WORKSPACE}/kernel/apk_sign.c
+                #echo -e '\nunsigned MANAGER_SIZE[SUPPORTED_MANAGER_COUNT]={'$(echo "${managers_size[*]}" | tr ' ' ', ')'};\nconst char *MANAGER_HASH[SUPPORTED_MANAGER_COUNT]={'$(echo $(for i in "${managers_hash[@]}" ; do printf '"%s" ' "$i";done) | tr ' ' ', ')'};\n\nbool lpu_is_manager_apk(char *path)\n{\n        int i;\n        bool result = false;\n\n        for (i = 0; i < SUPPORTED_MANAGER_COUNT; i++)\n     {\n             result = check_v2_signature(path, MANAGER_SIZE[i], MANAGER_HASH[i]);\n           if (result)  { return result;}\n        }\n     return result;\n}\n' >> ${GITHUB_WORKSPACE}/kernel/apk_sign.c
               fi
-              cat ${repo_path}/kernel/apk_sign.c
+              cat ${GITHUB_WORKSPACE}/kernel/apk_sign.c
             fi
             #sed -i 's|KernelSU|LinuxxPU|g' $(find . -type f -name 'ksu.c')
             #sed -i 's|kernelsu|linuxxpu|g' $(find . -type f -name 'ksu.c')
@@ -792,26 +790,26 @@ jobs:
             #sed -i 's|kernelsu|linuxxpu|g' $(find . -type f -name 'selinux.h')
             sed  -i 's/_KSU_/_LPU_/g' ${defconfig}
             sed  -i 's/CONFIG_KSU/CONFIG_LPU/g' ${defconfig}
-            for files in $(grep -R ${repo_path}/kernel -e 'sukisu.ultra' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i 's|sukisu.ultra|linuxxpu|g' $files;done
-            for files in $(grep -R ${repo_path}/kernel -e 'SukiSU.Ultra' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU.Ultra/LinuxxPU/g' $files;done
-            for files in $(grep -R ${repo_path}/kernel -e 'SUKISU.ULTRA' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i 's|SUKISU.ULTRA|LINUXXPU|g' $files;done
-            for files in $(grep -R ${repo_path}/kernel -e 'SUKISU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i 's|SUKISU|LINUXXPU|g' $files;done
-            for files in $(grep -R ${repo_path}/kernel -e 'sukisu' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i 's|sukisu|linuxxpu|g' $files;done
-            for files in $(grep -R ${repo_path}/kernel -e 'SukiSU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU/LinuxxPU/g' $files;done
-            for files in $(grep -R ${repo_path}/kernel -e 'KernelSU.Next' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i '/REPO_(OWNER|NAME)( :)?=/! s/KernelSU.Next/LinuxxPU/g' $files;done
-            for files in $(grep -R ${repo_path}/kernel -e 'kernelsu.next' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i 's|kernelsu.next|linuxxpu|g' $files;done
-            for files in $(grep -R ${repo_path}/kernel -e 'KSU.NEXT' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i 's|KSU.NEXT|LinuxxPU|g' $files;done
-            for files in $(grep -R ${repo_path}/kernel -e 'ksunext' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's|ksunext|linuxxpu|g' $files;done
-            for files in $(grep -R ${repo_path}/kernel -e 'KERNELSU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's|KERNELSU|LINUXXPU|g' $files;done
-            for files in $(grep -R ${repo_path}/kernel -e 'KERNEL_SU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's|KERNEL_SU|LINUXXPU|g' $files;done
-            for files in $(grep -R ${repo_path}/kernel -e 'KernelSU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i '/REPO_(OWNER|NAME)( :)?=/! s/KernelSU/LinuxxPU/g' $files;done
-            for files in $(grep -R ${repo_path}/kernel -e 'kernelsu' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's|kernelsu|linuxxpu|g' $files;done
-            for files in $(grep -R ${repo_path}/kernel -e 'KSURC' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's|KSURC|LPURC|g' $files;done
-            for files in $(grep -R ${repo_path}/kernel -e 'KSUD' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed  -i 's#KSUD#LPUD#g' $files;done
-            for files in $(grep -R ${repo_path}/kernel -e 'KSU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed  -i 's#KSU#LPU#g' $files;done
-            for files in $(grep -R ${repo_path}/kernel -e 'Ksu' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -i 's|Ksu|Lpu|g' $files;done
-            for files in $(grep -R ${repo_path}/kernel -e 'KSURC' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's#KSURC#LPURC#g' $files;done
-            for files in $(grep -R ${repo_path}/kernel -e 'ksu' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do echo $files;sed -i 's#ksu#lpu#g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'sukisu.ultra' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i 's|sukisu.ultra|linuxxpu|g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'SukiSU.Ultra' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU.Ultra/LinuxxPU/g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'SUKISU.ULTRA' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i 's|SUKISU.ULTRA|LINUXXPU|g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'SUKISU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i 's|SUKISU|LINUXXPU|g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'sukisu' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i 's|sukisu|linuxxpu|g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'SukiSU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU/LinuxxPU/g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'KernelSU.Next' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i '/REPO_(OWNER|NAME)( :)?=/! s/KernelSU.Next/LinuxxPU/g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'kernelsu.next' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i 's|kernelsu.next|linuxxpu|g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'KSU.NEXT' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i 's|KSU.NEXT|LinuxxPU|g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'ksunext' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's|ksunext|linuxxpu|g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'KERNELSU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's|KERNELSU|LINUXXPU|g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'KERNEL_SU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's|KERNEL_SU|LINUXXPU|g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'KernelSU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i '/REPO_(OWNER|NAME)( :)?=/! s/KernelSU/LinuxxPU/g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'kernelsu' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's|kernelsu|linuxxpu|g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'KSURC' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's|KSURC|LPURC|g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'KSUD' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed  -i 's#KSUD#LPUD#g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'KSU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed  -i 's#KSU#LPU#g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'Ksu' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -i 's|Ksu|Lpu|g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'KSURC' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's#KSURC#LPURC#g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'ksu' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do echo $files;sed -i 's#ksu#lpu#g' $files;done
             files=('/fs/Makefile' '/fs/Kconfig' '/fs/dcache.c' '/fs/devpts/inode.c' '/fs/exec.c' '/fs/namei.c' '/fs/namespace.c' '/fs/notify/fdinfo.c' '/fs/open.c' '/fs/overlayfs/inode.c' '/fs/overlayfs/readdir.c' '/fs/overlayfs/super.c' '/fs/proc/bootconfig.c' '/fs/proc/fd.c' '/fs/proc/task_mmu.c' '/fs/proc_namespace.c' '/fs/readdir.c' '/fs/stat.c' '/fs/statfs.c' '/include/linux/mount.h' '/include/linux/sched.h' '/kernel/kallsyms.c' '/kernel/sys.c' '/drivers/input/input.c' '/drivers/tty/pty.c' '/fs/read_write.c' '/drivers/Makefile' '/drivers/Kconfig' '/include/linux/sus_su.h' '/include/linux/susfs_def.h' '/include/linux/susfs.h' '/fs/sus_su.c' '/fs/susfs.c' '/security/selinux/avc.c')
             for each in "${files[@]}";do if [ -f "./common${each}" ];then sed -E -i -e 's|KSU|LPU|g' -e 's|KERNEL_SU|LINUXXPU|g' -e  '/REPO_(OWNER|NAME)( :)?=/! s/KernelSU/LinuxxPU/g' -e 's|ksu|lpu|g' -e '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU-Ultra/LINUXXPU/g' -e 's|sukisu|linuxxpu|g' -e '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU Ultra/LINUXXPU/g' -e 's|SUKISU|LINUXXPU|g'  -e '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU/LinuxxPU/g' -e 's|kernelsu|linuxxpu|g' ./common${each};fi;done
             #for file in $(grep -Elr 'KSU|kernelsu|ksuid' ./common/fs ./common/include ./common/kernel ./common/security ./common/drivers 2>/dev/null | sort | uniq);do
@@ -825,7 +823,7 @@ jobs:
             false
           fi
 
-          if [ ! -d ${repo_path}/clang-22 ];then
+          if [ ! -d ${GITHUB_WORKSPACE}/clang-22 ];then
             #for ndk
             export TOOLCHAIN=${ANDROID_NDK_LATEST_HOME}/toolchains/llvm/prebuilt/linux-x86_64
             export My_PATH="${ANDROID_NDK_LATEST_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin:${ANDROID_NDK_LATEST_HOME}/prebuilt/linux-x86_64/bin/:${PATH}:$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/bin"
@@ -869,7 +867,7 @@ jobs:
               #for file in $(find common/arch/arm64/configs/vendor -type f -name 'topaz*' 2>/dev/null);do ./common/scripts/kconfig/merge_config.sh -m -r -y $file;done
             #fi
             #if [ -f ./common/arch/arm64/configs/topaz_defconfig ];then
-              #bash ./common/scripts/kconfig/merge_config.sh -m ${repo_path}/.defconfig ${defconfig}
+              #bash ./common/scripts/kconfig/merge_config.sh -m ${GITHUB_WORKSPACE}/.defconfig ${defconfig}
               #mv -f .config ${defconfig}
             #fi
             #rm -f ./common/arch/arm64/configs/generic_bengal_defconfig ./common/arch/arm64/configs/defconfig
@@ -889,7 +887,7 @@ jobs:
             #for ndk and arm-toolchain and clang-22
             sed -E -i '/.*sysroot_flags\+=.+/d' build/_setup_env.sh
 
-            if [ ! -d ${repo_path}/clang-22 ];then
+            if [ ! -d ${GITHUB_WORKSPACE}/clang-22 ];then
               sed -E -i 's|source .+_setup_env.sh.+|source "${ROOT_DIR}/build/_setup_env.sh";export PATH="${My_PATH}"|g' build/build.sh
               sed -E -i 's|.*export ROOT_DIR=.+dirname.+$|export ROOT_DIR=$($(find ${BUILD_SCRIPT_DIR} -type f -name "gettop.sh"))|g' build/build.sh
               sed -E -i 's|(if \[ -n \"\$\{MODULES_ORDER\}\" \]\;.+)|\1\n  cp ${OUT_DIR}/modules.order ${KERNEL_DIR}/${MODULES_ORDER}\n|g' build/build.sh
