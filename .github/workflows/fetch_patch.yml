@@ -297,8 +297,6 @@ jobs:
       - name: patch ...
         #shell: /usr/bin/bash -e -o pipefail {0}
         run: |
-          set -x
-          set -e
           must_unchange_kernel_files='/home/runner/mylinuxxpu'
           mkdir -p ${must_unchange_kernel_files}
           patched_folder='/home/runner/myksunext'
@@ -381,7 +379,7 @@ jobs:
           [ -d ${repo_folder}/userspace/ksud ] && mv ${repo_folder}/userspace/ksud ${repo_folder}/userspace/lpud || echo "${repo_folder}/userspace/ksud does not exist !!!"
           [ -d ${repo_folder}/userspace/ksuinit ] && mv ${repo_folder}/userspace/ksuinit ${repo_folder}/userspace/lpuinit || echo "${repo_folder}/userspace/ksuinit does not exist !!!"
           for file in $(find ${repo_folder} -type f -name '*ksu*');do mv $file $(echo $file | sed -E 's|ksu([d]?)|lpu\1|g');done
-          sed -E -i 's/(.+git clone )https[^[:space:]]+KernelSU[^[:space:]]* (.+)/\1'"$repo_url"' \2/g' ${repo_folder}/kernel/setup.sh
+          sed -E -i 's|(.+git clone )https[^[:space:]]+KernelSU[^[:space:]]* (.+)|\1'"$repo_url"' \2|g' ${repo_folder}/kernel/setup.sh
           cp -af ${repo_folder}/kernel ${repo_folder}/.github  ${repo_folder}/.defconfig  ${must_unchange_kernel_files}/
 
           #for file in $(grep -R ${repo_folder} -e 'Wild.KSU' 2>/dev/null | cut -d':' -f1 | sort  | uniq);do sed -Ei 's|Wild.KSU|LinuxxPU|g' $file;done
@@ -482,8 +480,6 @@ jobs:
           cp -af ${patched_folder} ${repo_folder}/.github/ || true
           cp -af ${must_unchange_kernel_files}/.defconfig ${repo_folder}/
           [ -d "${patched_folder}/.github" ] &&  cp -af ${patched_folder}/.github/. ${repo_folder}/.github/
-          set -x
-          set -e
           [ -f "${repo_folder}/manager/app/src/main/cpp/lpu.c" ] && { echo 'debug cpp/lpu.c';sed -i -e 's/lpu_sys_file_open/zako_sys_file_open/g' -e 's/lpu_file_verify_esig/zako_file_verify_esig/g' -e 's/lpu_file_verrcidx2str/zako_file_verrcidx2str/g' ${repo_folder}/manager/app/src/main/cpp/lpu.c || true; } || true
           #unzip -o ${repo_folder}/.github/scripts/workflows.zip -d ${repo_folder}/.github/workflows
           #set -x
