@@ -67,16 +67,16 @@ jobs:
             
             if $use_wild_manager ;then
               git clone --single-branch https://github.com/WildKernels/Wild_KSU KSU
-              cd KSU
-              if ! [[ $(git describe --tags --always) =~ ^v[0-9]+\..+ ]] ; then
+              #cd KSU
+              #if ! [[ $(git describe --tags --always) =~ ^v[0-9]+\..+ ]] ; then
                 #git clone --single-branch https://github.com/KernelSU-Next/KernelSU-Next
                 #cd KernelSU-Next
                 #tag_ver="$(echo $(git describe --tags --always) | rev | cut -d'-' -f2- | rev)"
                 #cd ..
                 #rm -rf KernelSU-Next
                 tag_ver='Wild'
-              fi
-              cd ..
+              #fi
+              #cd ..
               owner=WildKernels
               repo=Wild_KSU
               workflow=build-manager-ci.yml
