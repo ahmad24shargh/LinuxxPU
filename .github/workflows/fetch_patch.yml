@@ -123,7 +123,8 @@ jobs:
             #[[ ${wild_tag_ver:0:1} == '_' ]] && wild_tag_ver=${wild_tag_ver:1}
             #echo "C_TAG_NAME=${tag_ver}-Wild-${wild_tag_ver}"
             #echo "${tag_ver}-Wild-${wild_tag_ver}" > ${GITHUB_WORKSPACE}/TAG_NAME.ME
-            C_TAG_NAME="${tag_ver}-${C_VERSION}-${wild_tag_ver}"
+            KSU_VERSION="$(expr $(echo "$(grep -E 'shell expr' kernel/Makefile 2>/dev/null | head -n 1 | grep -Eo '[0-9]*' | tr '\n' '+')$C_VERSION" | sed 's/\+/ + /g'))"
+            C_TAG_NAME="${tag_ver}-${KSU_VERSION}-${wild_tag_ver}"
           else
             C_TAG_NAME=$(echo "$(git describe --tags --always)" | rev | cut -d'-' -f2- | rev)
           fi
