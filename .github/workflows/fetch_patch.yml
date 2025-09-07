@@ -309,6 +309,7 @@ jobs:
           cd  ${repo_folder}
           for dirs in $(find ${repo_folder}/manager/app/src/main/res -maxdepth 1 -type d  -name 'values-*');do [ "$(echo $dirs | rev | cut -d'-' -f1 | rev)" != "night" ] && rm -rf $dirs;done
           sed -i '/app_name_wild_ksu/d' ${repo_folder}/manager/app/src/main/res/values/strings.xml
+          for file in $(find ${repo_folder}/userspace -type f -name 'module.rs' 2>/dev/null);do sed -i '/.env("WKSU", "true")/d' $file;done
           for files in $(find ${repo_folder}/docs -type f  -name 'README_*');do rm -f ${files};done
           #rm -f ${repo_folder}/.github/workflows/*
           #rm -f ${repo_folder}/assets/kernelsu_next.png
@@ -367,7 +368,7 @@ jobs:
           for dir in $(find ${repo_folder} -type d -name 'ultra' 2>/dev/null);do bn="$( cd -- "$(dirname "$dir")" >/dev/null 2>&1 ; pwd -P )";mv $dir "${bn}/linuxxpu";mv "${bn}" "$(echo ${bn} | rev | cut -d'/' -f2- | rev)/ahmad";done
           #sed -E -i 's|(KSU[^[:space:]]+EXPECTED_SIZE).+0x.+|\1 := 0x373|g' ${repo_folder}/kernel/Makefile
           #sed -E -i 's|(KSU[^[:space:]]+EXPECTED_HASH) := .+|\1 := 5028506331f6c9f189e2f6500d90c3d6972bd7033e960fed4b5dda1fe31a5e95|g' ${repo_folder}/kernel/Makefile
-          sed -i 's|WKSU_|KSU_|g' ${repo_folder}/kernel/Makefile
+          sed -i -e 's|WKSU_|KSU_|g' -e 's|Wild KSU|LinuxxPU|g' ${repo_folder}/kernel/Makefile
           sed -E -i -e 's#(KSU[^[:space:]]+(EXPECTED|MANAGER)_SIZE).+0x.+#\1 := 0x373#g' -e  's#(KSU[^[:space:]]+(EXPECTED|MANAGER)_HASH) := .+#\1 := 5028506331f6c9f189e2f6500d90c3d6972bd7033e960fed4b5dda1fe31a5e95#g' ${repo_folder}/kernel/Makefile
           sed -E -i 's|^([[:space:]]+)android\:label\=.+|\1android:label="LinuxxPU"|g' ${repo_folder}/manager/app/src/main/AndroidManifest.xml
           sed -E -i 's|(ic_launcher)_alt([^[:space:]]*)|\1\2|g' ${repo_folder}/manager/app/src/main/AndroidManifest.xml
@@ -381,7 +382,7 @@ jobs:
           sed -E -i 's#(.+git clone )https[^[:space:]]+KernelSU[^[:space:]]* (.+)#\1'"$repo_url"' \2#g' ${repo_folder}/kernel/setup.sh
           cp -af ${repo_folder}/kernel ${repo_folder}/.github  ${repo_folder}/.defconfig  ${must_unchange_kernel_files}/
 
-          for file in $(grep -RE ${repo_folder} -e 'Wild.KSU' 2>/dev/null | cut -d':' -f1 | sort  | uniq);do sed -Ei 's|Wild.KSU|LinuxxPU|g' $file;done
+          for file in $(grep -R ${repo_folder} -e 'Wild.KSU' 2>/dev/null | cut -d':' -f1 | sort  | uniq);do sed -Ei 's|Wild.KSU|LinuxxPU|g' $file;done
           for file in $(grep -R ${repo_folder} -e 'wild_ksu' 2>/dev/null | cut -d':' -f1 | sort  | uniq);do sed -Ei 's|wild_ksu|linuxxpu|g' $file;done
           for file in $(grep -Ri ${repo_folder} -e 'wksu' 2>/dev/null | cut -d':' -f1 | sort  | uniq);do sed -i -e 's|wksu|lpu|g' -e 's|WKSU|LPU|g' $file;done
           for files in $(grep -R ${repo_folder} -e 'SukiSU.Ultra' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU.Ultra/LinuxxPU/g' $files;done
