@@ -381,7 +381,7 @@ jobs:
           [ -d ${repo_folder}/userspace/ksud ] && mv ${repo_folder}/userspace/ksud ${repo_folder}/userspace/lpud || echo "${repo_folder}/userspace/ksud does not exist !!!"
           [ -d ${repo_folder}/userspace/ksuinit ] && mv ${repo_folder}/userspace/ksuinit ${repo_folder}/userspace/lpuinit || echo "${repo_folder}/userspace/ksuinit does not exist !!!"
           for file in $(find ${repo_folder} -type f -name '*ksu*');do mv $file $(echo $file | sed -E 's|ksu([d]?)|lpu\1|g');done
-          sed -E -i 's/(.+git clone )https[^[:space:]]+KernelSU[^[:space:]]* (.+)/\1'"$repo_url"' \2/g' ${repo_folder}/kernel/setup.sh
+          sed -E -i 's|(.+git clone )https[^[:space:]]+KernelSU[^[:space:]]* (.+)|\1'"$repo_url"' \2|g' ${repo_folder}/kernel/setup.sh
           cp -af ${repo_folder}/kernel ${repo_folder}/.github  ${repo_folder}/.defconfig  ${must_unchange_kernel_files}/
 
           for file in $(grep -R ${repo_folder} -e 'Wild.KSU' 2>/dev/null | cut -d':' -f1 | sort  | uniq);do sed -Ei 's|Wild.KSU|LinuxxPU|g' $file;done
