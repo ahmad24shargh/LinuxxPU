@@ -457,7 +457,7 @@ jobs:
           sed -Ei 's|KSU|LPU|g' ${repo_folder}/kernel/setup.sh
           sed -i 's|ksunext|linuxxpu|g' ${repo_folder}/kernel/setup.sh
           sed -i 's|KERNELSU|LINUXXPU|g' ${repo_folder}/kernel/setup.sh
-          sed -E -i s|(addJavascriptInterface.+)\"lpu\"|\1"ksu"|g' ${repo_folder}/manager/app/src/main/java/com/ahmad/linuxxpu/ui/webui/WebUIActivity.kt
+          sed -E -i 's|(addJavascriptInterface.+)\"lpu\"|\1"ksu"|g' ${repo_folder}/manager/app/src/main/java/com/ahmad/linuxxpu/ui/webui/WebUIActivity.kt
           #sed -E -i '/^\*.+README_[^[:space:]]+md\)$$/d' ${repo_folder}/docs/README.md
           #sed -E -i 's|<img.+alt\="logo".*>|<img src="/assets/linuxxpu.png" style="width: 30%;display: inline-block;" alt="logo"><img style="width: 30%;display: inline-block;" src ="/assets/rifsxd.png"><img style="width: 30%;display: inline-block;" src ="/assets/wildplus.png">\n\n<div>GKI Kernels with KernelSU \& SUSFS powered by <a href="https://github.com/WildPlusKernel/GKI_KernelSU_SUSFS">Wild Plus Kernels</a></div>\n<div>KernelSU-Next Manager Forked From <a href="https://github.com/KernelSU-Next/KernelSU-Next">KernelSU-Next</a></div>\n|g' ${repo_folder}/docs/README.md
 
