@@ -948,6 +948,10 @@ jobs:
             cd "$CONFIG/out/${{ inputs.android_version }}-${{ inputs.kernel_version }}/dist"
             [ ! -f Image ] && echo "The file "Image" was not found in the current path!!!" && false
             #curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU_patch/refs/heads/main/kpm/patch_linux" -o patch
+            cp $GITHUB_WORKSPACE/kernel_patches/sukisu/kpimg ./kpimg
+            chmod 777 kpimg
+            cp $GITHUB_WORKSPACE/kernel_patches/sukisu/kptools ./kptools
+            chmod 777 kptools
             cp $GITHUB_WORKSPACE/kernel_patches/sukisu/patch_linux ./patch
             chmod 777 patch
             echo "Patching Image file..."
