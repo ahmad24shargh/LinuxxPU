@@ -144,7 +144,10 @@ jobs:
             
       - name: delete toolchain and clang-22 caches if older than a certain amount
         run: |
-          gh cache list
+          #REPO_OWNER=${{ github.event.repository_owner }}
+          #REPO_NAME=${{ github.event.repository.name }}
+          repo="${{ github.event.repository_owner }}/${{ github.event.repository.name }}"
+          gh cache list --repo $repo
           false
           #clang older than 10 days
           if [ $(echo $(( ($(date +%s) - $(date --date=$(gh cache list -k clang-22-${{ runner.os }}-v1 --json  'createdAt' | grep 'createdAt' | cut -d'"' -f4) +%s) )/(60*60*24) ))) -gt 9 ];then
