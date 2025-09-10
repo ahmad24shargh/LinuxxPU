@@ -14,9 +14,9 @@ if [ -f ${GITHUB_WORKSPACE}/TAG_NAME.ME ];then
     # S1NVTg== = KSUN
     # U1VLSVNV = SUKISU
     echo $ksu_fork
-    if [ "${ksu_fork}" == 'S1NVTg==' ];then
+    if [ "${ksu_fork}" == 'KSUN' ];then
       tag_name=$(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME | base64 -d)
-    elif [ "${ksu_fork}" == 'U1VLSVNV' ];then
+    elif [ "${ksu_fork}" == 'SUKISU' ];then
       tag_name=$(echo $(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME | base64 -d) | cut -d'-' -f1)
     else
       exit 1
