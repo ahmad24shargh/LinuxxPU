@@ -258,7 +258,7 @@ jobs:
             #$REPO --trace sync -c -j$(nproc --all) --no-tags --fail-fast
           #fi
       
-      - name: replacing stock gki_defconfig with custom .defconfig and others
+      - name: defconfig customization and various changes
         run: |
           #mkdir -p $CONFIG/out
           #cp "$defconfig" $CONFIG/out/.config
