@@ -297,6 +297,8 @@ jobs:
           echo "CONFIG_LTO_NONE=n" >> ${defconfig}
           echo "CONFIG_LTO_CLANG_FULL=n" >> ${defconfig}
           echo "CONFIG_LTO_CLANG_THIN=y" >> ${defconfig}
+          #Make sure to unspoof KCONFIG_FILE in common/kernel/Makefile
+          sed -E 's|\$\(obj\)/config_data:.+|\$(obj)/config_data: \$(KCONFIG_CONFIG) FORCE|g' $GITHUB_WORKSPACE/$CONFIG/common/kernel/Makefile
           pushd $CONFIG/common/kernel/
           echo '#!/bin/bash' > manipulating_conf_data.sh
           echo 'SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"' >> manipulating_conf_data.sh
@@ -877,7 +879,7 @@ jobs:
             #cp  ${defconfig} ./common/arch/arm64/configs/generic_bengal_defconfig
             cp  ${defconfig} ./common/arch/arm64/configs/defconfig
             #revert commite 2030317  to unspoof /proc/config.gz
-            for file in $(grep -e 'arch/arm64/configs/topaz_defconfig' ./common/kernel/* 2>/dev/null | cut -d':' -f1);do sed -i 's|config_data\: arch/arm64/configs/topaz_defconfig|config_data\: \$\(KCONFIG_CONFIG\)|g' $file;done
+            #for file in $(grep -e 'arch/arm64/configs/topaz_defconfig' ./common/kernel/* 2>/dev/null | cut -d':' -f1);do sed -i 's|config_data\: arch/arm64/configs/topaz_defconfig|config_data\: \$\(KCONFIG_CONFIG\)|g' $file;done
             #ln -s common msm-kernel
           fi
 
