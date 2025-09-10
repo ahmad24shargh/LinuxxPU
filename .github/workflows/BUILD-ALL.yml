@@ -96,6 +96,7 @@ jobs:
       C_TAG_NAME: ${{ steps.gen_outs.outputs.C_TAG_NAME }}
       C_KERNEL_SUBLEVEL: ${{ steps.gen_outs.outputs.C_KERNEL_SUBLEVEL }}
       C_OS_PATCH_LEVEL: ${{ steps.gen_outs.outputs.C_OS_PATCH_LEVEL }}
+      topnotchfreaks_codelinaro_branch: ${{ steps.gen_outs.outputs.topnotchfreaks_codelinaro_branch }}
       hook_method: ${{ steps.gen_outs.outputs.hook_method }}
     steps:
     #- name: Checkout code
@@ -142,6 +143,7 @@ jobs:
         determine_os_patch_level() { declare -n result="$1";case "${result}" in 94) result=2023-05;;104) result=2023-07;;123) result=2023-11;;137) result=2024-01;;144) result=2024-03;;148) result=2024-05;;149) result=2024-07;;151) result=2024-08;;153) result=2024-09;;167) result=2024-11;;170) result=2025-01;;178) result=2025-03;;180) result=2025-05;;185) result=2025-07;;*) result=lts;;esac; }
         C_KERNEL_SUBLEVEL=148
         C_OS_PATCH_LEVEL=148
+        topnotchfreaks_codelinaro_branch=null
         if "${{ inputs.kernel_variant == 'chickernel' }}";then
           wget https://raw.githubusercontent.com/chickendrop89/device_xiaomi_unified-kernel/refs/heads/android13-5.15-lts/Makefile 2>/dev/null
           if [ -f ./Makefile ];then
@@ -160,7 +162,6 @@ jobs:
             topnotchfreaks_codelinaro_branch="google"
             wget https://raw.githubusercontent.com/topnotchfreaks/kernel_msm-5.15/refs/heads/google/Makefile 2>/dev/null
           fi
-          echo "topnotchfreaks_codelinaro_branch=topnotchfreaks-${topnotchfreaks_codelinaro_branch}" >> $GITHUB_ENV
           if [ -f ./Makefile ];then
             C_KERNEL_SUBLEVEL=$(head -n 10 Makefile  | grep SUBLEVEL | cut -d' ' -f 3)
             [ -z ${C_KERNEL_SUBLEVEL} ] && C_KERNEL_SUBLEVEL=170
@@ -168,6 +169,7 @@ jobs:
           #C_OS_PATCH_LEVEL="lts"
           C_OS_PATCH_LEVEL="${C_KERNEL_SUBLEVEL}"
         fi
+        echo "topnotchfreaks_codelinaro_branch=topnotchfreaks-${topnotchfreaks_codelinaro_branch}" >> $GITHUB_OUTPUT
         determine_os_patch_level "C_OS_PATCH_LEVEL"
         echo "C_KERNEL_SUBLEVEL=${C_KERNEL_SUBLEVEL}" >> $GITHUB_OUTPUT
         echo "C_KERNEL_SUBLEVEL=${C_KERNEL_SUBLEVEL}"
@@ -458,13 +460,13 @@ jobs:
       C_LAST_COMMIT: ${{needs.calc_tag_version.outputs.C_LAST_COMMIT}}
       C_KERNEL_SUBLEVEL: ${{needs.calc_tag_version.outputs.C_KERNEL_SUBLEVEL}}
       C_TAG_NAME: ${{needs.calc_tag_version.outputs.C_TAG_NAME}}
+      topnotchfreaks_codelinaro_branch: ${{needs.calc_tag_version.outputs.topnotchfreaks_codelinaro_branch}}
       #REPO_OWNER: ${{ github.repository_owner }}
       #REPO_NAME: ${{ github.event.repository.name }}
       build_type: ${{ inputs.build_type }}
       ksu_fork: ${{ inputs.ksu_fork }}
       kernel_variant: ${{ inputs.kernel_variant }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      topnotchfreaks_codelinaro_branch: ${{ env.topnotchfreaks_codelinaro_branch }}
       susfs_version: "Susfs ඞ v1.5.9"
       
     steps:
@@ -559,7 +561,7 @@ jobs:
       - name: Append Commit Hashes & Links to `RELEASE_NOTES` & Append LinuxxPU Reference to `RELEASE_NOTES`
         run: |
           k_var=${{ env.kernel_variant }}
-          [ ${{ env.kernel_variant }} == topnotchfreaks-codelinaro ] && k_var=${topnotchfreaks_codelinaro_branch}
+          [ ${{ env.kernel_variant }} == topnotchfreaks-codelinaro ] && k_var=${{ env.topnotchfreaks_codelinaro_branch }}
           echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
           echo >> $GITHUB_ENV
           echo -n 'This release contains LinuxxPU DEV('${k_var}'-android13-5.15.'${{ env.C_KERNEL_SUBLEVEL }}')' >> $GITHUB_ENV
@@ -604,8 +606,7 @@ jobs:
           echo "EOF" >> $GITHUB_ENV
           [[ "${{ env.kernel_variant }}" == "common-android-mainline" ]] &&  RELEASE_NAME="GKI Kernel "
           [[ "${{ env.kernel_variant }}" == "chickernel" ]] &&  RELEASE_NAME="ChicKernel "
-          [[ "${{ env.kernel_variant }}" == "topnotchfreaks-codelinaro" ]] && RELEASE_NAME="TopNotchFreaks($(echo ${topnotchfreaks_codelinaro_branch} | cut -d'-' -f2-) source) Kernel "
-          [[ "${{ env.kernel_variant }}" == "topnotchfreaks-google" ]] && RELEASE_NAME="TopNotchFreaks(google source) Kernel "
+          [[ "${{ env.kernel_variant }}" == "topnotchfreaks-codelinaro" -o "${{ env.kernel_variant }}" == "topnotchfreaks-google" ]] && RELEASE_NAME="TopNotchFreaks($(echo ${{ env.topnotchfreaks_codelinaro_branch }} | cut -d'-' -f2-) source) Kernel "
           if [ "${{ env.ksu_fork }}" == "KSUN" ];then
             RELEASE_NAME="${RELEASE_NAME}With LinuxxPU DEV(KSUN based)"
           elif [ "${{ env.ksu_fork }}" == "SUKISU" ];then
