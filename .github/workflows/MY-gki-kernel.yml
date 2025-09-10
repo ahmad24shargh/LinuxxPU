@@ -988,8 +988,8 @@ jobs:
       - name: Preparing linuxxpu for upload
         run: |
           mkdir -p linuxxpu
-          for dir in {kernel,manager,userspace,'.git','.github','TAG_NAME.ME','LPU_FORK.ME','LAST_COMMIT.ME','VERSION.ME'};do
-            cp -af $dir linuxxpu
+          for dir in {kernel,manager,userspace,'.github','TAG_NAME.ME','LPU_FORK.ME','LAST_COMMIT.ME','VERSION.ME'};do
+            cp -af $dir linuxxpu || true
           done
           
       - name: Delete linuxxpu Artifact
