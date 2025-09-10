@@ -144,20 +144,17 @@ jobs:
             
       - name: delete toolchain and clang-22 caches if older than a certain amount
         run: |
-          #REPO_OWNER=${{ github.event.repository_owner }}
-          #REPO_NAME=${{ github.event.repository.name }}
           repo="${{ github.repository_owner }}/${{ github.event.repository.name }}"
-          gh cache list --repo $repo
-          false
+        
           #clang older than 10 days
-          if [ $(echo $(( ($(date +%s) - $(date --date=$(gh cache list -k clang-22-${{ runner.os }}-v1 --json  'createdAt' | grep 'createdAt' | cut -d'"' -f4) +%s) )/(60*60*24) ))) -gt 9 ];then
+          if [ $(echo $(( ($(date +%s) - $(date --date=$(gh cache list --repo $repo -k clang-22-${{ runner.os }}-v1 --json  'createdAt' | grep 'createdAt' | cut -d'"' -f4) +%s) )/(60*60*24) ))) -gt 9 ];then
             echo "remove clang-22-${{ runner.os }}-v1 from chache ..."
-            gh cache delete clang-22-${{ runner.os }}-v1
+            gh cache delete clang-22-${{ runner.os }}-v1 --repo $repo
           fi
           #toolchain older than 30 days
-          if [ $(echo $(( ($(date +%s) - $(date --date=$(gh cache list -k toolchain-${{ runner.os }}-v1 --json  'createdAt' | grep 'createdAt' | cut -d'"' -f4) +%s) )/(60*60*24) ))) -gt 29 ];then
+          if [ $(echo $(( ($(date +%s) - $(date --date=$(gh cache list --repo $repo -k toolchain-${{ runner.os }}-v1 --json  'createdAt' | grep 'createdAt' | cut -d'"' -f4) +%s) )/(60*60*24) ))) -gt 29 ];then
             echo "remove toolchain-${{ runner.os }}-v1 from chache ..."
-            gh cache delete toolchain-${{ runner.os }}-v1
+            gh cache delete toolchain-${{ runner.os }}-v1 --repo $repo
           fi
         
       - name: Cache toolchain
