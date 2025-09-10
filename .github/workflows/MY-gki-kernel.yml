@@ -82,6 +82,7 @@ jobs:
       ZRAM: true
       #permissive cause bootloop
       selinux_permissive: false
+      GH_TOKEN: ${{ github.token }}
 
     steps:
       - name: Maximize build space
