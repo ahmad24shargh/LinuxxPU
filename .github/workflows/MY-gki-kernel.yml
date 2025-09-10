@@ -344,7 +344,8 @@ jobs:
 
              popd
           fi
-          
+
+          curl https://android.googlesource.com/kernel/common/+/refs/heads/android13-5.15-lts/scripts/setlocalversion?format=TEXT | base64 -d > ${GITHUB_WORKSPACE}/$CONFIG/common/scripts/setlocalversion && chmod +x ${GITHUB_WORKSPACE}/$CONFIG/common/scripts/setlocalversion
           #cat $CONFIG/common/kernel/Makefile
           #cp "${GITHUB_WORKSPACE}/Kconfig" $CONFIG/common/
           #cp "${GITHUB_WORKSPACE}/arch/arm64/Kconfig" $CONFIG/common/arch/arm64/
