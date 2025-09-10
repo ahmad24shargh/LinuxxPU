@@ -464,6 +464,7 @@ jobs:
       ksu_fork: ${{ inputs.ksu_fork }}
       kernel_variant: ${{ inputs.kernel_variant }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      topnotchfreaks_codelinaro_branch: ${{ env.topnotchfreaks_codelinaro_branch }}
       susfs_version: "Susfs ඞ v1.5.9"
       
     steps:
