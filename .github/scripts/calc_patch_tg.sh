@@ -7,8 +7,8 @@ echo "C_TAG_NAME=${C_TAG_NAME}"
 echo "C_LAST_COMMIT=${C_LAST_COMMIT}"
 echo "C_VERSION=${C_VERSION}"
 if [ -f ${GITHUB_WORKSPACE}/TAG_NAME.ME ];then
-  for file in $(grep -R --exclude='.github' --exclude='.git' $GITHUB_WORKSPACE -e 'let version_name' 2>/dev/null | cut -d':' -f 1 | sort | uniq);do [ "$file" != "$0" ] && sed -E -i 's|(let version_name = )version_name(\.trim.+)|\1"'$(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME | base64 -d)'"\2|g' $file;cat $file | grep  'let version_';done
-  for file in $(grep -R --exclude='.github' --exclude='.git' $GITHUB_WORKSPACE -e 'return getGitDescribe()' 2>/dev/null | cut -d':' -f 1 | sort | uniq);do [ "$file" != "$0" ] && sed -i 's|return getGitDescribe()|return "'$(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME | base64 -d)'"|g' $file;cat $file | grep  'return';done
+  for file in $(grep -R --exclude='.github' --exclude='.git' $GITHUB_WORKSPACE -e 'let version_name' 2>/dev/null | cut -d':' -f 1 | sort | uniq);do [ "$file" != "$0" ] && sed -E -i 's/(let version_name = )version_name(\.trim.+)/\1"'$(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME | base64 -d)'"\2/g' $file;cat $file | grep  'let version_';done
+  for file in $(grep -R --exclude='.github' --exclude='.git' $GITHUB_WORKSPACE -e 'return getGitDescribe()' 2>/dev/null | cut -d':' -f 1 | sort | uniq);do [ "$file" != "$0" ] && sed -i 's/return getGitDescribe()/return "'$(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME | base64 -d)'"/g' $file;cat $file | grep  'return';done
   if [ -f "${GITHUB_WORKSPACE}/manager/build.gradle.kts" ];then
     ksu_fork=$(cat "${GITHUB_WORKSPACE}/LPU_FORK.ME" | base64 -d)
     # S1NVTg== = KSUN
