@@ -33,7 +33,7 @@ on:
       ksu_fork:
         type: choice
         description: 'Which ksu fork should be made?'
-        default: 'SUKISU'
+        default: 'KSUN'
         required: true
         options:
           - KSUN
@@ -42,7 +42,7 @@ on:
         description: 'Which kernel should be built ?'
         required: true
         type: choice
-        default: topnotchfreaks-google
+        default: topnotchfreaks-codelinaro
         options:
           - common-android-mainline
           - chickernel
