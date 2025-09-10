@@ -122,7 +122,7 @@ jobs:
           echo "CONFIG set to: $CONFIG"  
 
       # Install ccache
-      - name: Install ccache and pahole
+      - name: Install ccache,pahole,aria2
         run: sudo apt update && sudo apt install -y ccache pahole aria2
 
       #- name: Set up ccache
@@ -140,7 +140,20 @@ jobs:
           #key: ${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}-ccache-${{ github.sha }}
           #restore-keys: |
             #${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}-ccache-
-      
+            
+      - name: delete toolchain and clang-22 caches if older than a certain amount
+        run: |
+          #clang older than 10 days
+          if [ $(echo $(( ($(date +%s) - $(date --date=$(gh cache list -k clang-22-${{ runner.os }}-v1 --json  'createdAt' | grep 'createdAt' | cut -d'"' -f4) +%s) )/(60*60*24) ))) -gt 9 ];then
+            echo "remove clang-22-${{ runner.os }}-v1 from chache ..."
+            gh cache delete clang-22-${{ runner.os }}-v1
+          fi
+          #toolchain older than 30 days
+          if [ $(echo $(( ($(date +%s) - $(date --date=$(gh cache list -k toolchain-${{ runner.os }}-v1 --json  'createdAt' | grep 'createdAt' | cut -d'"' -f4) +%s) )/(60*60*24) ))) -gt 29 ];then
+            echo "remove toolchain-${{ runner.os }}-v1 from chache ..."
+            gh cache delete toolchain-${{ runner.os }}-v1
+          fi
+        
       - name: Cache toolchain
         id: cache-toolchain
         uses: actions/cache@v4
@@ -171,8 +184,10 @@ jobs:
       - name: Download clang-22 (if cache not found)
         if: steps.cache-clang-22.outputs.cache-hit != 'true'
         run: |
+          clang_latest_ulr=$(curl -s https://api.github.com/repos/ZyCromerZ/Clang/releases/latest | grep browser_download_url | cut -d '"' -f 4)
+          [ -z $clang_latest_ulr ] && { echo 'The clang-22 download link could not be extracted!!!';false; } || echo -e "Download link for the latest build of clang-22:\n${clang_latest_ulr}"
           mkdir -p clang-22
-          aria2c -x 16 -s 16 -o clang-22.tar.gz "https://github.com/ZyCromerZ/Clang/releases/download/22.0.0git-20250904-release/Clang-22.0.0git-20250904.tar.gz"
+          aria2c -x 16 -s 16 -o clang-22.tar.gz ${clang_latest_ulr}
           tar -xzf clang-22.tar.gz -C clang-22
           rm -rf clang-22.tar.gz
           
@@ -988,7 +1003,7 @@ jobs:
       - name: Preparing linuxxpu for upload
         run: |
           mkdir -p linuxxpu
-          for dir in {kernel,manager,userspace,'.github','TAG_NAME.ME','LPU_FORK.ME','LAST_COMMIT.ME','VERSION.ME'};do
+          for dir in {kernel,manager,userspace,'.git','.github','TAG_NAME.ME','LPU_FORK.ME','LAST_COMMIT.ME','VERSION.ME'};do
             cp -af $dir linuxxpu || true
           done
           
