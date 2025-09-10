@@ -561,7 +561,7 @@ jobs:
       - name: Append Commit Hashes & Links to `RELEASE_NOTES` & Append LinuxxPU Reference to `RELEASE_NOTES`
         run: |
           k_var=${{ env.kernel_variant }}
-          [ ${{ env.kernel_variant }} == topnotchfreaks-codelinaro ] && k_var=${{ env.topnotchfreaks_codelinaro_branch }}
+          [[ "${{ env.kernel_variant }}" == "topnotchfreaks-codelinaro" ]] && k_var=${{ env.topnotchfreaks_codelinaro_branch }}
           echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
           echo >> $GITHUB_ENV
           echo -n 'This release contains LinuxxPU DEV('${k_var}'-android13-5.15.'${{ env.C_KERNEL_SUBLEVEL }}')' >> $GITHUB_ENV
@@ -606,7 +606,7 @@ jobs:
           echo "EOF" >> $GITHUB_ENV
           [[ "${{ env.kernel_variant }}" == "common-android-mainline" ]] &&  RELEASE_NAME="GKI Kernel "
           [[ "${{ env.kernel_variant }}" == "chickernel" ]] &&  RELEASE_NAME="ChicKernel "
-          [[ "${{ env.kernel_variant }}" == "topnotchfreaks-codelinaro" -o "${{ env.kernel_variant }}" == "topnotchfreaks-google" ]] && RELEASE_NAME="TopNotchFreaks($(echo ${{ env.topnotchfreaks_codelinaro_branch }} | cut -d'-' -f2-) source) Kernel "
+          [[ "${{ env.kernel_variant }}" == *"topnotchfreaks"* ]] && RELEASE_NAME="TopNotchFreaks($(echo ${{ env.topnotchfreaks_codelinaro_branch }} | cut -d'-' -f2-) source) Kernel "
           if [ "${{ env.ksu_fork }}" == "KSUN" ];then
             RELEASE_NAME="${RELEASE_NAME}With LinuxxPU DEV(KSUN based)"
           elif [ "${{ env.ksu_fork }}" == "SUKISU" ];then
