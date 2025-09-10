@@ -1,0 +1,185 @@
+name: CI
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+concurrency:
+      group: staging_environment
+      cancel-in-progress: true
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      ksu_support:
+        description: 'support official,rksu,xx managers?'
+        required: true
+        type: boolean
+        default: true
+      ksun_support:
+        description: 'support kernelsu-next manager?'
+        required: true
+        type: boolean
+        default: true
+      mksu_support:
+        description: 'support mksu manager?'
+        required: true
+        type: boolean
+        default: true
+      sukisu_support:
+        description: 'support sukisu manager?'
+        required: true
+        type: boolean
+        default: false
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    #defaults:
+    #  run: 
+    #   working-directory: ./manager
+        
+    steps:
+      - name: exit
+        run: |
+          echo "I gave the exit command myself."
+          #exit 0
+          
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0 # fetch full history
+          filter: tree:0
+      #- name: Setup Java
+      #  uses: actions/setup-java@v4
+       # with:
+      #    distribution: temurin
+       #   java-version: 21
+      - name: test
+        if: false
+        run: |
+          options="${{ inputs.ksu_support }},${{ inputs.ksun_support }},${{ inputs.mksu_support }},${{ inputs.sukisu_support }}" 
+          if [ $(echo $options | grep -q 'true' 2>/dev/null;echo $?) -eq  '0' ];then
+            repo_path="$(dirname $(find /home/runner -name '.defconfig'))"
+            echo "repo_path=${repo_path}" >> $GITHUB_ENV
+            default_size=$(grep -Eo '[^[:space:]]+_EXPECTED_SIZE := [0-9a-fA-FXx]+' ${repo_path}/kernel/Makefile 2>/dev/null | cut -d' ' -f3)
+            test -z ${default_size} && exit 1
+            default_hash=$(grep -Eo '[^[:space:]]+_EXPECTED_HASH := .+' ${repo_path}/kernel/Makefile 2>/dev/null | cut -d' ' -f 3)
+            test -z ${default_hash} && exit 1
+            declare -a managers_size;
+            declare -a managers_hash;
+            managers_size=(${default_size})
+            managers_hash=(${default_hash})
+            #1 : official,rksu,backslashxx managers
+            if [ $(echo ${options} | cut -d',' -f1) == 'true' ];then
+              if [ ${default_size} != "0x33b" ];then
+                managers_size+=("0x33b")
+                managers_hash+=("c371061b19d8c7d7d6133c6a9bafe198fa944e50c1b31c9d8daa8d7f1fc2d2d6")
+              fi
+            fi
+            #2 : kernelsu-next manager
+            if [ $(echo ${options} | cut -d',' -f2) == 'true' ];then
+              if [ ${default_size} != "0x3e6" ];then
+                managers_size+=("0x3e6")
+                managers_hash+=("79e590113c4c4c0c222978e413a5faa801666957b1212a328e46c00c69821bf7")
+              fi
+            fi
+            #3 : mksu manager
+            if [ $(echo ${options} | cut -d',' -f3) == 'true' ];then
+              if [ ${default_size} != "384" ];then
+                managers_size+=("384")
+                managers_hash+=("7e0c6d7278a3bb8e364e0fcba95afaf3666cf5ff3c245a3b63c8833bd0445cc4")
+              fi
+            fi
+            #4 : sukisu manager
+            if [ $(echo ${options} | cut -d',' -f4) == 'true' ];then
+              if [ ${default_size} != "0x35c" ];then
+                managers_size+=("0x35c")
+                managers_hash+=("947ae944f3de4ed4c21a7e4f7953ecf351bfa2b36239da37a34111ad29993eef")
+              fi
+            fi
+            SUPPORTED_MANAGER_COUNT="${#managers_size[@]}"
+            for (( i=0; i<$SUPPORTED_MANAGER_COUNT; i++ )); do echo "${managers_size[$i]}:${managers_hash[$i]}" ; done
+            sed -E -i 's|(bool .*is_manager_apk\(char \*path\)\;)|#define SUPPORTED_MANAGER_COUNT '${SUPPORTED_MANAGER_COUNT}'\nextern unsigned MANAGER_SIZE[SUPPORTED_MANAGER_COUNT];\nextern const char *MANAGER_HASH[SUPPORTED_MANAGER_COUNT];\n\n\1|g' ${repo_path}/kernel/apk_sign.h
+            sed -E -i '/bool .*is_manager_apk\(char \*.+/,/}/d' ${repo_path}/kernel/apk_sign.c
+            echo -e '\nunsigned MANAGER_SIZE[SUPPORTED_MANAGER_COUNT]={'$(echo "${managers_size[*]}" | tr ' ' ', ')'};\nconst char *MANAGER_HASH[SUPPORTED_MANAGER_COUNT]={'$(echo $(for i in "${managers_hash[@]}" ; do printf '"%s" ' "$i";done) | tr ' ' ', ')'};\n\nbool lpu_is_manager_apk(char *path)\n{\n        int i;\n        bool result = false;\n\n        for (i = 0; i < SUPPORTED_MANAGER_COUNT; i++)\n     {\n             result = check_v2_signature(path, MANAGER_SIZE[i], MANAGER_HASH[i]);\n           if (result)  { return result;}\n        }\n     return result;\n}\n' >> ${repo_path}/kernel/apk_sign.c
+            echo .
+            echo .
+            echo .
+            echo "default_size: $default_size"
+            echo "default_hash: $default_hash"
+            echo .
+            echo .
+            echo .
+            cat ${repo_path}/kernel/apk_sign.h
+            echo .
+            echo .
+            echo .
+            cat ${repo_path}/kernel/apk_sign.c
+            fi
+
+      - name: Test Codes
+      # Randomization of package ID and app label
+        if: false
+        run: |
+          sudo apt-get install wamerican uni2ascii
+          echo
+          echo
+          dic=$(mktemp)
+          subdict=$(mktemp)
+          uni2ascii -B /usr/share/dict/american-english > $dic
+          stat $dic
+          file $dic
+          #exit 0
+          rand=$(awk -v min=1 -v max="$(cat $dic | wc -l)" 'BEGIN{srand(); print int(min+rand()*(max-min+1))}')
+          echo .
+          app_label=$(awk "NR==${rand} {print}" $dic)
+          echo ..
+          while [[ ! "$app_label" =~ ^[[:alnum:]]*$ ]] && [[ "$app_label" =~ ^[[:digit:]]+$ ]];do app_label=(awk "NR==${rand_all} {print}" $dic);done
+          echo ...
+          sed -E -n '/^.{3}$/p' $dic > $subdict
+          echo ....
+          rand=$(awk -v min=1 -v max="$(cat $subdict | wc -l)" 'BEGIN{srand(); print int(min+rand()*(max-min+1))}')
+          echo .....
+          p_id_1=$(awk "NR==${rand} {print}" $subdict)
+          echo ......
+          while [[ ! "$p_id_1" =~ ^[[:alnum:]]*$ ]] && [[ "$p_id_1" =~ ^[[:digit:]]+$ ]];do p_id_1=$(awk "NR==${rand} {print}" $subdict);done
+          sed -E -n '/^.{5}$/p' $dic > $subdict
+          rand=$(awk -v min=1 -v max="$(cat $subdict | wc -l)"  'BEGIN{srand(); print int(min+rand()*(max-min+1))}')
+          p_id_2=$(awk "NR==${rand} {print}" $subdict)
+          while [[ ! "$p_id_2" =~ ^[[:alnum:]]*$ ]] && [[ "$p_id_2" =~ ^[[:digit:]]+$ ]];do p_id_2=$(awk "NR==${rand} {print}" $subdict);done
+          sed -E -n '/^.{7}$/p' $dic > $subdict
+          rand=$(awk -v min=1 -v max="$(cat $subdict | wc -l)" 'BEGIN{srand(); print int(min+rand()*(max-min+1))}')
+          p_id_3=$(awk "NR==${rand} {print}" $subdict)
+          while [[ ! "$p_id_3" =~ ^[[:alnum:]]*$ ]] && [[ "$p_id_3" =~ ^[[:digit:]]+$ ]];do p_id_3=$(awk "NR==${rand} {print}" $subdict);done
+          echo "app label: $app_label"
+          echo "package id part 1: $p_id_1"
+          echo "package id part 2: $p_id_2"
+          echo "package id part 3: $p_id_3"
+          echo "${p_id_1}.${p_id_2}.${p_id_3}"
+
+      - name: Test Codes 2
+        if: true
+        run: |
+          echo '.....'
+          ls ${ANDROID_NDK_HOME}
+          echo ......
+          ls ${ANDROID_NDK_LATEST_HOME}
+           
+          
+
+          
+
+          
+
+
+
+          

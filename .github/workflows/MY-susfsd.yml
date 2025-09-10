@@ -1,0 +1,72 @@
+name: MY Build susfsd
+on:
+  workflow_call:
+    inputs:
+      target:
+        required: true
+        type: string
+      ksu_fork:
+        required: true
+        type: string
+      os:
+        required: false
+        type: string
+        default: ubuntu-latest
+      #C_VERSION:
+        #required: true
+        #type: string
+      #C_LAST_COMMIT:
+        #required: true
+        #type: string
+      #C_TAG_NAME:
+        #required: true
+        #type: string
+jobs:
+  build-susfs:
+    name: Build userspace susfsd
+    runs-on: ubuntu-latest
+    #env:
+      #C_VERSION: ${{ inputs.C_VERSION }}
+      #C_LAST_COMMIT: ${{ inputs.C_LAST_COMMIT }}
+      #C_TAG_NAME: ${{ inputs.C_TAG_NAME }}  
+    steps:
+    #- uses: actions/checkout@v4
+      #with:
+        #fetch-depth: 0
+    - name: download linuxxpu with patched dir
+      uses: actions/download-artifact@v4.3.0
+      with:
+        name: linuxxpu
+        path: .
+        #github-token: '${{ env.GH_TOKEN }}'
+
+    - name: Implementing necessary changes to the source code 
+      run: |
+        bash ${GITHUB_WORKSPACE}/.github/scripts/calc_patch_tg.sh
+   
+    - name: Build susfsd
+      if: github.event.inputs.ksu_fork == 'KSUN'
+      working-directory: ./userspace/susfsd
+      run: |
+        $ANDROID_NDK/ndk-build
+      
+    - name: Upload a Build Artifact
+      if: github.event.inputs.ksu_fork == 'KSUN'
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        name: susfsd-aarch64-linux-android
+        path: ./userspace/susfsd/libs
+
+    - name: Build susfs
+      if: github.event.inputs.ksu_fork == 'SUKISU'
+      working-directory: ./userspace/susfs
+      run: |
+        $ANDROID_NDK_HOME/ndk-build
+
+    - name: Upload a Build Artifact
+      if: github.event.inputs.ksu_fork == 'SUKISU'
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        name: susfs-aarch64-linux-android
+        path: ./userspace/susfs/libs
+    

@@ -1,0 +1,70 @@
+name: MY Build lpuinit
+on:
+  workflow_call:
+    inputs:
+      target:
+        required: true
+        type: string
+      os:
+        required: false
+        type: string
+        default: ubuntu-latest
+      #pack_lkm:
+        #required: false
+        #type: boolean
+        #default: true
+      #use_cache:
+        #required: false
+        #type: boolean
+        #default: true
+jobs:
+  build:
+    runs-on: ${{ inputs.os }}
+    steps:
+    - name: download linuxxpu with patched dir
+      uses: actions/download-artifact@v4.3.0
+      with:
+        name: linuxxpu
+        path: .
+        github-token: '${{ env.GH_TOKEN }}'
+        
+    - name: Implementing necessary changes to the source code 
+      run: |
+        bash ${GITHUB_WORKSPACE}/.github/scripts/calc_patch_tg.sh
+
+    - name: Setup Rust
+      run: |
+        rustup update stable
+        #rustup target add x86_64-linux-android
+        rustup target add aarch64-linux-android
+
+    - name: Set Rust & Android linker
+      run: |
+        TOOLCHAIN="${ANDROID_NDK_LATEST_HOME}/toolchains/llvm/prebuilt/linux-x86_64"
+        if [ ! -d "$TOOLCHAIN" ]; then
+          echo "Android NDK not found at $ANDROID_NDK"
+          exit 1
+        fi
+        echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=aarch64-linux-android21-clang" >> $GITHUB_ENV
+        #echo "CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER=$TOOLCHAIN/bin/x86_64-linux-android21-clang" >> $GITHUB_ENV
+
+    - name: Cache lpuinit
+      uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: userspace/lpuinit
+        cache-targets: false
+
+    - name: Setup Cross
+      run: |
+        RUSTFLAGS="" cargo install cross --git https://github.com/cross-rs/cross --rev 66845c1 --force
+
+    - name: Build lpuinit
+      run: |
+        export PATH="$PATH:${ANDROID_NDK_LATEST_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/"
+        CROSS_NO_WARNINGS=0 cross build --target ${{ inputs.target }} --release --manifest-path ./userspace/lpuinit/Cargo.toml
+
+    - name: Upload lpuinit artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: lpuinit-${{ inputs.target }}
+        path: userspace/lpuinit/target/**/release/lpuinit
