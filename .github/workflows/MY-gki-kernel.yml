@@ -967,7 +967,7 @@ jobs:
           #cp ./$CONFIG/out/${{ inputs.android_version }}-${{ inputs.kernel_version }}/dist/Image.lz4 ./bootimgs
           #cp ./$CONFIG/out/${{ inputs.android_version }}-${{ inputs.kernel_version }}/dist/Image ./
           #cp ./$CONFIG/out/${{ inputs.android_version }}-${{ inputs.kernel_version }}/dist/Image.lz4 ./
-
+          for file in $(find $CONFIG/out -type f -name '*.tar.gz' 2>/dev/null);do cp $file ${GITHUB_WORKSPACE};done
           # Create gzip of the Image file
           #gzip -n -k -f -9 ./Image > ./Image.gz
           
@@ -999,6 +999,7 @@ jobs:
           path: |
             *.zip
             *.img
+            *.tar.gz
 
       - name: Preparing linuxxpu for upload
         run: |
