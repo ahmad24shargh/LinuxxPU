@@ -298,7 +298,7 @@ jobs:
           echo "CONFIG_LTO_CLANG_FULL=n" >> ${defconfig}
           echo "CONFIG_LTO_CLANG_THIN=y" >> ${defconfig}
           #Make sure to unspoof KCONFIG_FILE in common/kernel/Makefile
-          sed -E 's|\$\(obj\)/config_data:.+|\$(obj)/config_data: \$(KCONFIG_CONFIG) FORCE|g' $GITHUB_WORKSPACE/$CONFIG/common/kernel/Makefile
+          sed -E -i 's|\$\(obj\)/config_data:.+|\$(obj)/config_data: \$(KCONFIG_CONFIG) FORCE|g' $GITHUB_WORKSPACE/$CONFIG/common/kernel/Makefile
           pushd $CONFIG/common/kernel/
           echo '#!/bin/bash' > manipulating_conf_data.sh
           echo 'SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"' >> manipulating_conf_data.sh
