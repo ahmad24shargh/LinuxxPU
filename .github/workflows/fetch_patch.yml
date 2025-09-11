@@ -63,7 +63,7 @@ jobs:
           #declare -a repo_commits=($(git log -n 200 --no-decorate | grep -E '^commit' | cut -d' ' -f2))
           if [ ${{ env.ksu_fork }} == 'KSUN' ];then
             use_pershoot_susfs=false
-            use_wild_manager=false
+            use_wild_manager=true
             
             if $use_wild_manager ;then
               git clone --single-branch https://github.com/WildKernels/Wild_KSU KSU
