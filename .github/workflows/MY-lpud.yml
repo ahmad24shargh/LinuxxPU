@@ -57,7 +57,7 @@ jobs:
         bash ${GITHUB_WORKSPACE}/.github/scripts/calc_patch_tg.sh
 
     - name: Prepare LKM Files
-      #if: ${{ inputs.pack_lkm }}
+      if: false
       run: |
         if ${{ inputs.ksu_fork == 'KSUN' }};then
           owner=KernelSU-Next
