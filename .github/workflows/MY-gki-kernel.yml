@@ -489,6 +489,7 @@ jobs:
           fi
           
       - name: Apply Hide Stuff Patches
+        if: false
         run: |
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG/common"
@@ -669,7 +670,7 @@ jobs:
           #fi
 
       - name: Adding log reduction and debug reduction configurations
-        #if: false
+        if: false
         run: |
           cd "$CONFIG"
           #if [ ! -f ./common/security/selinux/include/flask.h ];then
