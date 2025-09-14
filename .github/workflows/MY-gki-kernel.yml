@@ -551,7 +551,7 @@ jobs:
           #fi
           sed -i '/CONFIG_TCP_CONG_BBR/d' ${defconfig}
           echo "CONFIG_TCP_CONG_BBR=y" >> ${defconfig}
-          sed -i '/CONFIG_DEFAULT_TCP_CONG/d' >> ${defconfig}
+          sed -i '/CONFIG_DEFAULT_TCP_CONG/d' ${defconfig}
           echo 'CONFIG_DEFAULT_TCP_CONG="westwood"' >> ${defconfig}
           echo 'CONFIG_DEFAULT_WESTWOOD=y' >> ${defconfig}
            
