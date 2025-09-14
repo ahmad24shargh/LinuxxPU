@@ -185,7 +185,7 @@ jobs:
                 rm -rf kernel/
                 cp -a PERSHOOT/kernel .
                 rm -rf PERSHOOT
-                touch ${GITHUB_WORKSPACE}/use_pershoot_susfs
+                touch ${GITHUB_WORKSPACE}/USE_PERSHOOT_SUSFS.ME
               fi
               if [ -f ksun_susfs_latest.patch ];then
                 patch -p1 --forward < ksun_susfs_latest.patch
