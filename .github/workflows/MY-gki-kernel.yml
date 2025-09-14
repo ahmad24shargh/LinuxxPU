@@ -474,7 +474,11 @@ jobs:
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG/common"
 
-          if [ "${{ inputs.ksu_fork }}" == "KSUN" -a "${{ env.kernel_variant }}" != "chickernel" ]; then
+          if [ "${{ inputs.ksu_fork }}" == "KSUN" -a "${{ env.kernel_variant }}" != "chickernel" -a -f ../../use_pershoot_susfs ]; then
+            echo "Applying scope_minimized_manual_hooks_v1.5.patch for pershoot ksun..."
+            cp ../../kernel_patches/next/scope_minimized_manual_hooks_v1.5.patch ./
+            patch -p1 -F 3 < scope_minimized_manual_hooks_v1.5.patch
+          elif [ "${{ inputs.ksu_fork }}" == "KSUN" -a "${{ env.kernel_variant }}" != "chickernel" ]; then
             echo "Applying manual hooks for KernelSU-Next..."
             cp ../../kernel_patches/next/syscall_hooks.patch ./
             patch -p1 -F 3 < syscall_hooks.patch
@@ -489,7 +493,7 @@ jobs:
           fi
           
       - name: Apply Hide Stuff Patches
-        if: false
+        #if: false
         run: |
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG/common"
