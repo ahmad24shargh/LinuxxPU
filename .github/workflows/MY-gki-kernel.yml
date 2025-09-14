@@ -535,15 +535,25 @@ jobs:
           echo "CONFIG_IP6_NF_TARGET_HL=y" >> ${defconfig}
           echo "CONFIG_IP6_NF_MATCH_HL=y" >> ${defconfig}
 
-          # Add BBR Config
-          if [ $(grep -q 'CONFIG_TCP_CONG_ADVANCED=y' ${defconfig};echo $?) -ne 0 ];then
+          # Basic optimizations
+          echo "CONFIG_KALLSYMS=y" >> ${defconfig}
+          echo "CONFIG_KALLSYMS_ALL=y" >> ${defconfig}
+          echo "CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE=y" >> ${defconfig}
+          
+
+          # Add BBR & network Configs
+          #if [ $(grep -q 'CONFIG_TCP_CONG_ADVANCED=y' ${defconfig};echo $?) -ne 0 ];then
             echo "CONFIG_TCP_CONG_ADVANCED=y" >> ${defconfig} 
             echo "CONFIG_TCP_CONG_BIC=n" >> ${defconfig}
-            echo "CONFIG_TCP_CONG_WESTWOOD=n" >> ${defconfig}
+            echo "CONFIG_TCP_CONG_WESTWOOD=y" >> ${defconfig}
             echo "CONFIG_TCP_CONG_HTCP=n" >> ${defconfig}
             echo "CONFIG_NET_SCH_FQ=y" >> ${defconfig}
-          fi
+          #fi
+          sed -i '/CONFIG_TCP_CONG_BBR/d' ${defconfig}
           echo "CONFIG_TCP_CONG_BBR=y" >> ${defconfig}
+          sed -i '/CONFIG_DEFAULT_TCP_CONG/d' >> ${defconfig}
+          echo 'CONFIG_DEFAULT_TCP_CONG="westwood"' >> ${defconfig}
+          echo 'CONFIG_DEFAULT_WESTWOOD=y' >> ${defconfig}
            
 
           # Remove check_defconfig
