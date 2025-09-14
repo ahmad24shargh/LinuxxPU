@@ -62,7 +62,7 @@ jobs:
           #has_new_commits=true
           #declare -a repo_commits=($(git log -n 200 --no-decorate | grep -E '^commit' | cut -d' ' -f2))
           if [ ${{ env.ksu_fork }} == 'KSUN' ];then
-            use_pershoot_susfs=false
+            use_pershoot_susfs=true
             use_wild_manager=true
             
             if $use_wild_manager ;then
@@ -185,6 +185,7 @@ jobs:
                 rm -rf kernel/
                 cp -a PERSHOOT/kernel .
                 rm -rf PERSHOOT
+                touch use_pershoot_susfs
               fi
               if [ -f ksun_susfs_latest.patch ];then
                 patch -p1 --forward < ksun_susfs_latest.patch
