@@ -552,8 +552,8 @@ jobs:
           sed -i '/CONFIG_TCP_CONG_BBR/d' ${defconfig}
           echo "CONFIG_TCP_CONG_BBR=y" >> ${defconfig}
           sed -i '/CONFIG_DEFAULT_TCP_CONG/d' ${defconfig}
-          echo 'CONFIG_DEFAULT_TCP_CONG="westwood"' >> ${defconfig}
-          echo 'CONFIG_DEFAULT_WESTWOOD=y' >> ${defconfig}
+          echo 'CONFIG_DEFAULT_TCP_CONG="BBR"' >> ${defconfig}
+          echo 'CONFIG_DEFAULT_BBR=y' >> ${defconfig}
            
 
           # Remove check_defconfig
@@ -664,7 +664,7 @@ jobs:
           echo "CONFIG_KSU_SUSFS=y" >> ${defconfig}
           echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> ${defconfig}
           echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> ${defconfig}
-          echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_SUS_MOUNT=n" >> ${defconfig}
           echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> ${defconfig}
           echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> ${defconfig}
           echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> ${defconfig}
@@ -672,7 +672,7 @@ jobs:
           echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> ${defconfig}
           echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> ${defconfig}
           echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> ${defconfig}
-          echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_ENABLE_LOG=n" >> ${defconfig}
           echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> ${defconfig}
           echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> ${defconfig}
           echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ${defconfig}
