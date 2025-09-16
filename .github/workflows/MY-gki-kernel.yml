@@ -657,7 +657,7 @@ jobs:
           #echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> ${defconfig}
           echo "CONFIG_KSU_SUSFS_SUS_MOUNT=n" >> ${defconfig}
           # bug in sukisu when CONFIG_KSU_SUSFS_SUS_MOUNT=n
-          sed -i 's/if \(susfs_is_umount_for_zygote_system_process_enabled\)/if (false)/g' ${GITHUB_WORKSPACE}/kernel/core_hook.c
+          sed -i 's/if (susfs_is_umount_for_zygote_system_process_enabled)/if (false)/g' ${GITHUB_WORKSPACE}/kernel/core_hook.c
           #
           #echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> ${defconfig}
           #echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> ${defconfig}
