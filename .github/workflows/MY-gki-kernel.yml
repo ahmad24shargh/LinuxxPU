@@ -448,15 +448,6 @@ jobs:
           cd ./$CONFIG/common
           if [[ "${{ env.kernel_variant }}" != "chickernel" ]];then patch -p1 < 50_add_susfs_in_gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch;fi
 
-          if ! grep -qxF '#define CMD_SUSFS_HIDE_SUS_MNTS_FOR_ALL_PROCS 0x55561' ./include/linux/susfs_def.h; then
-            #curl -Ls https://raw.githubusercontent.com/fatalcoder524/kernel_patches_additional/refs/heads/main/hide_sus_mnts_for_all_procs.patch  | patch -p1 -F 3
-            echo "applying hide_sus_mnts_for_all_procs patch ..."
-            cp ../../kernel_patches/hide_sus_mnts_for_all_procs.patch ./
-            patch -p1 -F 3 < hide_sus_mnts_for_all_procs.patch
-          else
-            echo "Line already present. Skipping SUSFS_HIDE_SUS_MNTS_FOR_ALL_PROCS Patch."
-          fi
-
           #sed -i '/bool ksu_devpts_hook = false;/d' $GITHUB_WORKSPACE/kernel/sucompat.c
           #cd $GITHUB_WORKSPACE/$CONFIG/common
           #mkdir $GITHUB_WORKSPACE/debug
@@ -662,26 +653,38 @@ jobs:
 
           echo "Adding SUSFS configuration settings to gki_defconfig..."
           echo "CONFIG_KSU_SUSFS=y" >> ${defconfig}
-          echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> ${defconfig}
-          echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> ${defconfig}
+          #echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> ${defconfig}
+          #echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> ${defconfig}
           echo "CONFIG_KSU_SUSFS_SUS_MOUNT=n" >> ${defconfig}
-          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> ${defconfig}
-          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> ${defconfig}
-          echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> ${defconfig}
+          # bug in sukisu when CONFIG_KSU_SUSFS_SUS_MOUNT=n
+          sed -i 's/if \(susfs_is_umount_for_zygote_system_process_enabled\)/if (false)/g' ${GITHUB_WORKSPACE}/kernel/core_hook.c
+          #
+          #echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> ${defconfig}
+          #echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> ${defconfig}
+          #echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> ${defconfig}
           #echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=n" >> ${defconfig}
-          echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> ${defconfig}
-          echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> ${defconfig}
-          echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> ${defconfig}
+          #echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> ${defconfig}
+          #echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> ${defconfig}
+          #echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> ${defconfig}
           echo "CONFIG_KSU_SUSFS_ENABLE_LOG=n" >> ${defconfig}
-          echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> ${defconfig}
-          echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> ${defconfig}
-          echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ${defconfig}
+          #echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> ${defconfig}
+          #echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> ${defconfig}
+          #echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ${defconfig}
 
           #if [ "${{ inputs.linuxxpu_variant }}" == "Next" ]; then
           echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ${defconfig}
           #else
           #echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> ${defconfig}
           #fi
+
+          if ! grep -qxF '#define CMD_SUSFS_HIDE_SUS_MNTS_FOR_ALL_PROCS 0x55561' ./include/linux/susfs_def.h; then
+            #curl -Ls https://raw.githubusercontent.com/fatalcoder524/kernel_patches_additional/refs/heads/main/hide_sus_mnts_for_all_procs.patch  | patch -p1 -F 3
+            echo "applying hide_sus_mnts_for_all_procs patch ..."
+            cp ../../kernel_patches/hide_sus_mnts_for_all_procs.patch ./
+            patch -p1 -F 3 < hide_sus_mnts_for_all_procs.patch
+          else
+            echo "Line already present. Skipping SUSFS_HIDE_SUS_MNTS_FOR_ALL_PROCS Patch."
+          fi
 
       - name: Adding log reduction and debug reduction configurations
         if: false
