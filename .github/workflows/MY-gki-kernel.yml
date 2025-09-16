@@ -673,9 +673,9 @@ jobs:
           echo "CONFIG_KSU_SUSFS_SUS_MOUNT=n" >> ${defconfig}
           # bug in sukisu when CONFIG_KSU_SUSFS_SUS_MOUNT=n
           sed -i 's/if (susfs_is_umount_for_zygote_system_process_enabled)/if (false)/g' ${GITHUB_WORKSPACE}/kernel/core_hook.c
-          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=n" >> ${defconfig}
-          echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=n" >> ${defconfig}
-          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=n" >> ${defconfig}
+          CC_EXTRA_ARGS="${CC_EXTRA_ARGS} -Wno-error=implicit-function-declaration"
+          sed -i '/CC_EXTRA_ARGS=/d' $GITHUB_ENV || true
+          echo "CC_EXTRA_ARGS=${CC_EXTRA_ARGS}" >> $GITHUB_ENV
           # end of no sus_mount configs
           
           cd common
@@ -874,7 +874,7 @@ jobs:
           fi
           export TARGET=aarch64-linux-android
           #export CC="/usr/bin/ccache clang --target=${TARGET}${API} ${My_Args}"
-          export CC="clang --target=${TARGET}${API} ${My_Args}"
+          export CC="clang --target=${TARGET}${API} ${My_Args} ${CC_EXTRA_ARGS}"
           
           #export CC_ARG="${CC}"
           BUILD_CONFIG='common/build.config.gki.aarch64'
