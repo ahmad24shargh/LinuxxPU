@@ -484,7 +484,7 @@ jobs:
           fi
           
       - name: Apply Hide Stuff Patches
-        #if: false
+        if: false
         run: |
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG/common"
