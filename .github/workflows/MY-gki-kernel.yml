@@ -653,29 +653,29 @@ jobs:
 
           echo "Adding SUSFS configuration settings to gki_defconfig..."
           echo "CONFIG_KSU_SUSFS=y" >> ${defconfig}
-          #echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> ${defconfig}
-          #echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> ${defconfig}
-          #echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> ${defconfig}
-          #echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> ${defconfig}
-          #echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> ${defconfig}
-          #echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> ${defconfig}
-          ##echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=n" >> ${defconfig}
-          #echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> ${defconfig}
-          #echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> ${defconfig}
-          #echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> ${defconfig}
-          #echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> ${defconfig}
-          #echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> ${defconfig}
-          #echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> ${defconfig}
-          #echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> ${defconfig}
+          #echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=n" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ${defconfig}
           echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ${defconfig}
 
-          # no sus_mount configs
-          echo "CONFIG_KSU_SUSFS_SUS_MOUNT=n" >> ${defconfig}
-          # bug in sukisu when CONFIG_KSU_SUSFS_SUS_MOUNT=n
-          sed -i 's/if (susfs_is_umount_for_zygote_system_process_enabled)/if (false)/g' ${GITHUB_WORKSPACE}/kernel/core_hook.c
-          # disable Wimplicit-function-declaration as error
-          sed -i 's/-Werror=implicit-function-declaration/-Wno-error=implicit-function-declaration/g' ${GITHUB_WORKSPACE}/${CONFIG}/common/Makefile
-          # end of no sus_mount configs
+          ## no sus_mount configs
+          #echo "CONFIG_KSU_SUSFS_SUS_MOUNT=n" >> ${defconfig}
+          ## bug in sukisu when CONFIG_KSU_SUSFS_SUS_MOUNT=n
+          #sed -i 's/if (susfs_is_umount_for_zygote_system_process_enabled)/if (false)/g' ${GITHUB_WORKSPACE}/kernel/core_hook.c
+          ## disable Wimplicit-function-declaration as error
+          #sed -i 's/-Werror=implicit-function-declaration/-Wno-error=implicit-function-declaration/g' ${GITHUB_WORKSPACE}/${CONFIG}/common/Makefile
+          ## end of no sus_mount configs
           
           cd common
           if ! grep -qxF '#define CMD_SUSFS_HIDE_SUS_MNTS_FOR_ALL_PROCS 0x55561' ./include/linux/susfs_def.h; then
@@ -688,7 +688,7 @@ jobs:
           fi
 
       - name: Adding log reduction and debug reduction configurations
-        if: false
+        #if: false
         run: |
           cd "$CONFIG"
           #if [ ! -f ./common/security/selinux/include/flask.h ];then
@@ -900,7 +900,7 @@ jobs:
             cp  ${defconfig} ./common/arch/arm64/configs/chickernel_defconfig
             cp  ${defconfig} ./common/arch/arm64/configs/defconfig
             #revert commite fed0402  to unspoof /proc/config.gz
-            for file in $(grep -e 'arch/arm64/configs/khaje-stock_defconfig' ./common/kernel/* 2>/dev/null | cut -d':' -f1);do sed -i 's|config_data\: arch/arm64/configs/khaje-stock_defconfig|config_data\: \$\(KCONFIG_CONFIG\)|g' $file;done
+            #for file in $(grep -e 'arch/arm64/configs/khaje-stock_defconfig' ./common/kernel/* 2>/dev/null | cut -d':' -f1);do sed -i 's|config_data\: arch/arm64/configs/khaje-stock_defconfig|config_data\: \$\(KCONFIG_CONFIG\)|g' $file;done
           elif [[ "${{ env.kernel_variant }}" == *"topnotchfreaks"* ]];then  
             #BUILD_CONFIG='common/build.config.msm.bengal.le'
             #if [ -f common/build.config.msm.topaz ];then 
