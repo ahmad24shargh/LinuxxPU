@@ -673,9 +673,8 @@ jobs:
           echo "CONFIG_KSU_SUSFS_SUS_MOUNT=n" >> ${defconfig}
           # bug in sukisu when CONFIG_KSU_SUSFS_SUS_MOUNT=n
           sed -i 's/if (susfs_is_umount_for_zygote_system_process_enabled)/if (false)/g' ${GITHUB_WORKSPACE}/kernel/core_hook.c
-          CC_EXTRA_ARGS="${CC_EXTRA_ARGS} -Wno-error=implicit-function-declaration"
-          sed -i '/CC_EXTRA_ARGS=/d' $GITHUB_ENV || true
-          echo "CC_EXTRA_ARGS=${CC_EXTRA_ARGS}" >> $GITHUB_ENV
+          # disable Wimplicit-function-declaration as error
+          sed -i 's/-Werror=implicit-function-declaration/-Wno-error=implicit-function-declaration/g' ${GITHUB_WORKSPACE}/${CONFIG}/common/Makefile
           # end of no sus_mount configs
           
           cd common
@@ -874,7 +873,7 @@ jobs:
           fi
           export TARGET=aarch64-linux-android
           #export CC="/usr/bin/ccache clang --target=${TARGET}${API} ${My_Args}"
-          export CC="clang --target=${TARGET}${API} ${My_Args} ${CC_EXTRA_ARGS}"
+          export CC="clang --target=${TARGET}${API} ${My_Args}"
           
           #export CC_ARG="${CC}"
           BUILD_CONFIG='common/build.config.gki.aarch64'
@@ -968,10 +967,6 @@ jobs:
             cd "$CONFIG/out/${{ inputs.android_version }}-${{ inputs.kernel_version }}/dist"
             [ ! -f Image ] && echo "The file "Image" was not found in the current path!!!" && false
             #curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU_patch/refs/heads/main/kpm/patch_linux" -o patch
-            cp $GITHUB_WORKSPACE/kernel_patches/sukisu/kpimg ./kpimg
-            chmod 777 kpimg
-            cp $GITHUB_WORKSPACE/kernel_patches/sukisu/kptools ./kptools
-            chmod 777 kptools
             cp $GITHUB_WORKSPACE/kernel_patches/sukisu/patch_linux ./patch
             chmod 777 patch
             echo "Patching Image file..."
