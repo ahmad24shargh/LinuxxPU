@@ -465,7 +465,7 @@ jobs:
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG/common"
 
-          if [ "${{ inputs.ksu_fork }}" == "KSUN" -a "${{ env.kernel_variant }}" != "chickernel" -a -f ../../use_pershoot_susfs ]; then
+          if [ "${{ inputs.ksu_fork }}" == "KSUN" -a "${{ env.kernel_variant }}" != "chickernel" -a -f ../../USE_PERSHOOT_SUSFS.ME ]; then
             echo "Applying scope_minimized_manual_hooks_v1.5.patch for pershoot ksun..."
             cp ../../kernel_patches/next/scope_minimized_manual_hooks_v1.5.patch ./
             patch -p1 -F 3 < scope_minimized_manual_hooks_v1.5.patch
