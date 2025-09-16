@@ -981,8 +981,12 @@ jobs:
           #echo "Changing to configuration directory: $CONFIG..."
           mkdir bootimgs
 
-          bootimage_dir=$(dirname $(find ./$CONFIG -type f -name 'Image' 2>/dev/null))
-
+          if [ -f "$CONFIG/out/${{ inputs.android_version }}-${{ inputs.kernel_version }}/dist/Image" ];then
+            bootimage_dir="./$CONFIG/out/${{ inputs.android_version }}-${{ inputs.kernel_version }}/dist"
+          else
+            bootimage_dir=$(dirname $(find ./$CONFIG -type f -name 'Image' 2>/dev/null))
+          fi
+          
           echo "Creating bootimgs folder and copying images..."
           for file in $(find ${bootimage_dir} -type f -name 'Image*' 2>/dev/null);do cp $file ./bootimgs;cp $file ./;done
           #cp ./$CONFIG/out/${{ inputs.android_version }}-${{ inputs.kernel_version }}/dist/Image ./bootimgs
