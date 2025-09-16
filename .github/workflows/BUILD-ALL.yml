@@ -647,8 +647,7 @@ jobs:
           fi
           [ -e ./downloaded-artifacts/aarch64-linux-android/release/lpuinit ] && zip ./downloaded-artifacts/lpuinit-aarch64-linux-android/arm64-v8a/lpuinit-aarch64-linux-android.zip ./downloaded-artifacts/aarch64-linux-android/release/lpuinit || true
           mkdir -p releases
-          [ -f ./downloaded-artifacts/build.tar.gz ] && rm ./downloaded-artifacts/build.tar.gz
-          for file in $(find ./downloaded-artifacts -name \*.zip -o -name \*.apk -o -name \*.img -o -name \*.tar.gz);do cp $file ./releases/ ;done
+          for file in $(find ./downloaded-artifacts -name \*.zip -o -name \*.apk -o -name \*.img -o -name \*.tar.gz);do [ "$(basename $file)" != "build.tar.gz" ] && cp $file ./releases/ ;done
           
           
       - name: release
