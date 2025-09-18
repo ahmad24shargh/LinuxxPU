@@ -872,11 +872,16 @@ jobs:
             export TOOLCHAIN=${ANDROID_NDK_LATEST_HOME}/toolchains/llvm/prebuilt/linux-x86_64
             export My_PATH="${ANDROID_NDK_LATEST_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin:${ANDROID_NDK_LATEST_HOME}/prebuilt/linux-x86_64/bin/:${PATH}:$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/bin"
           fi
-          export LLVM=1 LLVM_IAS=1
-          export ARCH=arm64 SUBARCH=arm64
-          export CROSS_COMPILE=aarch64-linux-android-
-          export CROSS_COMPILE_COMPAT=arm-linux-androideabi-
-          export LD=ld.lld HOSTLD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip HOSTCC=clang HOSTCXX=clang++
+          #export LLVM=1 LLVM_IAS=1
+          #export ARCH=arm64 SUBARCH=arm64
+          #export CROSS_COMPILE=aarch64-linux-android-
+          #export CROSS_COMPILE_COMPAT=arm-linux-androideabi-
+          #export LD=ld.lld HOSTLD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip HOSTCC=clang HOSTCXX=clang++
+          
+          # with CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE_O3=y
+          #export KCFLAGS="-Wno-error -pipe -O3 -fno-stack-protector"
+
+          #export KCPPFLAGS="-DCONFIG_OPTIMIZE_INLINING"
           export TARGET=aarch64-linux-android
           #export CC="/usr/bin/ccache clang --target=${TARGET}${API} ${My_Args}"
           export CC="clang --target=${TARGET}${API} ${My_Args}"
