@@ -810,7 +810,7 @@ jobs:
               SUPPORTED_MANAGER_COUNT="${#managers_size[@]}"
               #for (( i=0; i<$SUPPORTED_MANAGER_COUNT; i++ )); do echo "${managers_size[$i]}:${managers_hash[$i]}" ; done
               
-              # Cleaning up the "is manager apk" function to apply my own patch
+              # Cleaning up the "is manager apk" function in apk_sign.c to apply my own patch
               line_num_1=$(grep -En 'return \(check_v2_signature\(.+' ${GITHUB_WORKSPACE}/kernel/apk_sign.c 2>/dev/null | tail -1 | cut -d ':' -f1)
               line_num_2=$(grep -En '^[[:space:]]+\);$' ${GITHUB_WORKSPACE}/kernel/apk_sign.c 2>/dev/null | tail -1 | cut -d ':' -f1)
               if [ ! -z ${line_num_2} ];then
