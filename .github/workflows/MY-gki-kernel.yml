@@ -814,7 +814,7 @@ jobs:
               line_num_1=$(grep -En 'return \(check_v2_signature\(.+' ${GITHUB_WORKSPACE}/kernel/apk_sign.c 2>/dev/null | tail -1 | cut -d ':' -f1)
               line_num_2=$(grep -En '^[[:space:]]+\);$' ${GITHUB_WORKSPACE}/kernel/apk_sign.c 2>/dev/null | tail -1 | cut -d ':' -f1)
               if [ ! -z ${line_num_2} ];then
-                [ ${line_num_2} -gt ${line_num_1} ] && sed ''${line_num_2}'d' ${GITHUB_WORKSPACE}/kernel/apk_sign.c
+                [ ${line_num_2} -gt ${line_num_1} ] && sed -i ''${line_num_2}'d' ${GITHUB_WORKSPACE}/kernel/apk_sign.c
               fi
               sed -E -i '/^[[:space:]]+[\|]{2} check_v2_signature\(.+/d' ${GITHUB_WORKSPACE}/kernel/apk_sign.c
               #
