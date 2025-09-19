@@ -69,16 +69,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
-      #CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
-      #CCACHE_NOHASHDIR: "true"
-      #CCACHE_HARDLINK: "true"
       kernel_variant: ${{ inputs.kernel_variant }}
       ksu_fork: ${{ inputs.ksu_fork }}
       hook_method: ${{ inputs.hook_method }}
       include_susfs: ${{ inputs.include_susfs }}
-      #C_VERSION: ${{ inputs.C_VERSION }}
-      #C_LAST_COMMIT: ${{ inputs.C_LAST_COMMIT }}
-      #C_TAG_NAME: ${{ inputs.C_TAG_NAME }}
       ZRAM: true
       #permissive cause bootloop
       selinux_permissive: false
@@ -96,11 +90,7 @@ jobs:
           remove-haskell: "true"
           remove-codeql: "true"
           remove-docker-images: "true"
-              
-      #- name: Checkout Repository
-        #uses: actions/checkout@v5.0.0
-        #with:
-          #fetch-depth: 0
+            
       - name: download linuxxpu with patched dir
         uses: actions/download-artifact@v5.0.0
         with:
@@ -126,21 +116,6 @@ jobs:
       - name: Install ccache,pahole,aria2
         run: sudo apt update && sudo apt install -y ccache pahole aria2
 
-      #- name: Set up ccache
-        #run: |
-          #mkdir -p ~/.cache/bazel # Ensure the directory exists
-          #ccache --version
-          #ccache --max-size=2G
-          #ccache --set-config=compression=true
-          #echo "CCACHE_DIR=$HOME/.ccache" >> $GITHUB_ENV
-      
-      #- name: Restore ccache from cache
-        #uses: actions/cache@v4.2.4
-        #with:
-          #path: ~/.ccache
-          #key: ${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}-ccache-${{ github.sha }}
-          #restore-keys: |
-            #${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}-ccache-
             
       - name: delete toolchain and clang-22 caches if older than a certain amount
         run: |
@@ -442,23 +417,9 @@ jobs:
           cp $GITHUB_WORKSPACE/susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
           [ ${{ env.ksu_fork }} == 'KSUN' ] && echo "Applying SUSFS patches for KernelSU-Next..." || echo "Applying SUSFS patches for SukiSU Ultra..."
           cd ./KernelSU-Next
-          #cp ./kernel_patches/next/kernel-implement-susfs-v1.5.7-gki.patch ./
-          #[ ${{ env.ksu_fork }} == 'KSUN' ] && patch -p1 --forward < kernel-implement-susfs-v1.5.7-gki.patch
           # Change to common directory and apply common SUSFS patch
           cd ./$CONFIG/common
           if [[ "${{ env.kernel_variant }}" != "chickernel" ]];then patch -p1 < 50_add_susfs_in_gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch;fi
-
-          #sed -i '/bool ksu_devpts_hook = false;/d' $GITHUB_WORKSPACE/kernel/sucompat.c
-          #cd $GITHUB_WORKSPACE/$CONFIG/common
-          #mkdir $GITHUB_WORKSPACE/debug
-          #cp fs/exec.c fs/stat.c $GITHUB_WORKSPACE/debug/
-          
-      #- name: Upload the linuxxpu with the latest changes
-        #uses: actions/upload-artifact@v4.6.2
-        #with:
-          #name: patch-debug
-          #path: debug
-          #include-hidden-files: true
           
       - name: Apply New Hooks Patches
         run: |
@@ -570,8 +531,6 @@ jobs:
 
           #Remove Abi Exports and Error
           rm -rf ./common/android/abi_gki_protected_exports_* || true
-
-          #for file in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'is_manager_apk' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -E -i 's/([[:space:]]+)is_manager_apk/\1lpu_is_manager_apk/g' $file;done
           
       - name: Copy source files & apply LZ4KD & ZSTDN patches
         run: |
@@ -660,7 +619,6 @@ jobs:
           echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> ${defconfig}
           echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> ${defconfig}
           echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> ${defconfig}
-          #echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=n" >> ${defconfig}
           echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> ${defconfig}
           echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> ${defconfig}
           echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> ${defconfig}
@@ -692,9 +650,6 @@ jobs:
         #if: false
         run: |
           cd "$CONFIG"
-          #if [ ! -f ./common/security/selinux/include/flask.h ];then
-            #cp  ../kernel_patches/flask.h ./common/security/selinux/include/
-          #fi
           #echo "CONFIG_AUDIT=n" >> ${defconfig}
           #echo "CONFIG_AUDITSYSCALL=n" >> ${defconfig}
           if grep -Eq '^CONFIG_CMDLINE=.+' ${defconfig};then cmdline_str=$(echo "CONFIG_CMDLINE=\"$(grep -E '^CONFIG_CMDLINE=.+' ${defconfig} | cut -d '"' -f2) audit=0 printk.devkmsg=off\"");else cmdline_str='CONFIG_CMDLINE="audit=0 printk.devkmsg=off"';fi
@@ -722,8 +677,7 @@ jobs:
         env:
           ACTIONS_STEP_DEBUG: true
         run: |
-          set -e
-          set -x
+          set -ex
           cd "$CONFIG"
 
           if [ ! -d $GITHUB_WORKSPACE/clang-22 ];then
@@ -733,7 +687,6 @@ jobs:
           export API=$(echo ${{ inputs.android_version }} | sed 's/android1/3/g')
           My_Args=' -mcpu=cortex-a53+crypto+crc -mtune=cortex-a73 -march=armv8-a+crypto+crc -O3 -funroll-loops '
           #export KBUILD_BUILD_TIMESTAMP=$(date -u -d "3 month ago")
-          #export KBUILD_BUILD_TIMESTAMP='Tue May 14 09:27:18 UTC 2024'
           export KBUILD_BUILD_TIMESTAMP='Fri May 23 03:46:04 UTC 2025'
           export KBUILD_BUILD_USER='ahmad'
           export KBUILD_BUILD_HOST='Forozan'
@@ -829,19 +782,10 @@ jobs:
                 sed -E -i 's/(.+apk_sign_keys\[\] \=.*)/'"${temp_str}"'/g' ${GITHUB_WORKSPACE}/kernel/apk_sign.c
                 for file in $(grep -R {GITHUB_WORKSPACE}/kernel -e 'define MAX_MANAGERS' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -E -i 's|#define MAX_MANAGERS.+|#define MAX_MANAGERS '$SUPPORTED_MANAGER_COUNT'|g' $file;cat $file;done
               else
-                #sed -E -i 's|(bool .*is_manager_apk\(char \*path\)\;)|#define SUPPORTED_MANAGER_COUNT '${SUPPORTED_MANAGER_COUNT}'\nextern unsigned MANAGER_SIZE[SUPPORTED_MANAGER_COUNT];\nextern const char *MANAGER_HASH[SUPPORTED_MANAGER_COUNT];\n\n\1|g' ${GITHUB_WORKSPACE}/kernel/apk_sign.h
-                #sed -E -i '/bool .*is_manager_apk\(char \*.+/,/}/d' ${GITHUB_WORKSPACE}/kernel/apk_sign.c
-                #sed -E -i -e 's|(bool .*is_manager_apk\(char \*.+\))|\nunsigned MANAGER_SIZE\[SUPPORTED_MANAGER_COUNT\]=\{'$(echo "${managers_size[*]}" | tr ' ' ', ')'\}\;\nconst char *MANAGER_HASH\[SUPPORTED_MANAGER_COUNT\]=\{'$(echo $(for i in "${managers_hash[@]}" ; do printf '"%s" ' "$i";done) | tr ' ' ', ')'\}\;\n\nbool lpu_is_manager_apk(char *path)|g' -e 's|return [^[:space:]]?check_v2_signature\(.+|int i\;\n        bool result = false\;\n\n        for \(i = 0\; i \< SUPPORTED_MANAGER_COUNT\; i++\)\n        \{\n           result = check_v2_signature\(path, MANAGER_SIZE[i], MANAGER_HASH[i]\)\;\n           if (result\)  \{ return result\;\}\n        \}\n     return result\;\n|g' ${GITHUB_WORKSPACE}/kernel/apk_sign.c
                 sed -E -i -e 's|(bool .*)(is_manager_apk\(char \*.+\))|\n#define SUPPORTED_MANAGER_COUNT '${SUPPORTED_MANAGER_COUNT}'\nunsigned MANAGER_SIZE\[SUPPORTED_MANAGER_COUNT\]=\{'$(echo "${managers_size[*]}" | tr ' ' ', ')'\}\;\nconst char *MANAGER_HASH\[SUPPORTED_MANAGER_COUNT\]=\{'$(echo $(for i in "${managers_hash[@]}" ; do printf '"%s" ' "$i";done) | tr ' ' ', ')'\}\;\n\n\1is_manager_apk(char *path)|g' -e 's|return [^[:space:]]?check_v2_signature\([^\;]+;|int i\;\n        bool result = false\;\n\n        for \(i = 0\; i \< SUPPORTED_MANAGER_COUNT\; i++\)\n        \{\n           result = check_v2_signature\(path, MANAGER_SIZE[i], MANAGER_HASH[i]\)\;\n           if (result\)  \{ return result\;\}\n        \}\n     return result\;\n|g' ${GITHUB_WORKSPACE}/kernel/apk_sign.c
-                #echo -e '\nunsigned MANAGER_SIZE[SUPPORTED_MANAGER_COUNT]={'$(echo "${managers_size[*]}" | tr ' ' ', ')'};\nconst char *MANAGER_HASH[SUPPORTED_MANAGER_COUNT]={'$(echo $(for i in "${managers_hash[@]}" ; do printf '"%s" ' "$i";done) | tr ' ' ', ')'};\n\nbool lpu_is_manager_apk(char *path)\n{\n        int i;\n        bool result = false;\n\n        for (i = 0; i < SUPPORTED_MANAGER_COUNT; i++)\n     {\n             result = check_v2_signature(path, MANAGER_SIZE[i], MANAGER_HASH[i]);\n           if (result)  { return result;}\n        }\n     return result;\n}\n' >> ${GITHUB_WORKSPACE}/kernel/apk_sign.c
               fi
               cat ${GITHUB_WORKSPACE}/kernel/apk_sign.c
             fi
-            #sed -i 's|KernelSU|LinuxxPU|g' $(find . -type f -name 'ksu.c')
-            #sed -i 's|kernelsu|linuxxpu|g' $(find . -type f -name 'ksu.c')
-            #sed -i 's|kernelsu|linuxxpu|g' $(find . -type f -name 'ksud.c')
-            #sed -i 's|kernelsu|linuxxpu|g' $(find . -type f -name 'rules.c')
-            #sed -i 's|kernelsu|linuxxpu|g' $(find . -type f -name 'selinux.h')
             sed  -i 's/_KSU_/_LPU_/g' ${defconfig}
             sed  -i 's/CONFIG_KSU/CONFIG_LPU/g' ${defconfig}
             for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'sukisu.ultra' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i 's|sukisu.ultra|linuxxpu|g' $files;done
@@ -893,7 +837,6 @@ jobs:
 
           #export KCPPFLAGS="-DCONFIG_OPTIMIZE_INLINING"
           export TARGET=aarch64-linux-android
-          #export CC="/usr/bin/ccache clang --target=${TARGET}${API} ${My_Args}"
           export CC="clang --target=${TARGET}${API} ${My_Args}"
           
           #export CC_ARG="${CC}"
@@ -971,11 +914,6 @@ jobs:
             else
               LTO=thin SKIP_EXT_MODULES=1 SKIP_CP_KERNEL_HDR=1 SKIP_VENDOR_BOOT=1 SKIP_MRPROPER=1 SYSTEM_DLKM_RE_SIGN=0 BUILD_SYSTEM_DLKM=0 KMI_SYMBOL_LIST_STRICT_MODE=0 build/build.sh CC="${CC}" 
             fi
-          else
-            rm -rf ./common/android/abi_gki_protected_exports_*
-            sed -i "/stable_scmversion_cmd/s/-maybe-dirty//g" ./build/kernel/kleaf/impl/stamp.bzl
-            #sed -E -i '/^CONFIG_LOCALVERSION=/ s/(.*)"$/\1-Wild+"/' ${defconfig}
-            tools/bazel build --disk_cache=/home/runner/.cache/bazel --config=fast --lto=thin //common:kernel_aarch64_dist || exit 1
           fi
           #ccache --show-stats
 
@@ -1012,10 +950,6 @@ jobs:
           
           echo "Creating bootimgs folder and copying images..."
           for file in $(find ${bootimage_dir} -type f -name 'Image*' 2>/dev/null);do echo $file;cp $file ./bootimgs;cp $file ./;done
-          #cp ./$CONFIG/out/${{ inputs.android_version }}-${{ inputs.kernel_version }}/dist/Image ./bootimgs
-          #cp ./$CONFIG/out/${{ inputs.android_version }}-${{ inputs.kernel_version }}/dist/Image.lz4 ./bootimgs
-          #cp ./$CONFIG/out/${{ inputs.android_version }}-${{ inputs.kernel_version }}/dist/Image ./
-          #cp ./$CONFIG/out/${{ inputs.android_version }}-${{ inputs.kernel_version }}/dist/Image.lz4 ./
           #for file in $(find $CONFIG/out -type f -name '*.tar.gz' 2>/dev/null);do cp $file ${GITHUB_WORKSPACE};done
           # Create gzip of the Image file
           #gzip -n -k -f -9 ./Image > ./Image.gz
