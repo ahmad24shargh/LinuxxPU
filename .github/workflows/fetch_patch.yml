@@ -356,15 +356,18 @@ jobs:
           for file in $(find ./userspace -type f -name 'Application.mk' 2>/dev/null);do sed -E -i 's/APP_ABI \:= .+/APP_ABI := arm64-v8a/g' $file;done
           sed -E -i -e 's|abiFilters\(.+|abiFilters("arm64-v8a")|g' -e 's|abiFilters \+\= listOf\(.+|abiFilters += listOf("arm64-v8a")|g' ./manager/build.gradle.kts
           for file in $(grep -R "${repo_folder}" -e 'com.rifsxd.ksunext' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -E -i 's|(com.)rifsxd(.)ksunext|\1ahmad\2linuxxpu|g' $file;done
+          for file in $(grep -R "${repo_folder}" -e 'me.weishu.kernelsu' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -E -i 's|me(.)weishu(.)kernelsu|com\1ahmad\2linuxxpu|g' $file;done
           for file in $(grep -R "${repo_folder}" -e 'com.twj.wksu' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -E -i 's|(com.)twj(.)wksu|\1ahmad\2linuxxpu|g' $file;done
           for file in $(grep -R "${repo_folder}" -e 'com.sukisu.ultra' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -E -i 's|(com.)sukisu(.)ultra|\1ahmad\2linuxxpu|g' $file;done
           for file in $(grep -R "${repo_folder}" -e 'com.sukisu.zako' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -E -i 's|(com.)sukisu(.)zako|\1ahmad\2linuxxpu|g' $file;done
           for file in $(grep -R ${repo_folder}/manager ${repo_folder}/userspace -e 'rifsxd' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -i 's|rifsxd|ahmad|g' $file;done
+          for file in $(grep -R ${repo_folder}/manager ${repo_folder}/userspace -e 'weishu' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -i 's|weishu|ahmad|g' $file;done
           for file in $(grep -R ${repo_folder}/manager ${repo_folder}/userspace -e 'twj' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -i 's|twj|ahmad|g' $file;done
           for file in $(grep -R ${repo_folder}/manager ${repo_folder}/userspace -e 'sukisu_kpm' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -i 's|sukisu_kpm|linuxxpu_kpm|g' $file;done
           for file in $(grep -R ${repo_folder}/manager ${repo_folder}/userspace -e 'SUKISU_KPM' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -i 's|SUKISU_KPM|LINUXXPU_KPM|g' $file;done
           for file in $(grep -R ${repo_folder}/manager ${repo_folder}/userspace -e 'sukisu' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -i 's|sukisu|ahmad|g' $file;done
           for dir in $(find ${repo_folder} -type d -name 'ksunext' 2>/dev/null);do bn="$( cd -- "$(dirname "$dir")" >/dev/null 2>&1 ; pwd -P )";mv $dir "${bn}/linuxxpu";mv "${bn}" "$(echo ${bn} | rev | cut -d'/' -f2- | rev)/ahmad";done
+          for dir in $(find ${repo_folder} -type d -name 'kernelsu' 2>/dev/null);do bn="$( cd -- "$(dirname "$dir")" >/dev/null 2>&1 ; pwd -P )";mv $dir "${bn}/linuxxpu";mv "${bn}" "$(echo ${bn} | rev | cut -d'/' -f2- | rev)/ahmad";bn="$( cd -- "$(dirname "$(dirname $(echo $dir | sed 's/kernelsu/linuxxpu/g'));")" >/dev/null 2>&1 ; pwd -P )";mv "${bn}" "$(echo ${bn} | rev | cut -d'/' -f2- | rev)/com";done
           for dir in $(find ${repo_folder} -type d -name 'wksu' 2>/dev/null);do bn="$( cd -- "$(dirname "$dir")" >/dev/null 2>&1 ; pwd -P )";mv $dir "${bn}/linuxxpu";mv "${bn}" "$(echo ${bn} | rev | cut -d'/' -f2- | rev)/ahmad";done
           for dir in $(find ${repo_folder} -type d -name 'ultra' 2>/dev/null);do bn="$( cd -- "$(dirname "$dir")" >/dev/null 2>&1 ; pwd -P )";mv $dir "${bn}/linuxxpu";mv "${bn}" "$(echo ${bn} | rev | cut -d'/' -f2- | rev)/ahmad";done
           #sed -E -i 's|(KSU[^[:space:]]+EXPECTED_SIZE).+0x.+|\1 := 0x373|g' ${repo_folder}/kernel/Makefile
