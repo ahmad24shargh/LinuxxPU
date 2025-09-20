@@ -105,6 +105,11 @@ jobs:
             owner=SukiSU-Ultra
             repo=SukiSU-Ultra
             workflow='build-manager.yml'
+          elif [ ${{ env.ksu_fork }} == 'xxKSU' ];then
+            git clone --single-branch https://github.com/backslashxx/KernelSU KSU
+            owner=backslashxx
+            repo=KernelSU
+            workflow='build-manager.yml' 
           else
             exit 1
             false
@@ -148,6 +153,9 @@ jobs:
               rm  -rf kernel
               mv SukiSU-Ultra/kernel .
               rm -rf SukiSU-Ultra
+            elif [ ${{ env.ksu_fork }} == 'xxKSU' ];then
+              wget https://raw.githubusercontent.com/yapixel/kernel_patches/refs/heads/main/xxksu/10_susfs_backslashxx_ksu_patches.patch
+              patch -p1 --forward < 10_susfs_backslashxx_ksu_patches.patch
             elif [ ${{ env.ksu_fork }} == 'KSUN'  ];then
               if [ "${use_pershoot_susfs}" == "false" ];then
                 SUSFS_BRANCH="gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}"
@@ -189,10 +197,6 @@ jobs:
               fi
               if [ -f ksun_susfs_latest.patch ];then
                 patch -p1 --forward < ksun_susfs_latest.patch
-                if curl --output /dev/null --silent --head --fail 'https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/pershoot.patch'; then
-                  wget https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/pershoot.patch
-                  patch -p1 --forward < pershoot.patch
-                fi
               fi
               #if [ "${use_wild_manager}" == "true" -a ${{ env.ksu_fork }}  == 'KSUN' ];then
                 #git clone --single-branch https://github.com/WildKernels/Wild_KSU WildKernels
@@ -200,10 +204,6 @@ jobs:
                 #cp -a WildKernels/manager .
                 #rm -rf WildKernels
               #fi
-              #git clone -b next-susfs-dev https://github.com/KernelSU-Next/KernelSU-Next
-              #rm  -rf kernel
-              #mv KernelSU-Next/kernel .
-              #rm -rf KernelSU-Next
             else
               exit 78
               false
@@ -319,9 +319,13 @@ jobs:
           #rm -rf ${repo_folder}/.github/manifests
           #rm -rf ${repo_folder}/.github/scripts
           #rm -f ${repo_folder}/.github/dependabot.yml
+          #if [ ${{ env.ksu_fork }} == 'xxKSU' -o ${{ env.ksu_fork }} == 'KSUN' ];then
+          for file in $(find ${repo_folder}/manager/app/src/main/jniLibs -name 'libmagiskboot.so' 2>/dev/null);do mv -f $file $(dirname $file)/liblpuboot.so;done
+          for file in $(grep -R ${repo_folder}/manager  -e 'libmagiskboot.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libmagiskboot.so|liblpuboot.so|g' $file;done
+          #fi
           if [ ${{ env.ksu_fork }} == 'KSUN' ];then
-            for file in $(find ${repo_folder}/manager/app/src/main/jniLibs -name 'libmagiskboot.so' 2>/dev/null);do mv -f $file $(dirname $file)/liblpuboot.so;done
-            for file in $(grep -R ${repo_folder}/manager  -e 'libmagiskboot.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libmagiskboot.so|liblpuboot.so|g' $file;done
+            #for file in $(find ${repo_folder}/manager/app/src/main/jniLibs -name 'libmagiskboot.so' 2>/dev/null);do mv -f $file $(dirname $file)/liblpuboot.so;done
+            #for file in $(grep -R ${repo_folder}/manager  -e 'libmagiskboot.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libmagiskboot.so|liblpuboot.so|g' $file;done
             echo 'find and replace libsusfsd.so in source code ...'
             [ -z $(grep -R ${repo_folder}  -e 'libsusfsd.so' 2>/dev/null | base64 | head -n 1) ] && exit 5
             for file in $(grep -R ${repo_folder}  -e 'libsusfsd.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libsusfsd.so|libsuslpufsd.so|g' $file;done
