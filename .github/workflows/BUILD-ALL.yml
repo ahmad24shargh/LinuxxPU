@@ -37,6 +37,7 @@ on:
         required: true
         options:
           - KSUN
+          - xxKSU
           - SUKISU
       kernel_variant:
         description: 'Which kernel should be built ?'
@@ -207,7 +208,6 @@ jobs:
       os_patch_level: ${{ matrix.os_patch_level }}
       linuxxpu_variant: Next
       linuxxpu_branch: Dev
-      #linuxxpu_branch_other: ""
       manager_supports: "${{ inputs.additional_ksu_support }}"
       #C_VERSION: ${{ matrix.C_VERSION }}
       #C_LAST_COMMIT: ${{ matrix.C_LAST_COMMIT }}
