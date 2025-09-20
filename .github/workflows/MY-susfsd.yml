@@ -23,6 +23,7 @@ on:
         #type: string
 jobs:
   build-susfs:
+    if: github.event.inputs.ksu_fork != 'xxKSU'
     name: Build userspace susfsd
     runs-on: ubuntu-latest
     #env:
