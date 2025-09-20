@@ -158,36 +158,13 @@ jobs:
               patch -p1 --forward < 10_susfs_backslashxx_ksu_patches.patch
             elif [ ${{ env.ksu_fork }} == 'KSUN'  ];then
               if [ "${use_pershoot_susfs}" == "false" ];then
-                SUSFS_BRANCH="gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}"
-                git clone https://gitlab.com/simonpunk/susfs4ksu.git -b "$SUSFS_BRANCH"
-                susfs_version=$(grep '#define SUSFS_VERSION' ./susfs4ksu/kernel_patches/include/linux/susfs.h | awk -F'"' '{print $2}')
-                rm -rf susfs4ksu
-                echo "SusFS Version: $susfs_version"
-                case "$susfs_version" in
-                  "v1.5.5"|"v1.5.6"|"v1.5.7")
-                    wget https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/0001-kernel-implement-susfs-v1.5.5-v1.5.7-KSUN-v1.0.8.patch
-                    cp "./0001-kernel-implement-susfs-v1.5.5-v1.5.7-KSUN-v1.0.8.patch" "./ksun_susfs_latest.patch"
-                    ;;
-                  "v1.5.8")
-                    wget https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/0001-kernel-implement-susfs-v1.5.8-KernelSU-Next-v1.0.8.patch
-                    cp "./0001-kernel-implement-susfs-v1.5.8-KernelSU-Next-v1.0.8.patch" "./ksun_susfs_latest.patch"
-                    ;;
-                  "v1.5.9")
-                    #[ "${kernelnosu}" == "true" ] && patch_file="https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/0001-kernel-implement-susfs-v1.5.9-KernelSU-Next-v1.0.8-kernelnosu.patch" || patch_file="https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/0001-kernel-implement-susfs-v1.5.9-KernelSU-Next-v1.0.8.patch"
-                    if $use_wild_manager;then
-                      patch_file="https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/Wild_KSUN-susfs-1.5.9.patch"
-                    else
-                      patch_file="https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/KSUN-susfs-1.5.9.patch"
-                    fi
-                    wget ${patch_file}
-                    cp $(echo ${patch_file} | rev | cut -d '/' -f1 | rev) "./ksun_susfs_latest.patch"
-                    ;;
-                  *)
-                    echo "Invalid version: $susfs_version"
-                    exit 1
-                    false
-                    ;;
-                esac
+                if $use_wild_manager;then
+                  patch_file="https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/Wild_KSUN-susfs-1.5.9.patch"
+                else
+                  patch_file="https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/KSUN-susfs-1.5.9.patch"
+                fi
+                wget ${patch_file}
+                cp $(echo ${patch_file} | rev | cut -d '/' -f1 | rev) "./ksun_susfs_latest.patch
               else
                 git clone --depth 1 -b next-susfs https://github.com/pershoot/KernelSU-Next PERSHOOT
                 rm -rf kernel/
@@ -215,32 +192,7 @@ jobs:
           sed -E -i -e 's/KSU_VERSION_FULL :=.+get_ksu_version_full.+/KSU_VERSION_FULL := "'"$C_TAG_NAME (${KSU_VERSION})"'"/g' -e 's/KSU_VERSION := .+/KSU_VERSION := '$KSU_VERSION'/g' KSU/kernel/Makefile
           cp -af KSU/* KSU/.* .
           rm -rf KSU
-          #for item in "${repo_commits[@]}";do if [[ ${upstream_last_commit} == ${item} ]]; then has_new_commits=false && break;fi;done
-          #echo "has_new_commits=${has_new_commits}" >> $GITHUB_OUTPUT
-          #echo "has_new_commits=${has_new_commits}" >> $GITHUB_ENV
-          #echo "has_new_commits: ${has_new_commits}"
-          #rm -rf KernelSU-Next
 
-      #- name: rebase if needed
-      ## Randomization of package ID and app label
-        ##if: ${{ env.C_LAST_COMMIT == '' }}
-        #if: ${{ env.has_new_commits == 'true' }}
-        #run: |
-          #repo_url='https://ahmad24shargh:${{ secrets.GITHUB_TOKEN }}@github.com/ahmad24shargh/LinuxxPU.git'
-          #cp -af ./.github/myksunext $(dirname ${patched_folder})
-          #git remote set-url origin ${repo_url}
-          #git clone https://github.com/ahmad24shargh/LinuxxPU
-          #[ $? -gt '0' ] && exit 1
-          #echo "Reset My Fork to Upstream ..."
-          #cd  ${repo_folder}
-          #git remote add KernelSU-Next https://github.com/KernelSU-Next/KernelSU-Next.git
-          #git fetch KernelSU-Next
-          #git checkout next
-          #git reset --hard KernelSU-Next/next
-          #cleanup
-          #git remote remove KernelSU-Next
-          #cp -af ${patched_folder}  ${repo_folder}/.github/
-          
       - name: upload linuxxpu with patched dir
         #if: ${{ env.C_LAST_COMMIT == '' }}
         #if: ${{ env.has_new_commits == 'true' }}
@@ -259,33 +211,7 @@ jobs:
     needs: fetch_upstream
     #if: ${{ needs.rebase.outputs.has_new_commits == 'true' }} 
     steps:
-      #- name: Configure git credentials
-        #uses: OleksiyRudenko/gha-git-credentials@v2.1.2
-        #with:
-          #global: true
-          #name: '${{ vars.MY_NAME }}'
-          #email: '${{ vars.MY_EMAIL }}'
-          #token: '${{ env.GH_TOKEN }}'
-          
-      #- name: Setup SSH authentication
-        #uses: benoitchantre/setup-ssh-authentication-action@1.0.1
-        #with:
-          #private-key: ${{ secrets.PRIVATE_KEY }}
-          #private-key-name: id_rsa
-          ##known-hosts: ${{ secrets.KNOWN_HOSTS }}
-          #known-hosts: $(ssh-keyscan -H  github.com)
-          
-      #- name: Import GPG key
-        #uses: crazy-max/ghaction-import-gpg@v6.3.0
-        #with:
-          #git_config_global: true
-          #gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-          #passphrase: ${{ secrets.GPG_PASSPHRASE }}
-          #git_user_signingkey: true
-          #git_commit_gpgsign: true
-          #git_tag_gpgsign: true
-          ##git_push_gpgsign: true
-          #trust_level: 5
+      
           
       - name: download linuxxpu with patched dir
         uses: actions/download-artifact@v5.0.0
@@ -489,27 +415,7 @@ jobs:
           cp -af ${must_unchange_kernel_files}/.defconfig ${repo_folder}/
           [ -d "${patched_folder}/.github" ] &&  cp -af ${patched_folder}/.github/. ${repo_folder}/.github/
           [ -f "${repo_folder}/manager/app/src/main/cpp/lpu.c" ] && { echo 'debug cpp/lpu.c';sed -i -e 's/lpu_sys_file_open/zako_sys_file_open/g' -e 's/lpu_file_verify_esig/zako_file_verify_esig/g' -e 's/lpu_file_verrcidx2str/zako_file_verrcidx2str/g' ${repo_folder}/manager/app/src/main/cpp/lpu.c || true; } || true
-          #unzip -o ${repo_folder}/.github/scripts/workflows.zip -d ${repo_folder}/.github/workflows
-          #set -x
-          #exit 0
-          #git config gpg.format ssh
-          #GPG_TTY=$(tty)
-          #ssh-keyscan -H github.com > ~/.ssh/known_hosts
-          #git config --global user.signingKey 0EA148FEE1C281B1
-          #echo -e "use-agent\npinentry-mode loopback\n" >> ~/.gnupg/gpg.conf
-          #echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-          #echo RELOADAGENT | gpg-connect-agent
-          #git config receive.advertisePushOptions true
-          #git add ${repo_folder}
-          #git commit -S -m "updates done by rebase_patch script"
-          #git push origin next --force
           
-  #cleanup_job:
-    #needs: patch
-    #if: always()
-    #if: ${{ needs.rebase.outputs.has_new_commits == 'true' }} 
-    #runs-on: ubuntu-latest
-    #steps:
       - name: Delete Artifact
         uses: GeekyEggo/delete-artifact@v5.1.0
         with: 
