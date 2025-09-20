@@ -67,6 +67,10 @@ jobs:
           owner=SukiSU-Ultra
           repo=SukiSU-Ultra
           workflow='build-manager.yml'
+        elif ${{ inputs.ksu_fork == 'xxKSU' }};then
+          owner=backslashxx
+          repo=KernelSU
+          workflow='build-manager.yml' 
         fi
         declare -a RUN_IDs
         RUN_IDs=($(gh run list --limit 50 --repo ${owner}/${repo} --workflow ${workflow}  --json databaseId,createdAt,conclusion,status --jq 'map(select(.status == "completed" and .conclusion == "success")) | sort_by(.created_at)' | tr ',' '\n' | grep "databaseId" | cut -d':' -f 2))
@@ -93,7 +97,7 @@ jobs:
         if ${{ inputs.ksu_fork == 'KSUN' }};then
           cp android*.ko ./userspace/lpud_overlayfs/bin/aarch64/
           cp android*.ko ./userspace/lpud_magic/bin/aarch64/
-        elif ${{ inputs.ksu_fork == 'SUKISU' }};then
+        elif;[ ${{ inputs.ksu_fork == 'SUKISU' }} -o  ${{ inputs.ksu_fork == 'xxKSU' }} ];then
           cp android*.ko ./userspace/lpud/bin/aarch64/
         fi
         
@@ -141,7 +145,7 @@ jobs:
         cache-targets: false
 
     - name: Cache lpud
-      if: ${{ inputs.ksu_fork == 'SUKISU' }}
+      if: ${{ inputs.ksu_fork == 'SUKISU' }} || ${{ inputs.ksu_fork == 'xxKSU' }}
       uses: Swatinem/rust-cache@v2
       with:
         workspaces: userspace/lpud
@@ -158,7 +162,7 @@ jobs:
         CROSS_NO_WARNINGS=0 cross build --target ${{ inputs.target }} --release --manifest-path ./userspace/lpud_magic/Cargo.toml
 
     - name: Build lpud
-      if: ${{ inputs.ksu_fork == 'SUKISU' }}
+      if: ${{ inputs.ksu_fork == 'SUKISU' }} || ${{ inputs.ksu_fork == 'xxKSU' }}
       run: CROSS_NO_WARNINGS=0 cross build --target ${{ inputs.target }} --release --manifest-path ./userspace/lpud/Cargo.toml
 
     - name: Upload lpud_overlayfs artifact
@@ -176,7 +180,7 @@ jobs:
         path: userspace/lpud_magic/target/**/release/lpud*
 
     - name: Upload ksud artifact
-      if: ${{ inputs.ksu_fork == 'SUKISU' }}
+      if: ${{ inputs.ksu_fork == 'SUKISU' }} || ${{ inputs.ksu_fork == 'xxKSU' }}
       uses: actions/upload-artifact@v4.6.2
       with:
         name: lpud-${{ inputs.target }}
