@@ -136,7 +136,7 @@ jobs:
               mv SukiSU-Ultra/kernel .
               rm -rf SukiSU-Ultra
             elif [ ${{ env.ksu_fork }} == 'xxKSU' ];then
-              wget https://raw.githubusercontent.com/yapixel/kernel_patches/refs/heads/main/xxksu/10_susfs_backslashxx_ksu_patches.patch
+              wget https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/xxksu/10_susfs_backslashxx_ksu_patches.patch
               patch -p1 --forward < 10_susfs_backslashxx_ksu_patches.patch
             elif [ ${{ env.ksu_fork }} == 'KSUN'  ];then
               if [ "${use_pershoot_susfs}" == "false" ];then
