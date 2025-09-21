@@ -18,6 +18,8 @@ if [ -f ${GITHUB_WORKSPACE}/TAG_NAME.ME ];then
       tag_name=$(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME | base64 -d)
     elif [ "${ksu_fork}" == 'SUKISU' ];then
       tag_name=$(echo $(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME | base64 -d) | cut -d'-' -f1)
+    elif [ "${ksu_fork}" == 'xxKSU' ];then
+      tag_name=$(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME | base64 -d)
     else
       exit 1
       false
