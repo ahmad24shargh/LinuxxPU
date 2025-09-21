@@ -357,7 +357,7 @@ jobs:
           cp $GITHUB_WORKSPACE/susfs4ksu/kernel_patches/fs/* ./common/fs/
           cp $GITHUB_WORKSPACE/susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
           [ ${{ env.ksu_fork }} == 'KSUN' ]  && echo "Applying SUSFS patches for KernelSU-Next..."
-          [ ${{ env.ksu_fork }} == 'SUKISU' ] && echo "Applying SUSFS patches for SukiSU Ultra...
+          [ ${{ env.ksu_fork }} == 'SUKISU' ] && echo "Applying SUSFS patches for SukiSU Ultra..."
           [ ${{ env.ksu_fork }} == 'xxKSU' ] && echo "Applying SUSFS patches for backslashxx KSU..."
           # Change to common directory and apply common SUSFS patch
           cd $GITHUB_WORKSPACE/$CONFIG/common
