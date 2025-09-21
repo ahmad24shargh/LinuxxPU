@@ -100,14 +100,6 @@ jobs:
       topnotchfreaks_codelinaro_branch: ${{ steps.gen_outs.outputs.topnotchfreaks_codelinaro_branch }}
       hook_method: ${{ steps.gen_outs.outputs.hook_method }}
     steps:
-    #- name: Checkout code
-      #uses: actions/checkout@v5.0.0
-      #with:
-          #fetch-depth: 0 # fetch full history
-          #filter: tree:0     
-          
-    #- name: Test update_patch.yml
-    #  run: gh workflow run update_patch.yml
     - name: download linuxxpu with patched dir
       uses: actions/download-artifact@v5.0.0
       with:
@@ -119,18 +111,6 @@ jobs:
     - name: Calculate and apply tag and version values
       id: gen_outs
       run: |
-        ##echo "getGitCommitCount: $(git rev-list --count HEAD)"
-        ##echo "getGitDescribe: $(git describe --tags --always)"
-        ##declare -a repo_commits=($(git log -n 100 --no-decorate | grep -E '^commit' | cut -d' ' -f2))
-        #git clone https://github.com/KernelSU-Next/KernelSU-Next
-        #cd KernelSU-Next
-        #C_TAG_NAME=$(echo "$(git describe --tags --always)" | rev | cut -d'-' -f2- | rev)
-        ##declare -a upstream_commits=($(git log -n 100 --no-decorate | grep -E '^commit' | cut -d' ' -f2))
-        ##cd ..
-        ##for item in "${repo_commits[@]}";do if [[ ${upstream_commits[*]} =~ ${item} ]]; then C_LAST_COMMIT=${item} && break;fi;done
-        #C_LAST_COMMIT=$(git log -n 1 --no-decorate | grep -E '^commit' | cut -d' ' -f2)
-        ##C_TAG_NAME="${C_TAG_NAME}-$(echo "$(git describe --tags --always)" | rev | cut -d'-' -f1 | rev)"
-        #C_VERSION=$(echo "$(git log --oneline | wc -l) - $(git rev-list ${C_LAST_COMMIT}..HEAD --count)" | bc)
         C_TAG_NAME=$(cat TAG_NAME.ME | base64 -d)
         C_LAST_COMMIT=$(cat LAST_COMMIT.ME | base64 -d)
         C_VERSION=$(cat VERSION.ME | base64 -d)
@@ -191,10 +171,6 @@ jobs:
             os_patch_level: ${{needs.calc_tag_version.outputs.C_OS_PATCH_LEVEL}}
             hook_method: ${{needs.calc_tag_version.outputs.hook_method}}
             ksu_fork: ${{ inputs.ksu_fork }}
-            #C_VERSION: ${{needs.calc_tag_version.outputs.C_VERSION}}
-            #C_LAST_COMMIT: ${{needs.calc_tag_version.outputs.C_LAST_COMMIT}}
-            #C_TAG_NAME: ${{needs.calc_tag_version.outputs.C_TAG_NAME}}
-            
     uses: ./.github/workflows/MY-gki-kernel.yml
     secrets: inherit
     with:
@@ -214,7 +190,7 @@ jobs:
       #C_TAG_NAME: ${{ matrix.C_TAG_NAME }}
       
   build-susfsd:
-    if: github.event.inputs.build_type == 'build_all' ||  github.event.inputs.build_type == 'only_manager'
+    if: github.event.inputs.ksu_fork != 'xxKSU'  && ( github.event.inputs.build_type == 'build_all' ||  github.event.inputs.build_type == 'only_manager' )
     needs:
       - calc_tag_version
     strategy:
@@ -289,10 +265,6 @@ jobs:
         working-directory: ./manager
         
     steps:
-      #- name: Checkout Repository
-        #uses: actions/checkout@v5.0.0
-        #with:
-          #fetch-depth: 0
       - name: download linuxxpu with patched dir
         uses: actions/download-artifact@v5.0.0
         with:
@@ -349,7 +321,7 @@ jobs:
           cp -f ../arm64-v8a/susfsd ../manager/app/src/main/jniLibs/arm64-v8a/libsuslpufsd.so
 
       - name: Download arm64 susfs
-        if: github.event.inputs.ksu_fork == 'SUKISU'
+        if: github.event.inputs.ksu_fork == 'SUKISU' 
         uses: actions/download-artifact@v5.0.0
         with:
           name: susfs-aarch64-linux-android
@@ -377,14 +349,14 @@ jobs:
           cp -f ../arm64-v8a/lpukpmg ../manager/app/src/main/jniLibs/arm64-v8a/liblpukpmg.so
           
       - name: Download arm64 lpud
-        if: github.event.inputs.ksu_fork == 'SUKISU'
+        if: github.event.inputs.ksu_fork == 'SUKISU' || github.event.inputs.ksu_fork == 'xxKSU'
         uses: actions/download-artifact@v5.0.0
         with:
           name: lpud-aarch64-linux-android
           path: .
 
       - name: Copy lpud to app jniLibs
-        if: github.event.inputs.ksu_fork == 'SUKISU'
+        if: github.event.inputs.ksu_fork == 'SUKISU' || github.event.inputs.ksu_fork == 'xxKSU'
         run: |
           #cp -f ../aarch64-linux-android/release/zakozako ../manager/app/src/main/jniLibs/arm64-v8a/libzakozako.so
           cp -f ../aarch64-linux-android/release/lpud ../manager/app/src/main/jniLibs/arm64-v8a/liblpud.so
@@ -470,12 +442,6 @@ jobs:
       susfs_version: "Susfs ඞ v1.5.9"
       
     steps:
-      ## Checkout the code
-      #- name: Checkout code
-        #uses: actions/checkout@v5.0.0
-        #with:
-          #fetch-depth: 0 # fetch full history
-          #filter: tree:0
       - name: download linuxxpu with patched dir
         uses: actions/download-artifact@v5.0.0
         with:
@@ -506,6 +472,10 @@ jobs:
             LPU_BRANCH="next"
             REPO_OWNER="KernelSU-Next"
             REPO_NAME="KernelSU-Next"
+          elif [ "${{ env.ksu_fork }}" == "xxKSU" ];then 
+            LPU_BRANCH="master"
+            REPO_OWNER="backslashxx"
+            REPO_NAME="KernelSU"
           fi
           echo "LPU_BRANCH=${LPU_BRANCH}" >> $GITHUB_ENV
           echo "REPO_OWNER=${REPO_OWNER}" >> $GITHUB_ENV
@@ -569,6 +539,8 @@ jobs:
           echo -e "\nFeatures:\n" >> $GITHUB_ENV
           if [ "${{ env.ksu_fork }}" == "SUKISU" ];then
             echo "-> based on SUKISU ULTRA" >> $GITHUB_ENV
+          elif [ "${{ env.ksu_fork }}" == "xxKSU" ];then 
+            echo "-> based on backslashxx KSU" >> $GITHUB_ENV
           elif [ -f ${GITHUB_WORKSPACE}/USE_PERSHOOT_SUSFS.ME ];then
             echo "-> based on KERNELSU NEXT(with pershoot fork driver)" >> $GITHUB_ENV
           elif [ "${{ env.ksu_fork }}" == "KSUN" ];then 
@@ -578,7 +550,7 @@ jobs:
           [ ${{ inputs.include_susfs }} == 'true'  ] && echo  "-> ${{ env.susfs_version}}" >> $GITHUB_ENV
           if [ "$HOOK_METHOD" == "tracepoint" -a "${{ env.ksu_fork }}" == "SUKISU" ];then
             echo "-> TracePoints Hooks for Better Hiding" >> $GITHUB_ENV
-          elif [ -f ${GITHUB_WORKSPACE}/USE_PERSHOOT_SUSFS.ME ];then
+          elif [ "${{ env.ksu_fork }}" == "xxKSU" -o -f ${GITHUB_WORKSPACE}/USE_PERSHOOT_SUSFS.ME ];then
             echo "-> Manual Hooks (scope-minimized v1.5) for Better Hiding" >> $GITHUB_ENV
           else
             echo "-> Manual Hooks (scope-minimized v1.4) for Better Hiding" >> $GITHUB_ENV
@@ -615,6 +587,8 @@ jobs:
             RELEASE_NAME="${RELEASE_NAME}With LinuxxPU DEV(KSUN based)"
           elif [ "${{ env.ksu_fork }}" == "SUKISU" ];then
             RELEASE_NAME="${RELEASE_NAME}With LinuxxPU DEV(SukiSU based)"
+          elif [ "${{ env.ksu_fork }}" == "xxKSU" ];then
+            RELEASE_NAME="${RELEASE_NAME}With LinuxxPU DEV(xxKSU based)"
           fi
           [ ${{ inputs.include_susfs }} == 'true'  ] && RELEASE_NAME="${RELEASE_NAME} and ${{ env.susfs_version}}"
           echo "RELEASE_NAME=${RELEASE_NAME}" >> $GITHUB_ENV
@@ -631,7 +605,7 @@ jobs:
           echo "GitHub release created with the following files:"
           find  ./downloaded-artifacts/
           zip -r ./downloaded-artifacts/linuxxpu.zip ./downloaded-artifacts/linuxxpu || true
-          if [ "${{ env.ksu_fork }}" == "SUKISU" ];then
+          if [ "${{ env.ksu_fork }}" == "SUKISU" -o "${{ env.ksu_fork }}" == "xxKSU" ];then
             [ -e ./downloaded-artifacts/susfs-aarch64-linux-android/arm64-v8a/suslpufsd ] && mv ./downloaded-artifacts/susfs-aarch64-linux-android/arm64-v8a/suslpufsd  ./downloaded-artifacts/susfs-aarch64-linux-android/arm64-v8a/susfs-aarch64-linux-android || true
             [ -e ./downloaded-artifacts/susfs-aarch64-linux-android/arm64-v8a/susfs-aarch64-linux-android ] && zip ./downloaded-artifacts/susfs-aarch64-linux-android/arm64-v8a/susfs-aarch64-linux-android.zip ./downloaded-artifacts/susfs-aarch64-linux-android/arm64-v8a/susfs-aarch64-linux-android || true
             [ -e ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud ] && mv ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud  ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud-aarch64-linux-android || true
