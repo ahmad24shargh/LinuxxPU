@@ -369,9 +369,14 @@ jobs:
           cd "$CONFIG/common"
 
           if [ "${{ inputs.ksu_fork }}" == "xxKSU" -a "${{ env.kernel_variant }}" != "chickernel" ]; then
-            wget https://raw.githubusercontent.com/yapixel/kernel_patches/refs/heads/main/xxksu/ksu_hooks.patch
-            echo "Applying ksu_hooks.patch.patch for backslashxx KSU..."
-            patch -p1 -F 3 < ksu_hooks.patch
+            # ksu_hooks.patch: Only 2 hooks, ultimatum patch
+            # scope_minimized_manual_hooks_v1.5.patch: Traditional full hook
+            #wget https://raw.githubusercontent.com/yapixel/kernel_patches/refs/heads/main/xxksu/ksu_hooks.patch
+            #echo "Applying ksu_hooks.patch.patch for backslashxx KSU..."
+            #patch -p1 -F 3 < ksu_hooks.patch
+            echo "Applying scope_minimized_manual_hooks_v1.5.patch for backslashxx KSU..."
+            cp ../../kernel_patches/next/scope_minimized_manual_hooks_v1.5.patch ./
+            patch -p1 -F 3 < scope_minimized_manual_hooks_v1.5.patch
           elif [ "${{ inputs.ksu_fork }}" == "KSUN" -a "${{ env.kernel_variant }}" != "chickernel" -a -f ../../USE_PERSHOOT_SUSFS.ME ]; then
             echo "Applying scope_minimized_manual_hooks_v1.5.patch for pershoot ksun..."
             cp ../../kernel_patches/next/scope_minimized_manual_hooks_v1.5.patch ./
