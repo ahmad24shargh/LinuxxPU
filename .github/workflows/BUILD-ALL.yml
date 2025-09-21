@@ -601,11 +601,15 @@ jobs:
 
       # Display Files Uploaded
       - name: Display Files Uploaded
+        #if: ${{ env.build_type == 'build_all' }}
         run: |
           echo "GitHub release created with the following files:"
           find  ./downloaded-artifacts/
           zip -r ./downloaded-artifacts/linuxxpu.zip ./downloaded-artifacts/linuxxpu || true
-          if [ "${{ env.ksu_fork }}" == "SUKISU" -o "${{ env.ksu_fork }}" == "xxKSU" ];then
+          if [ "${{ env.ksu_fork }}" == "xxKSU" ];then
+            [ -e ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud ] && mv ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud  ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud-aarch64-linux-android || true
+            [ -e ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud-aarch64-linux-android ] && zip ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud-aarch64-linux-android.zip ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud-aarch64-linux-android || true
+          elif [ "${{ env.ksu_fork }}" == "SUKISU" ];then
             [ -e ./downloaded-artifacts/susfs-aarch64-linux-android/arm64-v8a/suslpufsd ] && mv ./downloaded-artifacts/susfs-aarch64-linux-android/arm64-v8a/suslpufsd  ./downloaded-artifacts/susfs-aarch64-linux-android/arm64-v8a/susfs-aarch64-linux-android || true
             [ -e ./downloaded-artifacts/susfs-aarch64-linux-android/arm64-v8a/susfs-aarch64-linux-android ] && zip ./downloaded-artifacts/susfs-aarch64-linux-android/arm64-v8a/susfs-aarch64-linux-android.zip ./downloaded-artifacts/susfs-aarch64-linux-android/arm64-v8a/susfs-aarch64-linux-android || true
             [ -e ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud ] && mv ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud  ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud-aarch64-linux-android || true
