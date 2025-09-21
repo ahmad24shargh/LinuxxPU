@@ -301,7 +301,7 @@ jobs:
         run: |
           if [ ${{ env.ksu_fork }} == 'KSUN' ];then
             BRANCH="-s next"
-          eliif [ ${{ env.ksu_fork }} == 'SUKISU' -o ${{ env.ksu_fork }} == 'xxKSU'  ];then
+          elif [ ${{ env.ksu_fork }} == 'SUKISU' -o ${{ env.ksu_fork }} == 'xxKSU'  ];then
             BRANCH="-s main"
           fi
           echo "BRANCH=${BRANCH}" >> $GITHUB_ENV;echo $BRANCH
