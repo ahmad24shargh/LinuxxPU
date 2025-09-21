@@ -50,23 +50,16 @@ jobs:
             
             if $use_wild_manager ;then
               git clone --single-branch https://github.com/WildKernels/Wild_KSU KSU
-              #if ! [[ $(git describe --tags --always) =~ ^v[0-9]+\..+ ]] ; then
-                #git clone --single-branch https://github.com/KernelSU-Next/KernelSU-Next
-                #cd KernelSU-Next
-                #tag_ver="$(echo $(git describe --tags --always) | rev | cut -d'-' -f2- | rev)"
-                #cd ..
-                #rm -rf KernelSU-Next
-                tag_ver='Wild-KSUN'
-              #fi
-              #cd ..
               owner=WildKernels
               repo=Wild_KSU
               workflow=build-manager-ci.yml
+              tag_ver='Wild'
             else
               git clone --single-branch https://github.com/KernelSU-Next/KernelSU-Next KSU
               owner=KernelSU-Next
               repo=KernelSU-Next
               workflow=build-manager-ci.yml
+              tag_ver='KSUN'
             fi
             
             
@@ -87,11 +80,13 @@ jobs:
             owner=SukiSU-Ultra
             repo=SukiSU-Ultra
             workflow='build-manager.yml'
+            tag_ver='SUKISU'
           elif [ ${{ env.ksu_fork }} == 'xxKSU' ];then
             git clone -b master https://github.com/backslashxx/KernelSU KSU
             owner=backslashxx
             repo=KernelSU
             workflow='build-manager.yml' 
+            tag_ver='xxKSU'
           else
             exit 1
             false
@@ -105,16 +100,11 @@ jobs:
           echo "${C_LAST_COMMIT}" | base64 > ${GITHUB_WORKSPACE}/LAST_COMMIT.ME
           C_VERSION=$(echo "$(git log --oneline | wc -l) - $(git rev-list ${C_LAST_COMMIT}..HEAD --count)" | bc)
           echo "${C_VERSION}" | base64 > ${GITHUB_WORKSPACE}/VERSION.ME
-          if [ ! -z $tag_ver ];then
-            wild_tag_ver=$(git describe --tags --always)
-            #[[ ${wild_tag_ver:0:1} == '_' ]] && wild_tag_ver=${wild_tag_ver:1}
-            #echo "C_TAG_NAME=${tag_ver}-Wild-${wild_tag_ver}"
-            #echo "${tag_ver}-Wild-${wild_tag_ver}" | base64 > ${GITHUB_WORKSPACE}/TAG_NAME.ME
-            #KSU_VERSION="$(expr $(echo "$(grep -E 'shell expr' kernel/Makefile 2>/dev/null | head -n 1 | grep -Eo '[0-9]*' | tr '\n' '+')$C_VERSION" | sed 's/\+/ + /g'))"
-            C_TAG_NAME="${tag_ver}-${wild_tag_ver}"
-          else
-            C_TAG_NAME=$(echo "$(git describe --tags --always)" | rev | cut -d'-' -f2- | rev)
-          fi
+
+          #KSU_VERSION="$(expr $(echo "$(grep -E 'shell expr' kernel/Makefile 2>/dev/null | head -n 1 | grep -Eo '[0-9]*' | tr '\n' '+')$C_VERSION" | sed 's/\+/ + /g'))"
+          #C_TAG_NAME=$(echo "$(git describe --tags --always)" | rev | cut -d'-' -f2- | rev)
+          C_TAG_NAME="${tag_ver}-$(git describe --tags --always)"
+          
           echo "${C_TAG_NAME}" | base64 > ${GITHUB_WORKSPACE}/TAG_NAME.ME
           echo "C_TAG_NAME=${C_TAG_NAME}"
           echo "C_VERSION=${C_VERSION}"
