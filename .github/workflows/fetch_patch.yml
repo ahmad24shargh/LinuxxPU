@@ -146,7 +146,7 @@ jobs:
                   patch_file="https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/KSUN-susfs-1.5.9.patch"
                 fi
                 wget ${patch_file}
-                cp $(echo ${patch_file} | rev | cut -d '/' -f1 | rev) "./ksun_susfs_latest.patch
+                cp $(echo ${patch_file} | rev | cut -d '/' -f1 | rev) ./ksun_susfs_latest.patch
               else
                 git clone --depth 1 -b next-susfs https://github.com/pershoot/KernelSU-Next PERSHOOT
                 rm -rf kernel/
