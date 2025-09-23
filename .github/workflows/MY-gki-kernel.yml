@@ -374,10 +374,10 @@ jobs:
             echo "CONFIG_TRACEPOINTS=y" >> ${defconfig}
             echo "CONFIG_KSU_TRACEPOINT_HOOK=y" >> ${defconfig}
           else
-            [ ${{ env.ksu_fork }} != 'xxKSU' ] && echo "CONFIG_KSU_MANUAL_HOOK=y" >> ${defconfig}
+            echo "CONFIG_KSU_MANUAL_HOOK=y" >> ${defconfig}
           fi
           
-          [ ${{ env.ksu_fork }} == 'xxKSU' ] && echo "CONFIG_KSU_KPROBES_HOOK=y"  >> ${defconfig} || echo "CONFIG_KSU_KPROBES_HOOK=n"  >> ${defconfig}
+          echo "CONFIG_KSU_KPROBES_HOOK=n"  >> ${defconfig}
             
           # Add additional tmpfs config setting
           echo "CONFIG_TMPFS_XATTR=y" >> ${defconfig}
