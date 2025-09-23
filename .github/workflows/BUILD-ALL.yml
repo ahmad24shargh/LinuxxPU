@@ -550,10 +550,11 @@ jobs:
           [ ${{ inputs.include_susfs }} == 'true'  ] && echo  "-> ${{ env.susfs_version}}" >> $GITHUB_ENV
           if [ "$HOOK_METHOD" == "tracepoint" -a "${{ env.ksu_fork }}" == "SUKISU" ];then
             echo "-> TracePoints Hooks for Better Hiding" >> $GITHUB_ENV
-          elif [ "${{ env.ksu_fork }}" == "xxKSU" -o -f ${GITHUB_WORKSPACE}/USE_PERSHOOT_SUSFS.ME ];then
-            echo "-> Manual Hooks (scope-minimized v1.5) for Better Hiding" >> $GITHUB_ENV
+          #elif [ "${{ env.ksu_fork }}" == "xxKSU" -o -f ${GITHUB_WORKSPACE}/USE_PERSHOOT_SUSFS.ME ];then
           else
-            echo "-> Manual Hooks (scope-minimized v1.4) for Better Hiding" >> $GITHUB_ENV
+            echo "-> Manual Hooks (scope-minimized v1.5) for Better Hiding" >> $GITHUB_ENV
+          #else
+            #echo "-> Manual Hooks (scope-minimized v1.4) for Better Hiding" >> $GITHUB_ENV
           fi
           if [ "${{ env.ksu_fork }}" == "SUKISU" ];then
             echo "-> Rename most libraries in the App lib dir for better hiding." >> $GITHUB_ENV
@@ -561,11 +562,11 @@ jobs:
             echo "-> Rename all libraries in the App lib dir for better hiding." >> $GITHUB_ENV
           fi
           echo "-> Wireguard Support" >> $GITHUB_ENV
-          echo "-> Simple Maphide for LineageOS Detections" >> $GITHUB_ENV
-          echo "-> Futile Maphide for jit-zygote-cache Detections" >> $GITHUB_ENV
+          #echo "-> Simple Maphide for LineageOS Detections" >> $GITHUB_ENV
+          #echo "-> Futile Maphide for jit-zygote-cache Detections" >> $GITHUB_ENV
           echo "-> Magic Mount Support" >> $GITHUB_ENV
           echo "-> Ptrace message leak fix for kernels < 5.16" >> $GITHUB_ENV
-          echo "-> CMD_SUSFS_HIDE_SUS_MNTS_FOR_ALL_PROCS Support for all kernels." >> $GITHUB_ENV
+          #echo "-> CMD_SUSFS_HIDE_SUS_MNTS_FOR_ALL_PROCS Support for all kernels." >> $GITHUB_ENV
           echo "-> CONFIG_TMPFS_XATTR Support [Mountify Support]" >> $GITHUB_ENV
           echo -e "-> BBRv1 and westwood Support\n\n" >> $GITHUB_ENV
           if [ ${{ inputs.include_susfs }} == 'true'  ];then
