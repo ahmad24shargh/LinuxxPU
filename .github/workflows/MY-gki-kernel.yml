@@ -1,6 +1,6 @@
 name: MY GKI Kernel Build
 permissions:
-  contents: write  # Allow writing to repository contents (for pushing tags)
+  contents: write  # (for pushing tags)
   actions: write   # Allows triggering actions
 on:
     
@@ -88,7 +88,6 @@ jobs:
       - name: Set CONFIG Environment Variable
         run: |
           sudo apt update && sudo apt install -y pahole aria2
-          # Set CONFIG dynamically based on inputs values
           CONFIG="${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}"
 
           # Set CONFIG as an environment variable for future steps
@@ -120,7 +119,6 @@ jobs:
             mkbootimg
           key: toolchain-${{ runner.os }}-v1
 
-      # Step 2: Download toolchain if cache was not found
       - name: Download toolchain (if cache not found)
         if: steps.cache-toolchain.outputs.cache-hit != 'true'
         run: |
@@ -137,7 +135,6 @@ jobs:
             clang-22
           key: clang-22-${{ runner.os }}-v1
 
-      # Step 2: Download toolchain i
       - name: Download clang-22 (if cache not found)
         if: steps.cache-clang-22.outputs.cache-hit != 'true'
         run: |
@@ -168,7 +165,6 @@ jobs:
 
       - name: Install Repo
         run: |
-          # Install dependencies
           mkdir -p ./git-repo
           curl https://storage.googleapis.com/git-repo-downloads/repo > ./git-repo/repo
           chmod a+rx ./git-repo/repo
@@ -177,21 +173,12 @@ jobs:
       - name: Clone Dependencies
         run: |
           echo "Cloning AnyKernel3 and other dependencies..."
-
-          # Define the branch names using the inputs values
           SUSFS_BRANCH="gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}"
-
-          # Debug print the branches
           echo "Using branch for SUSFS: $SUSFS_BRANCH"
 
           # Clone repositories using the branch names
-          #git clone https://github.com/WildPlusKernel/AnyKernel3.git -b "gki-2.0"
           git clone https://gitlab.com/simonpunk/susfs4ksu.git -b "$SUSFS_BRANCH"
           git clone https://github.com/ahmad24shargh/kernel_patches.git
-          cd kernel_patches
-          #cp -r AnyKernel3 ../
-          cd ..
-
 
       - name: Initialize and Sync Kernel Source
         run: |
@@ -199,7 +186,6 @@ jobs:
           mkdir -p "$CONFIG"
           cd "$CONFIG"
 
-          # Initialize and sync kernel source
           echo "Initializing and syncing kernel source..."
           FORMATTED_BRANCH="${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.os_patch_level }}"
           $REPO init --no-tags --depth=1 --dissociate -u https://android.googlesource.com/kernel/manifest -m ${GITHUB_WORKSPACE}/.github/manifests/${{ env.kernel_variant }}.xml 
@@ -207,7 +193,6 @@ jobs:
 
           REMOTE_BRANCH=$(git ls-remote https://android.googlesource.com/kernel/common ${FORMATTED_BRANCH})
           DEFAULT_MANIFEST_PATH=.repo/manifests/default.xml
-          #cat ${DEFAULT_MANIFEST_PATH}
 
           # Check if branch is deprecated
           if grep -q deprecated <<< $REMOTE_BRANCH; then
@@ -262,7 +247,7 @@ jobs:
 
           # for clang-22
           if [ -d $GITHUB_WORKSPACE/clang-22 ];then
-            pushd $GITHUB_WORKSPACE/$CONFIG
+            cd $GITHUB_WORKSPACE/$CONFIG
             #Remove old clang revisions and create a link to clang-22
             [ -e $GITHUB_WORKSPACE/clang-22/bin/clang ] && clang_bin="$GITHUB_WORKSPACE/clang-22/bin/clang"
             [ -z $clang_bin ] && echo "clang not found" && false
@@ -282,29 +267,15 @@ jobs:
              #cp ${GITHUB_WORKSPACE}/kernel_patches/0001-treewide-clang-compilation-fixup.patch ${GITHUB_WORKSPACE}/$CONFIG/common
              #cd ${GITHUB_WORKSPACE}/$CONFIG/common
              #patch -p1 < 0001-treewide-clang-compilation-fixup.patch || true
-
-             popd
           fi
 
           curl https://android.googlesource.com/kernel/common/+/refs/heads/android13-5.15-lts/scripts/setlocalversion?format=TEXT | base64 -d > ${GITHUB_WORKSPACE}/$CONFIG/common/scripts/setlocalversion && chmod +x ${GITHUB_WORKSPACE}/$CONFIG/common/scripts/setlocalversion
-          #if test -d $CONFIG/common/drivers; then
-             # cd $CONFIG/common/
-              #yes "" | make gki_defconfig $defconfig ARCH=arm64 O="$CONFIG/common/out/"
-          #elif test -d $CONFIG/drivers; then
-              #cd $CONFIG
-              #yes "" | make gki_defconfig $defconfig ARCH=arm64 O="$CONFIG/out"
-          #fi  
-          #sed -E -i  '/if.+GKI_BUILD_CONFIG_FRAGMENT.+then/,/fi/d' $CONFIG/common/build.config.gki.aarch64
+          # Apply Module Symbol Version Fix Patch(from wild+ GKI_KernelSU_SUSFS)
+          sed -i '/bad_version:/{:a;n;/return 0;/{s/return 0;/return 1;/;b};ba}' ${GITHUB_WORKSPACE}/$CONFIG/common/kernel/module.c
           echo "defconfig=${defconfig}" >> $GITHUB_ENV
           
       - name: Add KernelSU
         run: |
-          if [ ${{ env.ksu_fork }} == 'KSUN' ];then
-            BRANCH="-s next"
-          elif [ ${{ env.ksu_fork }} == 'SUKISU' -o ${{ env.ksu_fork }} == 'xxKSU'  ];then
-            BRANCH="-s main"
-          fi
-          echo "BRANCH=${BRANCH}" >> $GITHUB_ENV;echo $BRANCH
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG"
           [ ${{ env.ksu_fork }} == 'KSUN' ]  && echo "Adding KernelSU Next..."
@@ -336,7 +307,6 @@ jobs:
           KSU_ROOT=$GITHUB_WORKSPACE
           ABI_XML=$COMMON_ROOT/android/abi_gki_aarch64.xml
           SYMBOL_LIST=$COMMON_ROOT/android/abi_gki_aarch64
-          # python3 $KSU_ROOT/scripts/abi_gki_all.py $ABI_XML > $SYMBOL_LIST
           echo "[+] Add KernelSU-Next symbols"
           cat $KSU_ROOT/kernel/export_symbol.txt | awk '{sub("[ \t]+","");print "  "$0}' >> $SYMBOL_LIST
           
@@ -368,23 +338,16 @@ jobs:
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG/common"
 
-          if [ "${{ inputs.ksu_fork }}" == "xxKSU" -a "${{ env.kernel_variant }}" != "chickernel" ]; then
+          if [ "${{ inputs.ksu_fork }}" == "xxKSU" ]; then
             # ksu_hooks.patch: Only 2 hooks, ultimatum patch
             # scope_minimized_manual_hooks_v1.5.patch: Traditional full hook
-            #wget https://raw.githubusercontent.com/yapixel/kernel_patches/refs/heads/main/xxksu/ksu_hooks.patch
-            #echo "Applying ksu_hooks.patch.patch for backslashxx KSU..."
-            #patch -p1 -F 3 < ksu_hooks.patch
             echo "Applying scope_minimized_manual_hooks_v1.5.patch for backslashxx KSU..."
             cp ../../kernel_patches/next/scope_minimized_manual_hooks_v1.5.patch ./
             patch -p1 -F 3 < scope_minimized_manual_hooks_v1.5.patch
-          elif [ "${{ inputs.ksu_fork }}" == "KSUN" -a "${{ env.kernel_variant }}" != "chickernel" -a -f ../../USE_PERSHOOT_SUSFS.ME ]; then
+          elif [ "${{ inputs.ksu_fork }}" == "KSUN" -a "${{ env.kernel_variant }}" != "chickernel" ]; then
             echo "Applying scope_minimized_manual_hooks_v1.5.patch for pershoot ksun..."
             cp ../../kernel_patches/next/scope_minimized_manual_hooks_v1.5.patch ./
             patch -p1 -F 3 < scope_minimized_manual_hooks_v1.5.patch
-          elif [ "${{ inputs.ksu_fork }}" == "KSUN" -a "${{ env.kernel_variant }}" != "chickernel" ]; then
-            echo "Applying manual hooks for KernelSU-Next..."
-            cp ../../kernel_patches/next/syscall_hooks.patch ./
-            patch -p1 -F 3 < syscall_hooks.patch
           elif [ "${{ inputs.ksu_fork }}" == "SUKISU" -a "${{ env.kernel_variant }}" != "chickernel"  -a "${{ env.hook_method }}" == "manual" ]; then
             echo "Applying manual hooks for SukiSU Ultra..."
             cp ../../kernel_patches/sukisu/syscall_hooks.patch ./
@@ -395,15 +358,6 @@ jobs:
             patch -p1 -F 3 < sukisu_tracepoint_hooks.patch
           fi
           
-      - name: Apply Hide Stuff Patches
-        #if: false
-        run: |
-          echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG/common"
-          # Apply additional patch
-          cp ../../kernel_patches/69_hide_stuff.patch ./
-          patch -p1 -F 3 < 69_hide_stuff.patch
-            
       - name: Add Configuration Settings
         run: |
           echo "Changing to configuration directory: $CONFIG..."
@@ -420,12 +374,11 @@ jobs:
             echo "CONFIG_TRACEPOINTS=y" >> ${defconfig}
             echo "CONFIG_KSU_TRACEPOINT_HOOK=y" >> ${defconfig}
           else
-            echo "CONFIG_KSU_MANUAL_HOOK=y" >> ${defconfig}
+            [ ${{ env.ksu_fork }} != 'xxKSU' ] && echo "CONFIG_KSU_MANUAL_HOOK=y" >> ${defconfig}
           fi
           
-          echo "CONFIG_KSU_WITH_KPROBES=n" >> ${defconfig}
-          echo "CONFIG_KSU_KPROBES_HOOK=n"  >> ${defconfig}
-          
+          [ ${{ env.ksu_fork }} == 'xxKSU' ] && echo "CONFIG_KSU_KPROBES_HOOK=y"  >> ${defconfig} || echo "CONFIG_KSU_KPROBES_HOOK=n"  >> ${defconfig}
+            
           # Add additional tmpfs config setting
           echo "CONFIG_TMPFS_XATTR=y" >> ${defconfig}
           echo "CONFIG_TMPFS_POSIX_ACL=y" >> ${defconfig}
@@ -614,8 +567,6 @@ jobs:
           #echo "CONFIG_DEBUG_INFO=n" >> ${defconfig}
           #echo "CONFIG_DEBUG_KERNEL=n" >> ${defconfig}   
           #echo "CONFIG_DEBUG_MISC=n" >> ${defconfig}
-          #echo "CONFIG_PRINTK=n" >> ${defconfig}
-          #sed -i 's/CONFIG_KSU_SUSFS_ENABLE_LOG=y/CONFIG_KSU_SUSFS_ENABLE_LOG=n/g' ${defconfig}
         
       - name: Build kernel
         env:
@@ -762,15 +713,10 @@ jobs:
             export My_PATH="${ANDROID_NDK_LATEST_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin:${ANDROID_NDK_LATEST_HOME}/prebuilt/linux-x86_64/bin/:${PATH}:$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/bin"
           fi
           
-          # with CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE_O3=y
-          #export KCFLAGS="-Wno-error -pipe -O3 -fno-stack-protector"
-
-          #export KCPPFLAGS="-DCONFIG_OPTIMIZE_INLINING"
           export TARGET=aarch64-linux-android
           export CC="clang --target=${TARGET}${API} ${My_Args}"
           
           BUILD_CONFIG='common/build.config.gki.aarch64'
-          #BUILD_CONFIG='nothing'
           sed -i -e '/^KMI_SYMBOL_LIST_STRICT_MODE=/d' -e '/^TRIM_NONLISTED_KMI=/d' -e '/^KMI_ENFORCED=/d' -e '$a\KMI_SYMBOL_LIST_STRICT_MODE=0' -e '$a\TRIM_NONLISTED_KMI=0' -e '$a\KMI_ENFORCED=0' -e '/^MODULES_ORDER=/d' -e '/^MODULES_LIST=/d' common/build.config.gki.aarch64
 
           if [ ${{ env.selinux_permissive }} == 'true' ];then
@@ -844,7 +790,6 @@ jobs:
           
       - name: Create Bootimgs Folder and Copy Images
         run: |
-          #echo "Changing to configuration directory: $CONFIG..."
           mkdir bootimgs
 
           if [ -f "$CONFIG/out/${{ inputs.android_version }}-${{ inputs.kernel_version }}/dist/Image" ];then
@@ -855,20 +800,12 @@ jobs:
           
           echo "Creating bootimgs folder and copying images..."
           for file in $(find ${bootimage_dir} -type f -name 'Image*' 2>/dev/null);do echo $file;cp $file ./bootimgs;cp $file ./;done
-          #for file in $(find $CONFIG/out -type f -name '*.tar.gz' 2>/dev/null);do cp $file ${GITHUB_WORKSPACE};done
-          # Create gzip of the Image file
-          #gzip -n -k -f -9 ./Image > ./Image.gz
           
 
       - name: Run Boot Image ${{ inputs.android_version }} Build Script
         run: |
           cd bootimgs
-
-          #echo "Building Image.gz"
-          #gzip -n -k -f -9 ./Image > ./Image.gz
-
           echo "Building boot.img"
-          #My added --cmdline to default options
           $MKBOOTIMG --header_version 4 --kernel Image --output boot.img
           $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot.img --algorithm SHA256_RSA2048 --key $BOOT_SIGN_KEY_PATH
           zip boot.img.zip boot.img
@@ -887,7 +824,6 @@ jobs:
           path: |
             *.zip
             *.img
-            #*.tar.gz
 
       - name: Preparing linuxxpu for upload
         run: |
