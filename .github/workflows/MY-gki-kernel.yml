@@ -30,18 +30,6 @@ on:
       os_patch_level:
         required: true
         type: string
-      linuxxpu_variant:
-        required: true
-        type: string
-      linuxxpu_branch:
-        required: true
-        type: string
-      linuxxpu_branch_other:
-        required: false
-        type: string
-      revision:
-        required: false
-        type: string
       manager_supports:
         required: true
         type: string
