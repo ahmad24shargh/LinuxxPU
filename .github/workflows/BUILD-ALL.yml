@@ -4,7 +4,7 @@ env:
   GH_TOKEN: ${{ secrets.WORKFLOW_TOKEN }} 
   #for sukisu only
   # manual or tracepoint
-  HOOK_METHOD: 'manual'
+  HOOK_METHOD: 'tracepoint'
   
 concurrency:
       group: staging_environment
@@ -106,12 +106,7 @@ jobs:
         C_TAG_NAME=$(cat TAG_NAME.ME | base64 -d)
         C_LAST_COMMIT=$(cat LAST_COMMIT.ME | base64 -d)
         C_VERSION=$(cat VERSION.ME | base64 -d)
-        echo "C_TAG_NAME=${C_TAG_NAME}" >> $GITHUB_OUTPUT
-        echo "C_LAST_COMMIT=${C_LAST_COMMIT}" >> $GITHUB_OUTPUT
-        echo "C_VERSION=${C_VERSION}" >> $GITHUB_OUTPUT
-        echo "C_TAG_NAME=${C_TAG_NAME}"
-        echo "C_LAST_COMMIT=${C_LAST_COMMIT}"
-        echo "C_VERSION=${C_VERSION}"
+        echo -e "C_TAG_NAME=${C_TAG_NAME}\nC_LAST_COMMIT=${C_LAST_COMMIT}\nC_VERSION=${C_VERSION}" | tee $GITHUB_OUTPUT
         determine_os_patch_level() { declare -n result="$1";case "${result}" in 94) result=2023-05;;104) result=2023-07;;123) result=2023-11;;137) result=2024-01;;144) result=2024-03;;148) result=2024-05;;149) result=2024-07;;151) result=2024-08;;153) result=2024-09;;167) result=2024-11;;170) result=2025-01;;178) result=2025-03;;180) result=2025-05;;185) result=2025-07;;189) result=2025-09;;*) result=lts;;esac; }
         C_KERNEL_SUBLEVEL=148
         C_OS_PATCH_LEVEL=148
@@ -122,7 +117,6 @@ jobs:
             C_KERNEL_SUBLEVEL=$(head -n 10 Makefile  | grep SUBLEVEL | cut -d' ' -f 3)
             [ -z ${C_KERNEL_SUBLEVEL} ] && C_KERNEL_SUBLEVEL=167
           fi
-          #C_OS_PATCH_LEVEL="lts"
           C_OS_PATCH_LEVEL="${C_KERNEL_SUBLEVEL}"
         fi
         if [[ "${{ inputs.kernel_variant }}" == *"topnotchfreaks"* ]];then
@@ -138,17 +132,11 @@ jobs:
             C_KERNEL_SUBLEVEL=$(head -n 10 Makefile  | grep SUBLEVEL | cut -d' ' -f 3)
             [ -z ${C_KERNEL_SUBLEVEL} ] && C_KERNEL_SUBLEVEL=170
           fi
-          #C_OS_PATCH_LEVEL="lts"
           C_OS_PATCH_LEVEL="${C_KERNEL_SUBLEVEL}"
         fi
         echo "topnotchfreaks_codelinaro_branch=topnotchfreaks-${topnotchfreaks_codelinaro_branch}" >> $GITHUB_OUTPUT
         determine_os_patch_level "C_OS_PATCH_LEVEL"
-        echo "C_KERNEL_SUBLEVEL=${C_KERNEL_SUBLEVEL}" >> $GITHUB_OUTPUT
-        echo "C_KERNEL_SUBLEVEL=${C_KERNEL_SUBLEVEL}"
-        echo "C_OS_PATCH_LEVEL=${C_OS_PATCH_LEVEL}" >> $GITHUB_OUTPUT
-        echo "C_OS_PATCH_LEVEL=${C_OS_PATCH_LEVEL}"
-        echo "hook_method=$HOOK_METHOD" 
-        echo "hook_method=$HOOK_METHOD" >> $GITHUB_OUTPUT
+        echo -e "C_KERNEL_SUBLEVEL=${C_KERNEL_SUBLEVEL}\nC_OS_PATCH_LEVEL=${C_OS_PATCH_LEVEL}\nhook_method=$HOOK_METHOD" | tee $GITHUB_OUTPUT
         
         
   build-kernel:
@@ -173,12 +161,7 @@ jobs:
       ksu_fork: ${{ inputs.ksu_fork }}
       hook_method: ${{ matrix.hook_method }}
       os_patch_level: ${{ matrix.os_patch_level }}
-      linuxxpu_variant: Next
-      linuxxpu_branch: Dev
       manager_supports: "${{ inputs.additional_ksu_support }}"
-      #C_VERSION: ${{ matrix.C_VERSION }}
-      #C_LAST_COMMIT: ${{ matrix.C_LAST_COMMIT }}
-      #C_TAG_NAME: ${{ matrix.C_TAG_NAME }}
       
   build-susfsd:
     if: github.event.inputs.ksu_fork != 'xxKSU'  && ( github.event.inputs.build_type == 'build_all' ||  github.event.inputs.build_type == 'only_manager' )
@@ -190,17 +173,11 @@ jobs:
           - target: aarch64-linux-android
             os: ubuntu-latest
             ksu_fork: ${{ inputs.ksu_fork }}
-            #C_VERSION: ${{needs.calc_tag_version.outputs.C_VERSION}}
-            #C_LAST_COMMIT: ${{needs.calc_tag_version.outputs.C_LAST_COMMIT}}
-            #C_TAG_NAME: ${{needs.calc_tag_version.outputs.C_TAG_NAME}}
     uses: ./.github/workflows/MY-susfsd.yml
     with:
       target: ${{ matrix.target }}
       os: ${{ matrix.os }}
       ksu_fork: ${{ matrix.ksu_fork }}
-      #C_VERSION: ${{ matrix.C_VERSION }}
-      #C_LAST_COMMIT: ${{ matrix.C_LAST_COMMIT }}
-      #C_TAG_NAME: ${{ matrix.C_TAG_NAME }}
 
   build-kpmmgr:
     if: github.event.inputs.ksu_fork == 'SUKISU' && ( github.event.inputs.build_type == 'build_all' ||  github.event.inputs.build_type == 'only_manager' )
@@ -228,17 +205,11 @@ jobs:
           - target: aarch64-linux-android
             os: ubuntu-latest
             ksu_fork: ${{ inputs.ksu_fork }}
-            #C_VERSION: ${{needs.calc_tag_version.outputs.C_VERSION}}
-            #C_LAST_COMMIT: ${{needs.calc_tag_version.outputs.C_LAST_COMMIT}}
-            #C_TAG_NAME: ${{needs.calc_tag_version.outputs.C_TAG_NAME}}
     uses: ./.github/workflows/MY-lpud.yml
     with:
       target: ${{ matrix.target }}
       os: ${{ matrix.os }}
       ksu_fork: ${{ matrix.ksu_fork }}
-      #C_VERSION: ${{ matrix.C_VERSION }}
-      #C_LAST_COMMIT: ${{ matrix.C_LAST_COMMIT }}
-      #C_TAG_NAME: ${{ matrix.C_TAG_NAME }}
 
   build-manager:
     if: ${{ github.event.inputs.build_type == 'build_all' || github.event.inputs.build_type == 'only_manager' &&  ! failure() && ! cancelled() }}
@@ -248,9 +219,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ksu_fork: ${{ inputs.ksu_fork }}
-      #C_VERSION: ${{needs.calc_tag_version.outputs.C_VERSION}}
-      #C_LAST_COMMIT: ${{needs.calc_tag_version.outputs.C_LAST_COMMIT}}
-      #C_TAG_NAME: ${{needs.calc_tag_version.outputs.C_TAG_NAME}}
     defaults:
       run:
         working-directory: ./manager
@@ -468,31 +436,21 @@ jobs:
             REPO_OWNER="backslashxx"
             REPO_NAME="KernelSU"
           fi
-          echo "LPU_BRANCH=${LPU_BRANCH}" >> $GITHUB_ENV
-          echo "REPO_OWNER=${REPO_OWNER}" >> $GITHUB_ENV
-          echo "REPO_NAME=${REPO_NAME}" >> $GITHUB_ENV
           TAG_NAME=${{ env.C_TAG_NAME }}
           if [ $(echo ${{ env.C_TAG_NAME }} | grep -qi 'wild';echo $?) != 0 ];then
             TAG_NAME=$(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME | base64 -d | cut -d'-' -f1,2)
           fi
-          echo TAG_NAME=$TAG_NAME
-          echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
           REPO_URL="https://github.com/${REPO_OWNER}/${REPO_NAME}.git"
           REPO_URL2="${REPO_OWNER}/${REPO_NAME}"
-          #COMMIT_HASH=$(git ls-remote $REPO_URL refs/heads/$LPU_BRANCH | awk '{ print $1 }')
           COMMIT_HASH=${{ env.C_LAST_COMMIT }}
-            if [[ -z "$COMMIT_HASH" ]]; then
-              echo "Error: Could not fetch latest commit for Dev" >&2
-              exit 1
-            fi
-            LPU_REF=$COMMIT_HASH
-            LPU_URL="https://github.com/$REPO_URL2/commit/$COMMIT_HASH"
-
-          # Echo the values to GitHub environment for later use
-          echo "LPU_REF=$LPU_REF" >> $GITHUB_ENV
-          echo "LPU_URL=$LPU_URL" >> $GITHUB_ENV
-          echo "LinuxxPU Reference: $LPU_REF"
-          echo "LinuxxPU URL: $LPU_URL"
+          if [[ -z "$COMMIT_HASH" ]]; then
+            echo "Error: Could not fetch latest commit for Dev" >&2
+            exit 1
+          fi
+          LPU_REF=$COMMIT_HASH
+          LPU_URL="https://github.com/$REPO_URL2/commit/$COMMIT_HASH"
+          echo -e "TAG_NAME=${TAG_NAME}\nLPU_BRANCH=${LPU_BRANCH}\nREPO_OWNER=${REPO_OWNER}\nREPO_NAME=${REPO_NAME}\nLPU_REF=$LPU_REF" >> $GITHUB_ENV\nLPU_URL=$LPU_URL" >> $GITHUB_ENV
+          echo -e "TAG_NAME=$TAG_NAME\nLinuxxPU Reference: $LPU_REF\nLinuxxPU URL: $LPU_URL"
 
       - name: Get commit hashes and generate commit URLs
         if: ${{ inputs.include_susfs == true }}
@@ -510,12 +468,10 @@ jobs:
 
             if [[ -n "$COMMIT_HASH" ]]; then
               COMMIT_URL="https://gitlab.com/$GITLAB_OWNER/$GITLAB_REPO/-/commit/$COMMIT_HASH"
-              echo "$branch_name Commit: $COMMIT_HASH"
-              echo "$branch_name Commit URL: $COMMIT_URL"
+              echo -e "$branch_name Commit: $COMMIT_HASH\n$branch_name Commit URL: $COMMIT_URL"
 
               # Store commit hash and commit URL in GitHub environment
-              echo "COMMIT_HASH_${var_name}=$COMMIT_HASH" >> "$GITHUB_ENV"
-              echo "COMMIT_URL_${var_name}=$COMMIT_URL" >> "$GITHUB_ENV"
+              echo -e "COMMIT_HASH_${var_name}=$COMMIT_HASH\nCOMMIT_URL_${var_name}=$COMMIT_URL" >> "$GITHUB_ENV"
             fi
           done
 
@@ -541,11 +497,8 @@ jobs:
           [ ${{ inputs.include_susfs }} == 'true'  ] && echo  "-> ${{ env.susfs_version}}" >> $GITHUB_ENV
           if [ "$HOOK_METHOD" == "tracepoint" -a "${{ env.ksu_fork }}" == "SUKISU" ];then
             echo "-> TracePoints Hooks for Better Hiding" >> $GITHUB_ENV
-          #elif [ "${{ env.ksu_fork }}" == "xxKSU" -o -f ${GITHUB_WORKSPACE}/USE_PERSHOOT_SUSFS.ME ];then
           else
             echo "-> Manual Hooks (scope-minimized v1.5) for Better Hiding" >> $GITHUB_ENV
-          #else
-            #echo "-> Manual Hooks (scope-minimized v1.4) for Better Hiding" >> $GITHUB_ENV
           fi
           if [ "${{ env.ksu_fork }}" == "SUKISU" ];then
             echo "-> Rename most libraries in the App lib dir for better hiding." >> $GITHUB_ENV
@@ -557,20 +510,16 @@ jobs:
           #echo "-> Futile Maphide for jit-zygote-cache Detections" >> $GITHUB_ENV
           echo "-> Magic Mount Support" >> $GITHUB_ENV
           echo "-> Ptrace message leak fix for kernels < 5.16" >> $GITHUB_ENV
-          #echo "-> CMD_SUSFS_HIDE_SUS_MNTS_FOR_ALL_PROCS Support for all kernels." >> $GITHUB_ENV
           echo "-> CONFIG_TMPFS_XATTR Support [Mountify Support]" >> $GITHUB_ENV
           echo -e "-> BBRv1 and westwood Support\n\n" >> $GITHUB_ENV
           if [ ${{ inputs.include_susfs }} == 'true'  ];then
-            echo -e "Notes:\n  -> SUS SU Mode 2 will show as disabled or not compatble due to non-kprobe hooks and is not needed anymore!\n\n" >> $GITHUB_ENV
-            echo -e "Module:\n  -> https://github.com/sidex15/ksu_module_susfs\n\n" >> $GITHUB_ENV
+            echo -e "Notes:\n  -> SUS SU Mode 2 will show as disabled or not compatble due to non-kprobe hooks and is not needed anymore!\n\nModule:\n  -> https://github.com/sidex15/ksu_module_susfs\n\n" >> $GITHUB_ENV
           fi
-          echo "Commit Hashes and Links:" >> $GITHUB_ENV
-          echo 'LinuxxPU-Dev: ['${LPU_REF}']('${LPU_URL}')' >> $GITHUB_ENV
+          echo -e 'Commit Hashes and Links:\nLinuxxPU-Dev: ['${LPU_REF}']('${LPU_URL}')' >> $GITHUB_ENV
           if [ ${{ inputs.include_susfs }} == 'true'  ];then
             echo "SUSFS4KSU:" >> $GITHUB_ENV
             echo -e 'gki-android13-5.15: ['${COMMIT_HASH_gki_android13_5_15}']('${COMMIT_URL_gki_android13_5_15}')\n\"\"\n' >> $GITHUB_ENV
           fi
-          #[ "${{ env.ksu_fork }}" == "SUKISU" ] && echo "💡 If you need kpm, patch the kernel file manually." >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
           [[ "${{ env.kernel_variant }}" == "common-android-mainline" ]] &&  RELEASE_NAME="GKI Kernel "
           [[ "${{ env.kernel_variant }}" == "chickernel" ]] &&  RELEASE_NAME="ChicKernel "
@@ -591,7 +540,6 @@ jobs:
         with:
           path: ./downloaded-artifacts    
 
-      # Display Files Uploaded
       - name: Display Files Uploaded
         #if: ${{ env.build_type == 'build_all' }}
         run: |
@@ -635,12 +583,5 @@ jobs:
           body: ${{ env.RELEASE_NOTES }}  # Pass the RELEASE_NOTES to the action
           files: |
             ./releases/*
-            #./downloaded-artifacts/Manager/*.apk
-            #./downloaded-artifacts/kernel*/*.img
-            #./downloaded-artifacts/kernel*/*.zip
-            #./downloaded-artifacts/kpmmgr*/*/kpmmgr
-            #./downloaded-artifacts/lpud*/*/*/lpud*
-            #./downloaded-artifacts/susf*/*/susf*
-            #./downloaded-artifacts/linuxxpu.zip
             
           
