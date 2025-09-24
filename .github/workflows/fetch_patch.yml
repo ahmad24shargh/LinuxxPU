@@ -11,7 +11,6 @@ on:
   #schedule:
     #- cron: '* 0,12 * * *'
 
-  # Allows you to run this workflow manually from the Actions tab
   workflow_call:
     inputs:
       ksu_fork:
@@ -33,13 +32,11 @@ jobs:
       ksu_fork: ${{ inputs.ksu_fork }}
       include_susfs: ${{ inputs.include_susfs }}
     runs-on: ubuntu-latest
-    #outputs:
-      #has_new_commits: ${{ steps.calc-commite.outputs.has_new_commits }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v5.0.0
         with:
-          fetch-depth: 0 # fetch full history
+          fetch-depth: 0
           token: ${{ env.GH_TOKEN }}
       
       - name: fetch upstream ... 
@@ -61,20 +58,6 @@ jobs:
               workflow=build-manager-ci.yml
               tag_ver='KSUN'
             fi
-            
-            
-            #Add kernelnosu support to core_hook.c file
-            kernelnosu=false
-            if [ "${kernelnosu}" == "true" ];then
-             core_hook_path="KSU/kernel/core_hook.c"
-              sed -E -i 's|(^int ksu_handle_prctl\(.+)|\nstatic bool is_system_bin_su\(\)\n\{\n\t// YES in_execve becomes 0 when it succeeds.\n\tif \(\!current-\>mm \|\| current-\>in_execve\)\n\t\treturn false\;\n\n\t// quick af check\n\treturn \(current-\>mm-\>exe_file \&\& \!strcmp\(current-\>mm-\>exe_file-\>f_path.dentry-\>d_name.name\, \"su\"\)\)\;\n\\n\1|g' ${core_hok_path}
-              sed -E -i 's|(^[[:space:]]*)if \(\!from_root \&\& \!from_manager\) \{|\1if \(\!from_root \&\& \!from_manager \&\& \!\ (is_allow_su\(\) \&\& is_system_bin_su\(\)\)\) \{|g' ${core_hook_path}
-              LINE_NUM_CMD_ENABLE_SU=$(grep -n  'if (arg2 == CMD_ENABLE_SU) {' ${core_hook_path} 2>/dev/null | cut -d':' -f1)
-              sed -i ''"${LINE_NUM_CMD_ENABLE_SU}"','$(echo "$LINE_NUM_CMD_ENABLE_SU + 22" | bc)'d' ${core_hook_path}
-              sed -E -i 's|(^[[:space:]]*\/\/ all other cmds are for .root manager.+$)|\tif \(arg2 == CMD_ENABLE_SU\) \{\n\t\tbool enabled = \(arg3 \!= 0\)\;\n\t\tif \(enabled == ksu_su_compat_enabled\) \{\n\t\t\tpr_info\(\"cmd enable su but no need to change.\\n\"\)\;\n\t\t\tif \(copy_to_user\(result\, \&reply_ok\, sizeof\(reply_ok\)\)\) \{\/\/ return the reply_ok directly\n\t\t\t\tpr_err\(\"prctl reply error\, cmd\: \%lu\\n\"\, arg2\)\;\n\t\t\t\}\n\t\t\treturn 0\;\n\t\t\}\n\t\tif \(enabled\) \{\n\t\t\tksu_sucompat_init\(\)\;\n\t\t\} else\{\n\t\t\tksu_sucompat_exit\(\)\;\n\t\t\}\n\t\tksu_su_compat_enabled = enabled\;\n\t\tif \(copy_to_user\(result\, \&reply_ok\, sizeof\(reply_ok\)\)\) \{\n\t\t\tpr_err\(\"prctl reply error\, cmd\: \%lu\\n\"\, arg2\)\;\n\t\t\}\n\n\t\treturn 0\;\n\t\}\n\1|g' ${core_hook_path}
-            fi
-            #end
-            
           elif [ ${{ env.ksu_fork }} == 'SUKISU' ];then
             git clone --single-branch https://github.com/ShirkNeko/SukiSU-Ultra KSU
             owner=SukiSU-Ultra
@@ -116,11 +99,6 @@ jobs:
           echo "C_VERSION=${C_VERSION}"
           echo "C_LAST_COMMIT=${C_LAST_COMMIT}"
           cd ..
-          #git clone https://github.com/KernelSU-Next/KernelSU-Next
-          #cd KernelSU-Next
-          #cp -af KernelSU-Next/* KernelSU-Next/.git .
-          #upstream_last_commit=$(git log -n 1 --no-decorate | grep -E '^commit' | cut -d' ' -f2)
-          #cd ..
           repo_folder=$(realpath .)
           mkdir -p /home/runner/mylinuxxpu
           patched_folder='/home/runner/myksunext'
@@ -153,12 +131,6 @@ jobs:
               if [ -f ksun_susfs_latest.patch ];then
                 patch -p1 --forward < ksun_susfs_latest.patch
               fi
-              #if [ "${use_wild_manager}" == "true" -a ${{ env.ksu_fork }}  == 'KSUN' ];then
-                #git clone --single-branch https://github.com/WildKernels/Wild_KSU WildKernels
-                #rm -rf manager/
-                #cp -a WildKernels/manager .
-                #rm -rf WildKernels
-              #fi
             else
               exit 78
               false
@@ -172,8 +144,6 @@ jobs:
           rm -rf KSU
 
       - name: upload linuxxpu with patched dir
-        #if: ${{ env.C_LAST_COMMIT == '' }}
-        #if: ${{ env.has_new_commits == 'true' }}
         uses: actions/upload-artifact@v4.6.2
         with:
          name: linuxxpu
@@ -185,20 +155,15 @@ jobs:
       ksu_fork: ${{ inputs.ksu_fork }}
       
     runs-on: ubuntu-latest
-    #needs: rebase
     needs: fetch_upstream
-    #if: ${{ needs.rebase.outputs.has_new_commits == 'true' }} 
     steps:
-      
-          
       - name: download linuxxpu with patched dir
         uses: actions/download-artifact@v5.0.0
         with:
           name: linuxxpu
           path: .
           github-token: '${{ env.GH_TOKEN }}'
-          
-      #- name: patch and push ...
+  
       - name: patch ...
         #shell: /usr/bin/bash -e -o pipefail {0}
         run: |
@@ -353,8 +318,6 @@ jobs:
           
           [ -d  "${must_unchange_kernel_files}/.github" ] && cp -af ${must_unchange_kernel_files}/.git* ${repo_folder}/
           [ -f  "${must_unchange_kernel_files}/.defconfig" ] && cp -f ${must_unchange_kernel_files}/.defconfig ${repo_folder}/
-
-          #echo $separator
           [ -f ${temp_file} ] && rm ${temp_file} 
           cp -af ${patched_folder} ${repo_folder}/.github/ || true
           cp -af ${must_unchange_kernel_files}/.defconfig ${repo_folder}/
@@ -368,8 +331,6 @@ jobs:
           failOnError: false
         
       - name: upload linuxxpu with patched dir
-        #if: ${{ env.C_LAST_COMMIT == '' }}
-        #if: ${{ env.has_new_commits == 'true' }}
         uses: actions/upload-artifact@v4.6.2
         with:
           name: linuxxpu
