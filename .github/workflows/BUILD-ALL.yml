@@ -1,7 +1,5 @@
 name: BUILD ALL
-permissions: write-all
-  #contents: write  # Allow writing to repository contents (for pushing tags)
-  #actions: write   # Allows triggering actions
+permissions: write-al
 env:
   GH_TOKEN: ${{ secrets.WORKFLOW_TOKEN }} 
   #for sukisu only
@@ -16,11 +14,6 @@ on:
   workflow_call:
   workflow_dispatch:
     inputs:
-      #skip_run:
-      #  description: 'Function testing, no build?'
-      #  required: true
-      #  type: boolean
-      #  default: false
       build_type:
         type: choice
         description: 'What should be built?'
@@ -107,7 +100,6 @@ jobs:
         path: .
         github-token: '${{ env.GH_TOKEN }}'
       
-    
     - name: Calculate and apply tag and version values
       id: gen_outs
       run: |
@@ -117,11 +109,10 @@ jobs:
         echo "C_TAG_NAME=${C_TAG_NAME}" >> $GITHUB_OUTPUT
         echo "C_LAST_COMMIT=${C_LAST_COMMIT}" >> $GITHUB_OUTPUT
         echo "C_VERSION=${C_VERSION}" >> $GITHUB_OUTPUT
-        #cd .. && rm -rf KernelSU-Next
         echo "C_TAG_NAME=${C_TAG_NAME}"
         echo "C_LAST_COMMIT=${C_LAST_COMMIT}"
         echo "C_VERSION=${C_VERSION}"
-        determine_os_patch_level() { declare -n result="$1";case "${result}" in 94) result=2023-05;;104) result=2023-07;;123) result=2023-11;;137) result=2024-01;;144) result=2024-03;;148) result=2024-05;;149) result=2024-07;;151) result=2024-08;;153) result=2024-09;;167) result=2024-11;;170) result=2025-01;;178) result=2025-03;;180) result=2025-05;;185) result=2025-07;;*) result=lts;;esac; }
+        determine_os_patch_level() { declare -n result="$1";case "${result}" in 94) result=2023-05;;104) result=2023-07;;123) result=2023-11;;137) result=2024-01;;144) result=2024-03;;148) result=2024-05;;149) result=2024-07;;151) result=2024-08;;153) result=2024-09;;167) result=2024-11;;170) result=2025-01;;178) result=2025-03;;180) result=2025-05;;185) result=2025-07;;189) result=2025-09;;*) result=lts;;esac; }
         C_KERNEL_SUBLEVEL=148
         C_OS_PATCH_LEVEL=148
         topnotchfreaks_codelinaro_branch=null
