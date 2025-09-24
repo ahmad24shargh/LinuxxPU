@@ -1,5 +1,5 @@
 name: BUILD ALL
-permissions: write-al
+permissions: write-all
 env:
   GH_TOKEN: ${{ secrets.WORKFLOW_TOKEN }} 
   #for sukisu only
