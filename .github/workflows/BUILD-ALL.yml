@@ -106,7 +106,6 @@ jobs:
         C_TAG_NAME=$(cat TAG_NAME.ME | base64 -d)
         C_LAST_COMMIT=$(cat LAST_COMMIT.ME | base64 -d)
         C_VERSION=$(cat VERSION.ME | base64 -d)
-        echo -e "C_TAG_NAME=${C_TAG_NAME}\nC_LAST_COMMIT=${C_LAST_COMMIT}\nC_VERSION=${C_VERSION}" | tee $GITHUB_OUTPUT
         determine_os_patch_level() { declare -n result="$1";case "${result}" in 94) result=2023-05;;104) result=2023-07;;123) result=2023-11;;137) result=2024-01;;144) result=2024-03;;148) result=2024-05;;149) result=2024-07;;151) result=2024-08;;153) result=2024-09;;167) result=2024-11;;170) result=2025-01;;178) result=2025-03;;180) result=2025-05;;185) result=2025-07;;189) result=2025-09;;*) result=lts;;esac; }
         C_KERNEL_SUBLEVEL=148
         C_OS_PATCH_LEVEL=148
@@ -136,7 +135,7 @@ jobs:
         fi
         echo "topnotchfreaks_codelinaro_branch=topnotchfreaks-${topnotchfreaks_codelinaro_branch}" >> $GITHUB_OUTPUT
         determine_os_patch_level "C_OS_PATCH_LEVEL"
-        echo -e "C_KERNEL_SUBLEVEL=${C_KERNEL_SUBLEVEL}\nC_OS_PATCH_LEVEL=${C_OS_PATCH_LEVEL}\nhook_method=$HOOK_METHOD" | tee $GITHUB_OUTPUT
+        echo -e "C_TAG_NAME=${C_TAG_NAME}\nC_LAST_COMMIT=${C_LAST_COMMIT}\nC_VERSION=${C_VERSION}\nC_KERNEL_SUBLEVEL=${C_KERNEL_SUBLEVEL}\nC_OS_PATCH_LEVEL=${C_OS_PATCH_LEVEL}\nhook_method=$HOOK_METHOD" | tee -a $GITHUB_OUTPUT
         
         
   build-kernel:
@@ -276,7 +275,6 @@ jobs:
         if: github.event.inputs.ksu_fork == 'KSUN'
         run: |
           mkdir -p app/src/main/jniLibs/arm64-v8a
-          #cp -f ../arm64-v8a/susfsd ../manager/app/src/main/jniLibs/arm64-v8a/libsusfsd.so
           cp -f ../arm64-v8a/susfsd ../manager/app/src/main/jniLibs/arm64-v8a/libsuslpufsd.so
 
       - name: Download arm64 susfs
@@ -290,7 +288,6 @@ jobs:
         if: github.event.inputs.ksu_fork == 'SUKISU'
         run: |
           mkdir -p app/src/main/jniLibs/arm64-v8a
-          #cp -f ../arm64-v8a/zakozakozako ../manager/app/src/main/jniLibs/arm64-v8a/libzakozakozako.so  
           cp -f ../arm64-v8a/suslpufsd ../manager/app/src/main/jniLibs/arm64-v8a/libsuslpufsd.so
           
       - name: Download arm64 kpmmgr
@@ -304,7 +301,6 @@ jobs:
         if: github.event.inputs.ksu_fork == 'SUKISU'
         run: |
           mkdir -p app/src/main/jniLibs/arm64-v8a
-          #cp -f ../arm64-v8a/lpukpmg ../manager/app/src/main/jniLibs/arm64-v8a/liblpukpmg.so
           cp -f ../arm64-v8a/lpukpmg ../manager/app/src/main/jniLibs/arm64-v8a/liblpukpmg.so
           
       - name: Download arm64 lpud
@@ -317,7 +313,6 @@ jobs:
       - name: Copy lpud to app jniLibs
         if: github.event.inputs.ksu_fork == 'SUKISU' || github.event.inputs.ksu_fork == 'xxKSU'
         run: |
-          #cp -f ../aarch64-linux-android/release/zakozako ../manager/app/src/main/jniLibs/arm64-v8a/libzakozako.so
           cp -f ../aarch64-linux-android/release/lpud ../manager/app/src/main/jniLibs/arm64-v8a/liblpud.so
           
       - name: Download arm64 lpud_overlayfs
@@ -354,7 +349,6 @@ jobs:
           } >> gradle.properties
           sed -i 's/org.gradle.configuration-cache=true//g' gradle.properties
           chmod +x gradlew
-          #./gradlew versionCatalogUpdate
           ./gradlew clean assembleRelease
 
       - name: Upload Build Artifact
@@ -392,8 +386,6 @@ jobs:
       C_KERNEL_SUBLEVEL: ${{needs.calc_tag_version.outputs.C_KERNEL_SUBLEVEL}}
       C_TAG_NAME: ${{needs.calc_tag_version.outputs.C_TAG_NAME}}
       topnotchfreaks_codelinaro_branch: ${{needs.calc_tag_version.outputs.topnotchfreaks_codelinaro_branch}}
-      #REPO_OWNER: ${{ github.repository_owner }}
-      #REPO_NAME: ${{ github.event.repository.name }}
       build_type: ${{ inputs.build_type }}
       ksu_fork: ${{ inputs.ksu_fork }}
       kernel_variant: ${{ inputs.kernel_variant }}
@@ -449,7 +441,7 @@ jobs:
           fi
           LPU_REF=$COMMIT_HASH
           LPU_URL="https://github.com/$REPO_URL2/commit/$COMMIT_HASH"
-          echo -e "TAG_NAME=${TAG_NAME}\nLPU_BRANCH=${LPU_BRANCH}\nREPO_OWNER=${REPO_OWNER}\nREPO_NAME=${REPO_NAME}\nLPU_REF=$LPU_REF" >> $GITHUB_ENV\nLPU_URL=$LPU_URL" >> $GITHUB_ENV
+          echo -e "TAG_NAME=${TAG_NAME}\nLPU_BRANCH=${LPU_BRANCH}\nREPO_OWNER=${REPO_OWNER}\nREPO_NAME=${REPO_NAME}\nLPU_REF=$LPU_REF\nLPU_URL=$LPU_URL" >> $GITHUB_ENV
           echo -e "TAG_NAME=$TAG_NAME\nLinuxxPU Reference: $LPU_REF\nLinuxxPU URL: $LPU_URL"
 
       - name: Get commit hashes and generate commit URLs
