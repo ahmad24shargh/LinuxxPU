@@ -94,7 +94,7 @@ jobs:
           cd KSU
           last_commite=$(git log -n 1 --no-decorate | grep -E '^commit' | cut -d' ' -f2)
           HEADSHA=($(gh run list --limit 50 --repo ${owner}/${repo} --workflow ${workflow}  --json databaseId,createdAt,conclusion,status,headSha --jq 'map(select(.status == "completed" and .conclusion == "success")) | sort_by(.created_at)' | tr ',' '\n' | grep -Eo '[[:alnum:]]{40}'))
-          if [[ "${HEADSHA[@]}" !~ "${last_commite}"  ]];then
+          if [[ ! ("${HEADSHA[@]}" =~ "${last_commite}")  ]];then
             echo "The last commit did not have a successful build, trying to switch to the last successful commit..."
             for (( i=0; i<${#HEADSHA[@]}; i++ )); do if $(git cat-file -e ${HEADSHA[$i]});then git reset --hard ${HEADSHA[$i]};break;fi;done
           else
