@@ -270,8 +270,8 @@ jobs:
           fi
 
           curl https://android.googlesource.com/kernel/common/+/refs/heads/android13-5.15-lts/scripts/setlocalversion?format=TEXT | base64 -d > ${GITHUB_WORKSPACE}/$CONFIG/common/scripts/setlocalversion && chmod +x ${GITHUB_WORKSPACE}/$CONFIG/common/scripts/setlocalversion
-          # Apply Module Symbol Version Fix Patch(from wild+ GKI_KernelSU_SUSFS)
-          sed -i '/bad_version:/{:a;n;/return 0;/{s/return 0;/return 1;/;b};ba}' ${GITHUB_WORKSPACE}/$CONFIG/common/kernel/module.c
+          ## Apply Module Symbol Version Fix Patch(from wild+ GKI_KernelSU_SUSFS)
+          #sed -i '/bad_version:/{:a;n;/return 0;/{s/return 0;/return 1;/;b};ba}' ${GITHUB_WORKSPACE}/$CONFIG/common/kernel/module.c
           echo "defconfig=${defconfig}" >> $GITHUB_ENV
           
       - name: Add KernelSU
@@ -374,10 +374,10 @@ jobs:
             echo "CONFIG_TRACEPOINTS=y" >> ${defconfig}
             echo "CONFIG_KSU_TRACEPOINT_HOOK=y" >> ${defconfig}
           else
-            echo "CONFIG_KSU_MANUAL_HOOK=y" >> ${defconfig}
+            [ ${{ env.ksu_fork }} != 'xxKSU' ] && echo "CONFIG_KSU_MANUAL_HOOK=y" >> ${defconfig}
           fi
           
-          echo "CONFIG_KSU_KPROBES_HOOK=n"  >> ${defconfig}
+          [ ${{ env.ksu_fork }} == 'xxKSU' ] && echo "CONFIG_KSU_KPROBES_HOOK=y"  >> ${defconfig} || echo "CONFIG_KSU_KPROBES_HOOK=n"  >> ${defconfig}
             
           # Add additional tmpfs config setting
           echo "CONFIG_TMPFS_XATTR=y" >> ${defconfig}
