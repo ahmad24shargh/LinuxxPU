@@ -98,9 +98,7 @@ jobs:
           C_TAG_NAME="${tag_ver}-$(git describe --tags --always)"
           
           echo "${C_TAG_NAME}" | base64 > ${GITHUB_WORKSPACE}/TAG_NAME.ME
-          echo "C_TAG_NAME=${C_TAG_NAME}"
-          echo "C_VERSION=${C_VERSION}"
-          echo "C_LAST_COMMIT=${C_LAST_COMMIT}"
+          echo -e "C_TAG_NAME=${C_TAG_NAME}\nC_VERSION=${C_VERSION}\nC_LAST_COMMIT=${C_LAST_COMMIT}"
           cd ..
           repo_folder=$(realpath .)
           mkdir -p /home/runner/mylinuxxpu
@@ -311,12 +309,6 @@ jobs:
           [ -d  "${must_unchange_kernel_files}/kernel" ] && cp -af ${must_unchange_kernel_files}/kernel ${repo_folder}/ 
           for files in $(grep -R ${repo_folder} -e 'ksud' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's|ksud|lpud|g' $files;done
           for files in $(grep -R ${repo_folder} -e 'ksu' 2>/dev/null | grep -v 'https' | grep -v 'rustix::' | cut -d':' -f1 | sort | uniq);do sed -i '/rustix::/ n; /override var name\: String/! s/ksu/lpu/g' $files;done
-          sed -Ei 's|KernelSU[^[:space:]]*|LinuxxPU|g' ${repo_folder}/kernel/setup.sh
-          sed -Ei 's|kernelsu[^[:space:]]*|linuxxpu|g' ${repo_folder}/kernel/setup.sh
-          sed -Ei 's|KSU.NEXT|LinuxxPU|g' ${repo_folder}/kernel/setup.sh
-          sed -Ei 's|KSU|LPU|g' ${repo_folder}/kernel/setup.sh
-          sed -i 's|ksunext|linuxxpu|g' ${repo_folder}/kernel/setup.sh
-          sed -i 's|KERNELSU|LINUXXPU|g' ${repo_folder}/kernel/setup.sh
           sed -E -i 's|(addJavascriptInterface.+)\"lpu\"|\1"ksu"|g' ${repo_folder}/manager/app/src/main/java/com/ahmad/linuxxpu/ui/webui/WebUIActivity.kt
           
           [ -d  "${must_unchange_kernel_files}/.github" ] && cp -af ${must_unchange_kernel_files}/.git* ${repo_folder}/
