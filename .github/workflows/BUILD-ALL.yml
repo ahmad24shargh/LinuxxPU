@@ -534,7 +534,6 @@ jobs:
           [ ${{ inputs.include_susfs }} == 'true'  ] && RELEASE_NAME="${RELEASE_NAME} and ${{ env.susfs_version}}"
           echo "RELEASE_NAME=${RELEASE_NAME}" >> $GITHUB_ENV
           
-     # Download Artifacts for A12 (Only if A12 Build is successful or input is true or empty)
       - name: Download Artifacts
         uses: actions/download-artifact@v5.0.0
         with:
