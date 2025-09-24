@@ -85,7 +85,7 @@ jobs:
             git clone -b master https://github.com/backslashxx/KernelSU KSU
             owner=backslashxx
             repo=KernelSU
-            workflow='build-manager.yml' 
+            workflow='release.yml' 
             tag_ver='xxKSU'
           else
             exit 1
