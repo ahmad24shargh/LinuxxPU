@@ -65,10 +65,13 @@ jobs:
             workflow='build-manager.yml'
             tag_ver='SUKISU'
           elif [ ${{ env.ksu_fork }} == 'xxKSU' ];then
-            git clone -b master https://github.com/backslashxx/KernelSU KSU
+            # master branch : release.yml
+            # staging branch : build-manager.yml 
+            # update MY-lpud.yml
+            git clone -b staging https://github.com/backslashxx/KernelSU KSU
             owner=backslashxx
             repo=KernelSU
-            workflow='release.yml' 
+            workflow='build-manager.yml' 
             tag_ver='xxKSU'
           else
             exit 1
