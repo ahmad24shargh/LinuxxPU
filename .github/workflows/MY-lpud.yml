@@ -22,29 +22,10 @@ on:
         required: false
         type: boolean
         default: true
-      #C_VERSION:
-        #required: true
-        #type: string
-      #C_LAST_COMMIT:
-        #required: true
-        #type: string
-      #C_TAG_NAME:
-        #required: true
-        #type: string
 jobs:
   build:
     runs-on: ${{ inputs.os }}
-    #env:
-      #C_VERSION: ${{ inputs.C_VERSION }}
-      #C_LAST_COMMIT: ${{ inputs.C_LAST_COMMIT }}
-      #C_TAG_NAME: ${{ inputs.C_TAG_NAME }}
     steps:
-    #- name: Checkout Repository
-      #uses: actions/checkout@v5.0.0
-      #with:
-        #fetch-depth: 0
-      
-    
     - name: download linuxxpu with patched dir
       uses: actions/download-artifact@v5.0.0
       with:
@@ -70,7 +51,7 @@ jobs:
         elif ${{ inputs.ksu_fork == 'xxKSU' }};then
           owner=backslashxx
           repo=KernelSU
-          workflow='release.yml' 
+          workflow='build-manager.yml' 
         fi
         declare -a RUN_IDs
         RUN_IDs=($(gh run list --limit 50 --repo ${owner}/${repo} --workflow ${workflow}  --json databaseId,createdAt,conclusion,status --jq 'map(select(.status == "completed" and .conclusion == "success")) | sort_by(.created_at)' | tr ',' '\n' | grep "databaseId" | cut -d':' -f 2))
