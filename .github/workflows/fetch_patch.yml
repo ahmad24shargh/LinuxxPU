@@ -68,7 +68,7 @@ jobs:
             # master branch : release.yml
             # staging branch : build-manager.yml 
             # update MY-lpud.yml
-            git clone -b master https://github.com/backslashxx/KernelSU KSU
+            git clone https://github.com/backslashxx/KernelSU KSU
             owner=backslashxx
             repo=KernelSU
             workflow='release.yml' 
@@ -86,7 +86,6 @@ jobs:
           #else
             #echo "The latest commit has a successful build."
           #fi
-          git describe --tags --always | base64 > ${GITHUB_WORKSPACE}/TAG_NAME.ME
           echo -n "${{ env.ksu_fork }}" | base64 > ${GITHUB_WORKSPACE}/LPU_FORK.ME
           C_LAST_COMMIT=$(git log -n 1 --no-decorate | grep -E '^commit' | cut -d' ' -f2)
           echo "${C_LAST_COMMIT}" | base64 > ${GITHUB_WORKSPACE}/LAST_COMMIT.ME
