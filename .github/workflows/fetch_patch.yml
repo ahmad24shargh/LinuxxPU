@@ -95,7 +95,12 @@ jobs:
 
           #KSU_VERSION="$(expr $(echo "$(grep -E 'shell expr' kernel/Makefile 2>/dev/null | head -n 1 | grep -Eo '[0-9]*' | tr '\n' '+')$C_VERSION" | sed 's/\+/ + /g'))"
           #C_TAG_NAME=$(echo "$(git describe --tags --always)" | rev | cut -d'-' -f2- | rev)
-          C_TAG_NAME="${tag_ver}-$(git describe --tags --always)"
+          C_TAG_NAME=$(for i in $(echo $(git describe --tags --always) | tr '-' '\n');do if [[ "$i" =~ "." || ${#i} < 4  ]];then echo  "$(echo $i | tr -d 'vV')";fi;done | tr '\n' '-' | sed 's/.$//' 2>/dev/null)
+          if [ -z "${C_TAG_NAME}" ];then
+            C_TAG_NAME="${tag_ver}-$(git describe --tags --always)"
+          else
+            C_TAG_NAME="${tag_ver}-${C_TAG_NAME}"
+          fi
           
           echo "${C_TAG_NAME}" | base64 > ${GITHUB_WORKSPACE}/TAG_NAME.ME
           echo -e "C_TAG_NAME=${C_TAG_NAME}\nC_VERSION=${C_VERSION}\nC_LAST_COMMIT=${C_LAST_COMMIT}"
