@@ -578,9 +578,9 @@ jobs:
             set +e
             set +x
             declare -a options
-            # Array with 7 members (root managers)
-            for i in {0..6};do options+=(false);done
-            case "${{ inputs.manager_supports }}" in 'All managers') for i in $(seq 0 $((${#options[@]}-1)));do options[$i]=true;done;;'none') for i in $(seq 0 $((${#options[@]}-1)));do options[$i]=false;done;;'official') options[0]=true;;'rsuntk') options[1]=true;;'backslashxx') options[2]=true;;'kernelsu-next') options[3]=true;;'mksu') options[4]=true;;'sukisu') options[5]=true;;'wild-ksun') options[6]=true;;*) for i in $(seq 0 $((${#options[@]}-1)));do options[$i]=false;done;;esac
+            # Array with 8 members (root managers)
+            for i in {0..7};do options+=(false);done
+            case "${{ inputs.manager_supports }}" in 'All managers') for i in $(seq 0 $((${#options[@]}-1)));do options[$i]=true;done;;'none') for i in $(seq 0 $((${#options[@]}-1)));do options[$i]=false;done;;'official') options[0]=true;;'rsuntk') options[1]=true;;'backslashxx') options[2]=true;;'kernelsu-next') options[3]=true;;'mksu') options[4]=true;;'sukisu') options[5]=true;;'wild-ksun') options[6]=true;;'kowx712-ksu') options[7]=true;;*) for i in $(seq 0 $((${#options[@]}-1)));do options[$i]=false;done;;esac
             #options="${{ inputs.manager_supports }}" 
             #echo "${options}"
             if [[ ${options[*]} =~ true ]];then
@@ -590,7 +590,7 @@ jobs:
               declare -a managers_hash;
               managers_size=(${default_size})
               managers_hash=(${default_hash})
-              #1 : official ksu & KOWX712/KernelSU
+              #1 : official ksu
               if [[ ${options[0]} == true ]];then
                 if [ ${default_size} != "0x33b" ];then
                   managers_size+=("0x33b")
@@ -637,6 +637,13 @@ jobs:
                 if [ ${default_size} != "0x35c" ];then
                   managers_size+=("0x39b")
                   managers_hash+=("593d4ce870c02468639efeef631e07ca4d852d63f154be56706229f9a5be0800")
+                fi
+              fi
+              #8 : KOWX712/KernelSU // KOWX712's mksu fork with lkm-goodies patch from xx
+              if [[ ${options[7]} == true ]];then
+                if [ ${default_size} != "0x35c" ];then
+                  managers_size+=("0x375")
+                  managers_hash+=("484fcba6e6c43b1fb09700633bf2fb4758f13cb0b2f4457b80d075084b26c588")
                 fi
               fi
               SUPPORTED_MANAGER_COUNT="${#managers_size[@]}"
