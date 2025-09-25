@@ -58,6 +58,7 @@ on:
           - 'mksu'
           - 'sukisu'
           - 'wild-ksun'
+          - 'kowx712-ksu'
        
       #chickernel contains the susfs patch built into the source code
       include_susfs:
