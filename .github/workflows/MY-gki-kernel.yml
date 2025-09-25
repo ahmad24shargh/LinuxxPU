@@ -590,7 +590,7 @@ jobs:
               declare -a managers_hash;
               managers_size=(${default_size})
               managers_hash=(${default_hash})
-              #1 : official ksu
+              #1 : official ksu & KOWX712/KernelSU
               if [[ ${options[0]} == true ]];then
                 if [ ${default_size} != "0x33b" ];then
                   managers_size+=("0x33b")
