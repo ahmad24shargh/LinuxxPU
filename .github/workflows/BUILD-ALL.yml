@@ -26,7 +26,7 @@ on:
       ksu_fork:
         type: choice
         description: 'Which ksu fork should be made?'
-        default: 'KSUN'
+        default: 'xxKSU'
         required: true
         options:
           - KSUN
@@ -65,7 +65,7 @@ on:
         description: Includes susfs patch
         type: boolean
         required: true
-        default: true
+        default: false
 
 jobs:
   fetch_patch:
