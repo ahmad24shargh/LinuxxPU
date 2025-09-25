@@ -430,9 +430,9 @@ jobs:
             REPO_NAME="KernelSU"
           fi
           TAG_NAME=${{ env.C_TAG_NAME }}
-          if [ $(echo ${{ env.C_TAG_NAME }} | grep -qi 'wild';echo $?) != 0 ];then
-            TAG_NAME=$(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME | base64 -d | cut -d'-' -f1,2)
-          fi
+          #if [ $(echo ${{ env.C_TAG_NAME }} | grep -qi 'wild';echo $?) != 0 ];then
+            #TAG_NAME=$(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME | base64 -d | cut -d'-' -f1,2)
+          #fi
           REPO_URL="https://github.com/${REPO_OWNER}/${REPO_NAME}.git"
           REPO_URL2="${REPO_OWNER}/${REPO_NAME}"
           COMMIT_HASH=${{ env.C_LAST_COMMIT }}
