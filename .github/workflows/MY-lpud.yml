@@ -51,7 +51,7 @@ jobs:
         elif ${{ inputs.ksu_fork == 'xxKSU' }};then
           owner=backslashxx
           repo=KernelSU
-          workflow='build-manager.yml' 
+          workflow='release.yml' 
         fi
         declare -a RUN_IDs
         RUN_IDs=($(gh run list --limit 50 --repo ${owner}/${repo} --workflow ${workflow}  --json databaseId,createdAt,conclusion,status --jq 'map(select(.status == "completed" and .conclusion == "success")) | sort_by(.created_at)' | tr ',' '\n' | grep "databaseId" | cut -d':' -f 2))
