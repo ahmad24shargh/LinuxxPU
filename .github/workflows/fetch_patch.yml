@@ -144,7 +144,7 @@ jobs:
           fi
           KSU_VERSION="$(expr $(echo "$(grep -E 'shell expr' KSU/kernel/Makefile 2>/dev/null | head -n 1 | grep -Eo '[0-9]*' | tr '\n' '+')$C_VERSION" | sed 's/\+/ + /g'))"
           echo $KSU_VERSION
-          sed -E -i -e 's/KSU_VERSION_FULL :=.+get_ksu_version_full.+/KSU_VERSION_FULL := "'"$C_TAG_NAME (${KSU_VERSION})"'"/g' -e 's/KSU_VERSION := .+/KSU_VERSION := '$KSU_VERSION'/g' KSU/kernel/Makefile
+          [ ! -z "$KSU_VERSION" ] && sed -E -i -e 's/KSU_VERSION_FULL :=.+get_ksu_version_full.+/KSU_VERSION_FULL := "'"$C_TAG_NAME (${KSU_VERSION})"'"/g' -e 's/KSU_VERSION := .+/KSU_VERSION := '$KSU_VERSION'/g' KSU/kernel/Makefile
           cp -af KSU/* KSU/.* .
           rm -rf KSU
 
