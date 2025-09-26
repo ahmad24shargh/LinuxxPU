@@ -709,7 +709,7 @@ jobs:
           fi
           
           export TARGET=aarch64-linux-android
-          [ ${{ env.ksu_fork }} == 'xxKSU' ] && My_Args="${My_Args} -Wno-error=return-mismatch"
+          [ ${{ env.ksu_fork }} == 'xxKSU' ] && export KCFLAGS="${KCFLAGS} -Wno-error=return-mismatch"
           export CC="clang --target=${TARGET}${API} ${My_Args}"
           
           BUILD_CONFIG='common/build.config.gki.aarch64'
