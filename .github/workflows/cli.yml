@@ -1,0 +1,114 @@
+name: CI
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+concurrency:
+      group: staging_environment
+      cancel-in-progress: true
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      ksu_support:
+        description: 'support official,rksu,xx managers?'
+        required: true
+        type: boolean
+        default: true
+      ksun_support:
+        description: 'support kernelsu-next manager?'
+        required: true
+        type: boolean
+        default: true
+      mksu_support:
+        description: 'support mksu manager?'
+        required: true
+        type: boolean
+        default: true
+      sukisu_support:
+        description: 'support sukisu manager?'
+        required: true
+        type: boolean
+        default: false
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    steps:
+      - name: exit
+        run: |
+          echo "I gave the exit command myself."
+          #exit 0
+          
+      - name: Checkout code
+        uses: actions/checkout@v5.0.0
+        with:
+          fetch-depth: 0 # fetch full history
+          filter: tree:0
+
+      - name: Test Codes
+      # Randomization of package ID and app label
+        if: false
+        run: |
+          sudo apt-get install wamerican uni2ascii
+          echo
+          echo
+          dic=$(mktemp)
+          subdict=$(mktemp)
+          uni2ascii -B /usr/share/dict/american-english > $dic
+          stat $dic
+          file $dic
+          #exit 0
+          rand=$(awk -v min=1 -v max="$(cat $dic | wc -l)" 'BEGIN{srand(); print int(min+rand()*(max-min+1))}')
+          echo .
+          app_label=$(awk "NR==${rand} {print}" $dic)
+          echo ..
+          while [[ ! "$app_label" =~ ^[[:alnum:]]*$ ]] && [[ "$app_label" =~ ^[[:digit:]]+$ ]];do app_label=(awk "NR==${rand_all} {print}" $dic);done
+          echo ...
+          sed -E -n '/^.{3}$/p' $dic > $subdict
+          echo ....
+          rand=$(awk -v min=1 -v max="$(cat $subdict | wc -l)" 'BEGIN{srand(); print int(min+rand()*(max-min+1))}')
+          echo .....
+          p_id_1=$(awk "NR==${rand} {print}" $subdict)
+          echo ......
+          while [[ ! "$p_id_1" =~ ^[[:alnum:]]*$ ]] && [[ "$p_id_1" =~ ^[[:digit:]]+$ ]];do p_id_1=$(awk "NR==${rand} {print}" $subdict);done
+          sed -E -n '/^.{5}$/p' $dic > $subdict
+          rand=$(awk -v min=1 -v max="$(cat $subdict | wc -l)"  'BEGIN{srand(); print int(min+rand()*(max-min+1))}')
+          p_id_2=$(awk "NR==${rand} {print}" $subdict)
+          while [[ ! "$p_id_2" =~ ^[[:alnum:]]*$ ]] && [[ "$p_id_2" =~ ^[[:digit:]]+$ ]];do p_id_2=$(awk "NR==${rand} {print}" $subdict);done
+          sed -E -n '/^.{7}$/p' $dic > $subdict
+          rand=$(awk -v min=1 -v max="$(cat $subdict | wc -l)" 'BEGIN{srand(); print int(min+rand()*(max-min+1))}')
+          p_id_3=$(awk "NR==${rand} {print}" $subdict)
+          while [[ ! "$p_id_3" =~ ^[[:alnum:]]*$ ]] && [[ "$p_id_3" =~ ^[[:digit:]]+$ ]];do p_id_3=$(awk "NR==${rand} {print}" $subdict);done
+          echo "app label: $app_label"
+          echo "package id part 1: $p_id_1"
+          echo "package id part 2: $p_id_2"
+          echo "package id part 3: $p_id_3"
+          echo "${p_id_1}.${p_id_2}.${p_id_3}"
+
+      - name: Test Codes 2
+        if: true
+        run: |
+          echo '.....'
+          ls ${ANDROID_NDK_HOME}
+          echo ......
+          ls ${ANDROID_NDK_LATEST_HOME}
+           
+          
+
+          
+
+          
+
+
+
+          
