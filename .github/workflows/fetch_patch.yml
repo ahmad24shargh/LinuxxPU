@@ -68,10 +68,10 @@ jobs:
             # master branch : release.yml
             # staging branch : build-manager.yml 
             # update MY-lpud.yml
-            git clone https://github.com/backslashxx/KernelSU KSU
+            git clone -b staging https://github.com/backslashxx/KernelSU KSU
             owner=backslashxx
             repo=KernelSU
-            workflow='release.yml' 
+            workflow='build-manager.yml' 
             tag_ver='xxKSU'
           else
             exit 1
