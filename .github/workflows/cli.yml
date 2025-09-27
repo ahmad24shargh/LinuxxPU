@@ -47,7 +47,7 @@ jobs:
       - name: exit
         run: |
           echo "I gave the exit command myself."
-          gh release delete ${{ env.TAG_NAME }} --cleanup-tag -R ${{ github.repository_owner }}/${{ github.event.repository.name }}
+          gh release delete "v1.0.7-45" --cleanup-tag -R "${{ github.repository_owner }}/${{ github.event.repository.name }}"
           exit 0
           false
           
