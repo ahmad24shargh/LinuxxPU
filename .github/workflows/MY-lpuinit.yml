@@ -28,10 +28,6 @@ jobs:
         path: .
         github-token: '${{ env.GH_TOKEN }}'
         
-    - name: Implementing necessary changes to the source code 
-      run: |
-        bash ${GITHUB_WORKSPACE}/.github/scripts/calc_patch_tg.sh
-
     - name: Setup Rust
       run: |
         rustup update stable
