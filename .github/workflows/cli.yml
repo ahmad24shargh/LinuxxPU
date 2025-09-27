@@ -47,7 +47,9 @@ jobs:
       - name: exit
         run: |
           echo "I gave the exit command myself."
-          #exit 0
+          gh release delete ${{ env.TAG_NAME }} --cleanup-tag -R ${{ github.repository_owner }}/${{ github.event.repository.name }}
+          exit 0
+          false
           
       - name: Checkout code
         uses: actions/checkout@v5.0.0
