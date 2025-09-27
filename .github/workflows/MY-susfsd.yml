@@ -12,38 +12,17 @@ on:
         required: false
         type: string
         default: ubuntu-latest
-      #C_VERSION:
-        #required: true
-        #type: string
-      #C_LAST_COMMIT:
-        #required: true
-        #type: string
-      #C_TAG_NAME:
-        #required: true
-        #type: string
 jobs:
   build-susfs:
     if: github.event.inputs.ksu_fork != 'xxKSU'
     name: Build userspace susfsd
     runs-on: ubuntu-latest
-    #env:
-      #C_VERSION: ${{ inputs.C_VERSION }}
-      #C_LAST_COMMIT: ${{ inputs.C_LAST_COMMIT }}
-      #C_TAG_NAME: ${{ inputs.C_TAG_NAME }}  
     steps:
-    #- uses: actions/checkout@v5.0.0
-      #with:
-        #fetch-depth: 0
     - name: download linuxxpu with patched dir
       uses: actions/download-artifact@v5.0.0
       with:
         name: linuxxpu
         path: .
-        #github-token: '${{ env.GH_TOKEN }}'
-
-    - name: Implementing necessary changes to the source code 
-      run: |
-        bash ${GITHUB_WORKSPACE}/.github/scripts/calc_patch_tg.sh
    
     - name: Build susfsd
       if: github.event.inputs.ksu_fork == 'KSUN'
