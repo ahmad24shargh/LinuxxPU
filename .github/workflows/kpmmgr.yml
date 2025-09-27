@@ -23,20 +23,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      #- name: Checkout code
-        #uses: actions/checkout@v5.0.0
-        #with:
-          #fetch-depth: 0
       - name: download linuxxpu with patched dir
         uses: actions/download-artifact@v5.0.0
         with:
           name: linuxxpu
           path: .
 
-      - name: Implementing necessary changes to the source code 
-        run: |
-          bash ${GITHUB_WORKSPACE}/.github/scripts/calc_patch_tg.sh
-    
       - name: Build kpmmgr
         working-directory: ./userspace/lpukpmg
         run: |
