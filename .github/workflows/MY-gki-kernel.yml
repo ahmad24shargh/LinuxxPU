@@ -325,9 +325,11 @@ jobs:
           if [ "${{ inputs.ksu_fork }}" == "xxKSU" ]; then
             # ksu_hooks.patch: Only 2 hooks, ultimatum patch
             # scope_minimized_manual_hooks_v1.5.patch: Traditional full hook
-            echo "Applying scope_minimized_manual_hooks_v1.5.patch for backslashxx KSU..."
-            cp ../../kernel_patches/next/scope_minimized_manual_hooks_v1.5.patch ./
-            patch -p1 -F 3 < scope_minimized_manual_hooks_v1.5.patch
+            echo "Applying xx_hybridized and getname_flags.patch patches for backslashxx KSU..."
+            cp ../../kernel_patches/xxksu/xx_hybridized.patch ./
+            patch -p1 -F 3 < xx_hybridized.patch
+            cp ../../kernel_patches/xxksu/getname_flags.patch ./
+            patch -p1 -F 3 < getname_flags.patch
           elif [ "${{ inputs.ksu_fork }}" == "KSUN" -a "${{ env.kernel_variant }}" != "chickernel" ]; then
             echo "Applying scope_minimized_manual_hooks_v1.5.patch for pershoot ksun..."
             cp ../../kernel_patches/next/scope_minimized_manual_hooks_v1.5.patch ./
@@ -364,7 +366,7 @@ jobs:
           if [ ${{ env.ksu_fork }} == 'xxKSU' ];then
             echo "CONFIG_KSU_KPROBES_HOOK=y"  >> ${defconfig}
             echo "CONFIG_KSU_KPROBES_KSUD=y"  >> ${defconfig}
-            echo "CONFIG_KSU_KRETPROBES_SUCOMPAT=y"  >> ${defconfig}
+            echo "CONFIG_KSU_KRETPROBES_SUCOMPAT=n"  >> ${defconfig}
             # ⚠️ caution ⚠️
             echo "CONFIG_KSU_THRONE_TRACKER_ALWAYS_THREADED=y"  >> ${defconfig}
           else
