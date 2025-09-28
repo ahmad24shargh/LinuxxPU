@@ -566,7 +566,7 @@ jobs:
           export API=$(echo ${{ inputs.android_version }} | sed 's/android1/3/g')
           My_Args=' -mcpu=cortex-a53+crypto+crc -mtune=cortex-a73 -march=armv8-a+crypto+crc -O3 -funroll-loops '
           #export KBUILD_BUILD_TIMESTAMP=$(date -u -d "3 month ago")
-          export KBUILD_BUILD_TIMESTAMP='Fri May 23 03:46:04 UTC 2025'
+          export KBUILD_BUILD_TIMESTAMP='Mon Aug 11 14:47:10 UTC 2025'
           export KBUILD_BUILD_USER='ahmad'
           export KBUILD_BUILD_HOST='Forozan'
           sed -E -i -e 's|LC_ALL=C|LC_ALL=C;KBUILD_BUILD_TIMESTAMP="'"${KBUILD_BUILD_TIMESTAMP}"'";KBUILD_BUILD_USER="'"${KBUILD_BUILD_USER}"'";KBUILD_BUILD_HOST="'"${KBUILD_BUILD_HOST}"'";|g' -e 's|LINUX_COMPILE_BY=.+|LINUX_COMPILE_BY="'${KBUILD_BUILD_USER}'"|g' -e 's|LINUX_COMPILE_HOST=.+|LINUX_COMPILE_HOST="'${KBUILD_BUILD_HOST}'"|g' ./common/scripts/mkcompile_h
