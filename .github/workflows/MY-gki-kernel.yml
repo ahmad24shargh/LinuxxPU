@@ -325,7 +325,7 @@ jobs:
           if [ "${{ inputs.ksu_fork }}" == "xxKSU" ]; then
             # ksu_hooks.patch: Only 2 hooks, ultimatum patch
             # scope_minimized_manual_hooks_v1.5.patch: Traditional full hook
-            echo "Applying xx_hybridized and getname_flags.patch patches for backslashxx KSU..."
+            echo "Applying xx_hybridized and getname_flags patches for backslashxx KSU..."
             cp ../../kernel_patches/xxksu/xx_hybridized.patch ./
             patch -p1 -F 3 < xx_hybridized.patch
             cp ../../kernel_patches/xxksu/getname_flags.patch ./
