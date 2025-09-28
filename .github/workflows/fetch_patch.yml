@@ -104,7 +104,7 @@ jobs:
             version_code=$(echo $(grep -Eo ' [^ ]+ \+ [^ ]+ \+ [^;]+' ./userspace/ksud/build.rs 2>/dev/null | tr -d ' ' | sed "s/version_code/${C_VERSION}/") | bc)
             if [ ! -z "${version_code}" ];then
               echo "Changing the hardcoded KSU_VERSION in the Makefile to ${version_code} ..."
-              sed -E -i 's/ccflags-y \+= -DKSU_VERSION=/ccflags-y += -DKSU_VERSION='${version_code}'/' ./kernel/Makefile
+              sed -E -i 's/(ccflags-y \+= -DKSU_VERSION=)(.+)/\1'${version_code}'/' ./kernel/Makefile
             fi
           fi
           for file in $(grep -R --exclude='.github' --exclude='.git' . -e 'let version_name' 2>/dev/null | cut -d':' -f 1 | sort | uniq);do sed -E -i 's/(let version_name = )version_name(\.trim.+)/\1"'${C_TAG_NAME}'"\2/g' $file;cat $file | grep  'let version_';done
