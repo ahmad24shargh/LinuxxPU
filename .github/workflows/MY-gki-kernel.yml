@@ -196,6 +196,8 @@ jobs:
           elif [[ "${{ env.kernel_variant }}" == *"topnotchfreaks"* ]];then
             if [ -f $CONFIG/common/arch/arm64/configs/topaz_defconfig ];then
               defconfig="$GITHUB_WORKSPACE/$CONFIG/common/arch/arm64/configs/topaz_defconfig"
+            elif [ -f $CONFIG/common/arch/arm64/configs/unified_defconfig ];then
+              defconfig="$GITHUB_WORKSPACE/$CONFIG/common/arch/arm64/configs/unified_defconfig"
             else
               defconfig="$GITHUB_WORKSPACE/$CONFIG/common/arch/arm64/configs/gki_defconfig"
             fi
