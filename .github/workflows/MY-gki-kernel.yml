@@ -733,7 +733,8 @@ jobs:
             cp  ${defconfig} ./common/arch/arm64/configs/chickernel_defconfig
             cp  ${defconfig} ./common/arch/arm64/configs/defconfig
           elif [[ "${{ env.kernel_variant }}" == *"topnotchfreaks"* ]];then  
-            cp  ${defconfig} ./common/arch/arm64/configs/defconfig
+            #cp  ${defconfig} ./common/arch/arm64/configs/defconfig
+            [ ! -f ./common/arch/arm64/configs/topaz_defconfig ] && cp ${defconfig} ./common/arch/arm64/configs/topaz_defconfig
           fi
 
           
