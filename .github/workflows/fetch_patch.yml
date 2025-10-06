@@ -195,24 +195,17 @@ jobs:
           
           for file in $(find ${repo_folder}/manager/app/src/main/jniLibs -name 'libmagiskboot.so' 2>/dev/null);do mv -f $file $(dirname $file)/liblpuboot.so;done
           for file in $(grep -R ${repo_folder}/manager  -e 'libmagiskboot.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libmagiskboot.so|liblpuboot.so|g' $file;done
-          if [ ${{ env.ksu_fork }} == 'KSUN' ];then
+          if [ ${{ env.ksu_fork }} == 'KSUN' -o ${{ env.ksu_fork }} == 'SUKISU' ];then
             echo 'find and replace libsusfsd.so in source code ...'
             [ -z $(grep -R ${repo_folder}  -e 'libsusfsd.so' 2>/dev/null | base64 | head -n 1) ] && exit 5
             for file in $(grep -R ${repo_folder}  -e 'libsusfsd.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libsusfsd.so|libsuslpufsd.so|g' $file;done
           fi
           if [ ${{ env.ksu_fork }} == 'SUKISU' ];then
             if [ -d ${repo_folder}/manager/app/src/main/java/zako/zako/zako/zakoui ];then dir="${repo_folder}/manager/app/src/main/java/zako/zako/zako/zakoui";mv $dir "$(dirname $dir)/lpuui";dir="$(dirname $dir)";mv $dir "$(dirname $dir)/lpu";dir="$(dirname $dir)";mv $dir "$(dirname $dir)/lpu";dir="$(dirname $dir)";mv $dir "$(dirname $dir)/lpu";fi
-            for file in $(find ${repo_folder}/manager/app/src/main/jniLibs -name 'libzakoboot.so' 2>/dev/null);do mv -f $file $(dirname $file)/liblpuboot.so;done
-            for file in $(grep -R ${repo_folder}/manager  -e 'libzakoboot.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libzakoboot.so|liblpuboot.so|g' $file;done
             for file in $(find ${repo_folder}/manager/app/src/main/jniLibs -name 'libzakosign.so' 2>/dev/null);do mv -f $file $(dirname $file)/liblpuxsign.so;done
             for file in $(grep -R ${repo_folder}/manager  -e 'zakosign' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|zakosign|lpuxsign|g' $file;done
-            echo 'find and replace libzakozakozako.so in source code ...'
-            [ -z $(grep -R ${repo_folder}  -e 'libzakozakozako.so' 2>/dev/null | base64 | head -n 1) ] && false
-            for file in $(grep -R ${repo_folder}  -e 'zakozakozako' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|zakozakozako|suslpufsd|g' $file;done
-            echo 'find and replace libzakozako.so in source code ...'
-            [ -z $(grep -R ${repo_folder}  -e 'libzakozako.so' 2>/dev/null | base64 | head -n 1) ] && false
-            for file in $(grep -R ${repo_folder}  -e 'zakozako' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|zakozako|lpud|g' $file;done
           fi
+          for dir in $(find ${repo_folder}/manager/ ${repo_folder}/userspace/ -type d 2>/dev/null | grep -E 'x86_64|armeabi-v7a');do rm -rf $dir || true ;done
           rm -rf ${must_unchange_kernel_files}/* ${must_unchange_kernel_files}/.* 
 
 
