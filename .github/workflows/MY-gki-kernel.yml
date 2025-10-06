@@ -156,7 +156,7 @@ jobs:
         run: |
           echo "Cloning AnyKernel3 and other dependencies..."
           SUSFS_BRANCH="gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}"
-          echo "Using branch for SUSFS: $SUSFS_BRANCH
+          echo "Using branch for SUSFS: $SUSFS_BRANCH"
           git clone https://gitlab.com/simonpunk/susfs4ksu.git -b "$SUSFS_BRANCH"
           git clone https://github.com/ahmad24shargh/kernel_patches.git
 
