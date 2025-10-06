@@ -238,17 +238,30 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Download arm64 susfsd
-        if: github.event.inputs.ksu_fork == 'KSUN' || github.event.inputs.ksu_fork == 'SUKISU'
+        if: github.event.inputs.ksu_fork == 'KSUN'
         uses: actions/download-artifact@v5.0.0
         with:
           name: susfsd-aarch64-linux-android
           path: .
 
       - name: Copy susfsd to app jniLibs
-        if: github.event.inputs.ksu_fork == 'KSUN' || github.event.inputs.ksu_fork == 'SUKISU'
+        if: github.event.inputs.ksu_fork == 'KSUN'
         run: |
           mkdir -p app/src/main/jniLibs/arm64-v8a
           cp -f ../arm64-v8a/susfsd ../manager/app/src/main/jniLibs/arm64-v8a/libsuslpufsd.so
+
+      - name: Download arm64 susfsd
+        if: github.event.inputs.ksu_fork == 'SUKISU'
+        uses: actions/download-artifact@v5.0.0
+        with:
+          name: susfs-aarch64-linux-android
+          path: .
+
+      - name: Copy susfsd to app jniLibs
+        if: github.event.inputs.ksu_fork == 'SUKISU'
+        run: |
+          mkdir -p app/src/main/jniLibs/arm64-v8a
+          cp -f ../arm64-v8a/susfs ../manager/app/src/main/jniLibs/arm64-v8a/libsuslpufsd.so
           
       - name: Download arm64 lpud
         if: github.event.inputs.ksu_fork == 'SUKISU' || github.event.inputs.ksu_fork == 'xxKSU'
