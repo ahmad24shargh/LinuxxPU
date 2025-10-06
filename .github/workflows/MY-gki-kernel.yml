@@ -534,7 +534,7 @@ jobs:
           echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ${defconfig}
           echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ${defconfig}
           # for sukisu only
-          echo "CONFIG_KSU_MANUAL_SU=n" >> ${defconfig}
+          echo "CONFIG_KSU_MANUAL_SU=y" >> ${defconfig}
           
           cd common
           if ! grep -qxF '#define CMD_SUSFS_HIDE_SUS_MNTS_FOR_ALL_PROCS 0x55561' ./include/linux/susfs_def.h; then
