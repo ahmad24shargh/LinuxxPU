@@ -178,27 +178,12 @@ jobs:
       target: ${{ matrix.target }}
       os: ${{ matrix.os }}
       ksu_fork: ${{ matrix.ksu_fork }}
-
-  build-kpmmgr:
-    if: github.event.inputs.ksu_fork == 'SUKISU' && ( github.event.inputs.build_type == 'build_all' ||  github.event.inputs.build_type == 'only_manager' )
-    needs:
-      - calc_tag_version
-    strategy:
-      matrix:
-        include:
-          - target: aarch64-linux-android
-            os: ubuntu-latest
-    uses: ./.github/workflows/kpmmgr.yml
-    with:
-      target: ${{ matrix.target }}
-      os: ${{ matrix.os }}
       
   build-lpud:
     if: ${{ github.event.inputs.build_type == 'build_all' || github.event.inputs.build_type == 'only_manager' &&  ! failure() && ! cancelled() }}
     needs: 
       - calc_tag_version
       - build-susfsd
-      - build-kpmmgr
     strategy:
       matrix:
         include:
@@ -230,19 +215,6 @@ jobs:
           name: linuxxpu
           path: .
           github-token: '${{ env.GH_TOKEN }}'
-
-      #- name: Implementing necessary changes to the source code 
-        #run: |
-          #bash ${GITHUB_WORKSPACE}/.github/scripts/calc_patch_tg.sh
-
-      - name: Setup need_upload
-        id: need_upload
-        run: |
-          if [ ! -z "${{ secrets.BOT_TOKEN }}" ]; then
-            echo "UPLOAD=true" >> $GITHUB_OUTPUT
-          else
-            echo "UPLOAD=false" >> $GITHUB_OUTPUT
-          fi
 
       - name: Write Key
         run: |
@@ -290,19 +262,6 @@ jobs:
         run: |
           mkdir -p app/src/main/jniLibs/arm64-v8a
           cp -f ../arm64-v8a/suslpufsd ../manager/app/src/main/jniLibs/arm64-v8a/libsuslpufsd.so
-          
-      - name: Download arm64 kpmmgr
-        if: github.event.inputs.ksu_fork == 'SUKISU'
-        uses: actions/download-artifact@v5.0.0
-        with:
-          name: lpukpmg-aarch64-linux-android
-          path: .   
-
-      - name: Copy kpmmgr to app jniLibs
-        if: github.event.inputs.ksu_fork == 'SUKISU'
-        run: |
-          mkdir -p app/src/main/jniLibs/arm64-v8a
-          cp -f ../arm64-v8a/lpukpmg ../manager/app/src/main/jniLibs/arm64-v8a/liblpukpmg.so
           
       - name: Download arm64 lpud
         if: github.event.inputs.ksu_fork == 'SUKISU' || github.event.inputs.ksu_fork == 'xxKSU'
@@ -357,20 +316,6 @@ jobs:
         with:
           name: Manager
           path: manager/app/build/outputs/apk/release/*.apk
-
-      - name: Upload Mappings
-        uses: actions/upload-artifact@v4.6.2
-        with:
-          name: Mappings
-          path: manager/app/build/outputs/mapping/release/
-
-      - name: Bot Session Cache
-        if: steps.need_upload.outputs.UPLOAD == 'true'
-        id: bot_session_cache
-        uses: actions/cache@v4.2.4
-        with:
-          path: scripts/lpunextbot.session
-          key: ${{ runner.os }}-bot-session
       
   trigger-release:
     runs-on: ubuntu-latest  
@@ -506,7 +451,7 @@ jobs:
           echo "-> Magic Mount Support" >> $GITHUB_ENV
           echo "-> Ptrace message leak fix for kernels < 5.16" >> $GITHUB_ENV
           echo "-> CONFIG_TMPFS_XATTR Support [Mountify Support]" >> $GITHUB_ENV
-          echo "-> Baseband Guard Support (BBG)" >> $GITHUB_ENV
+          echo "-> Added Baseband Guard Support (BBG) support to prevent unauthorised writes to certain partitions" >> $GITHUB_ENV
           echo -e "-> BBRv1 and westwood Support\n\n" >> $GITHUB_ENV
           if [ ${{ inputs.include_susfs }} == 'true'  ];then
             echo -e "Notes:\n  -> SUS SU Mode 2 will show as disabled or not compatble due to non-kprobe hooks and is not needed anymore!\n\nModule:\n  -> https://github.com/sidex15/ksu_module_susfs\n\n" >> $GITHUB_ENV
@@ -549,7 +494,6 @@ jobs:
             [ -e ./downloaded-artifacts/susfs-aarch64-linux-android/arm64-v8a/susfs-aarch64-linux-android ] && zip ./downloaded-artifacts/susfs-aarch64-linux-android/arm64-v8a/susfs-aarch64-linux-android.zip ./downloaded-artifacts/susfs-aarch64-linux-android/arm64-v8a/susfs-aarch64-linux-android || true
             [ -e ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud ] && mv ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud  ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud-aarch64-linux-android || true
             [ -e ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud-aarch64-linux-android ] && zip ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud-aarch64-linux-android.zip ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud-aarch64-linux-android || true
-            [ -e ./downloaded-artifacts/lpukpmg-aarch64-linux-android/arm64-v8a/lpukpmg ] && zip ./downloaded-artifacts/lpukpmg-aarch64-linux-android/arm64-v8a/lpukpmg.zip ./downloaded-artifacts/lpukpmg-aarch64-linux-android/arm64-v8a/lpukpmg || true
           elif  [ "${{ env.ksu_fork }}" == "KSUN" ];then
             [ -e ./downloaded-artifacts/lpud_overlayfs-aarch64-linux-android/aarch64-linux-android/release/lpud ] && zip ./downloaded-artifacts/lpud_overlayfs-aarch64-linux-android/aarch64-linux-android/release/lpud_overlayfs-aarch64-linux-android.zip ./downloaded-artifacts/lpud_overlayfs-aarch64-linux-android/aarch64-linux-android/release/lpud || true
             [ -e ./downloaded-artifacts/lpud_magic-aarch64-linux-android/aarch64-linux-android/release/lpud ] && zip ./downloaded-artifacts/lpud_magic-aarch64-linux-android/aarch64-linux-android/release/lpud_magic-aarch64-linux-android.zip ./downloaded-artifacts/lpud_magic-aarch64-linux-android/aarch64-linux-android/release/lpud || true
