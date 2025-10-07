@@ -505,7 +505,27 @@ jobs:
           [ -e ./downloaded-artifacts/aarch64-linux-android/release/lpuinit ] && zip ./downloaded-artifacts/lpuinit-aarch64-linux-android/arm64-v8a/lpuinit-aarch64-linux-android.zip ./downloaded-artifacts/aarch64-linux-android/release/lpuinit || true
           mkdir -p releases
           for file in $(find ./downloaded-artifacts -name \*.zip -o -name \*.apk -o -name \*.img -o -name \*.tar.gz);do [ "$(basename $file)" != "build.tar.gz" ] && cp $file ./releases/ ;done
+
+      - name: Preparing linuxxpu for upload
+        run: |
+          mkdir -p linuxxpu
+          for dir in {kernel,manager,userspace,'TAG_NAME.ME','LPU_FORK.ME','LAST_COMMIT.ME','VERSION.ME','USE_PERSHOOT_SUSFS.ME'};do
+            cp -af $dir linuxxpu || true
+          done
           
+      - name: Delete linuxxpu Artifact
+        uses: GeekyEggo/delete-artifact@v5.1.0
+        with: 
+          name: linuxxpu
+          failOnError: false
+          
+      - name: Upload the linuxxpu with the latest changes
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: linuxxpu
+          path: linuxxpu
+          include-hidden-files: true
+
       - name: Check existing tags and delete the current tag and release assets if any exist
         if: ${{ env.build_type == 'build_all' }}
         continue-on-error: true
