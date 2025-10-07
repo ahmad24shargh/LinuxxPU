@@ -327,7 +327,7 @@ jobs:
           cp -af ${must_unchange_kernel_files}/.defconfig ${repo_folder}/
           [ -d "${patched_folder}/.github" ] &&  cp -af ${patched_folder}/.github/. ${repo_folder}/.github/
           [ -f "${repo_folder}/manager/app/src/main/cpp/lpu.c" ] && { echo 'debug cpp/lpu.c';sed -i -e 's/lpu_sys_file_open/zako_sys_file_open/g' -e 's/lpu_file_verify_esig/zako_file_verify_esig/g' -e 's/lpu_file_verrcidx2str/zako_file_verrcidx2str/g' ${repo_folder}/manager/app/src/main/cpp/lpu.c || true; } || true
-          for item in ${repo_folder}/.git ${repo_folder}/.github ${repo_folder}/docs ${repo_folder}/Website;do [ -d $item ] && rm -rf $item;done
+          #for item in ${repo_folder}/.git ${repo_folder}/.github ${repo_folder}/docs ${repo_folder}/Website;do [ -d $item ] && rm -rf $item;done
           
           
       - name: Delete Artifact
