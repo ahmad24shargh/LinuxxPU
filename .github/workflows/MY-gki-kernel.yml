@@ -44,7 +44,7 @@ jobs:
       ksu_fork: ${{ inputs.ksu_fork }}
       hook_method: ${{ inputs.hook_method }}
       include_susfs: ${{ inputs.include_susfs }}
-      ZRAM: false
+      ZRAM: true
       #permissive cause bootloop
       selinux_permissive: false
       GH_TOKEN: ${{ github.token }}
@@ -257,7 +257,7 @@ jobs:
           echo "defconfig=${defconfig}" >> $GITHUB_ENV
 
       - name: Add BBG
-        if: false
+        #if: false
         shell: bash
         run: |
           set -euo pipefail
@@ -440,77 +440,75 @@ jobs:
           rm -rf ./common/android/abi_gki_protected_exports_* || true
           
       - name: Copy source files & apply LZ4KD & ZSTDN patches
+        if: "${{ env.ksu_fork }}"  == "SUKISU" && "${{ env.ZRAM }}" == "true"
         run: |
-          if [[ "${{ env.ZRAM }}" == "true" ]]; then
-            echo "Changing to configuration directory: $CONFIG..."
-            cd "$CONFIG/common"
-            cp -r ../../kernel_patches/other/zram/lz4k/include/linux/* ./include/linux/
-            cp -r ../../kernel_patches/other/zram/lz4k/lib/* ./lib/
-            cp -r ../../kernel_patches/other/zram/lz4k/crypto/* ./crypto/
-            cp -r ../../kernel_patches/other/zram/lz4k_oplus ./lib/
+          echo "Changing to configuration directory: $CONFIG..."
+          cd "$CONFIG/common"
+          cp -r ../../kernel_patches/other/zram/lz4k/include/linux/* ./include/linux/
+          cp -r ../../kernel_patches/other/zram/lz4k/lib/* ./lib/
+          cp -r ../../kernel_patches/other/zram/lz4k/crypto/* ./crypto/
+          cp -r ../../kernel_patches/other/zram/lz4k_oplus ./lib/
           
-            cp ../../kernel_patches/other/zram/zram_patch/${{ inputs.kernel_version }}/lz4kd.patch ./
-            echo "Applying lz4kd patch"
-            patch -p1 -F 3 < lz4kd.patch || true
-            echo 'Completed LZ4KD patch'
+          cp ../../kernel_patches/other/zram/zram_patch/${{ inputs.kernel_version }}/lz4kd.patch ./
+          echo "Applying lz4kd patch"
+          patch -p1 -F 3 < lz4kd.patch || true
+          echo 'Completed LZ4KD patch'
 
-            cp ../../kernel_patches/other/zram/zram_patch/${{ inputs.kernel_version }}/lz4k_oplus.patch ./
-            echo "Applying lz4k_oplus patch"
-            patch -p1 -F 3 < lz4k_oplus.patch || true
-            echo 'Completed lz4k_oplus patch'
-          fi
+          cp ../../kernel_patches/other/zram/zram_patch/${{ inputs.kernel_version }}/lz4k_oplus.patch ./
+          echo "Applying lz4k_oplus patch"
+          patch -p1 -F 3 < lz4k_oplus.patch || true
+          echo 'Completed lz4k_oplus patch'
 
       - name: LZ4KD&Lz4k_oplus Configuration
+        if: "${{ env.ksu_fork }}"  == "SUKISU" && "${{ env.ZRAM }}" == "true"
         run: |
-          if [[ "${{ env.ZRAM }}" == "true" ]]; then
-            echo "Write LZ4KD&ZSTDN config dependency"
-            CONFIG_FILE="${defconfig}"
+          echo "Write LZ4KD&ZSTDN config dependency"
+          CONFIG_FILE="${defconfig}"
 
-            if [ "${{ inputs.kernel_version }}" = "5.10" ]; then
+          if [ "${{ inputs.kernel_version }}" = "5.10" ]; then
+            echo "CONFIG_ZSMALLOC=y" >> "$CONFIG_FILE"
+            echo "CONFIG_ZRAM=y" >> "$CONFIG_FILE"
+            echo "CONFIG_MODULE_SIG=n" >> "$CONFIG_FILE"
+            echo "CONFIG_CRYPTO_LZO=y" >> "$CONFIG_FILE"
+            echo "CONFIG_ZRAM_DEF_COMP_LZ4KD=y" >> "$CONFIG_FILE"
+          fi
+
+          if [ "${{ inputs.kernel_version }}" != "6.6" ] && [ "${{ inputs.kernel_version }}" != "5.10" ]; then
+            # sed -i 's/CONFIG_MODULE_SIG=y/CONFIG_MODULE_SIG=n/g' "$CONFIG_FILE"
+            if grep -q "CONFIG_ZSMALLOC" -- "$CONFIG_FILE"; then
+              echo "Hint: The file $CONFIG_FILE contains the string CONFIG_ZSMALLOC."
+              sed -i 's/CONFIG_ZSMALLOC=m/CONFIG_ZSMALLOC=y/g' "$CONFIG_FILE"
+            else
+              echo "Warning: File $CONFIG_FILE does not contain string CONFIG_ZSMALLOC."
               echo "CONFIG_ZSMALLOC=y" >> "$CONFIG_FILE"
-              echo "CONFIG_ZRAM=y" >> "$CONFIG_FILE"
-              echo "CONFIG_MODULE_SIG=n" >> "$CONFIG_FILE"
-              echo "CONFIG_CRYPTO_LZO=y" >> "$CONFIG_FILE"
-              echo "CONFIG_ZRAM_DEF_COMP_LZ4KD=y" >> "$CONFIG_FILE"
             fi
-
-            if [ "${{ inputs.kernel_version }}" != "6.6" ] && [ "${{ inputs.kernel_version }}" != "5.10" ]; then
-              # sed -i 's/CONFIG_MODULE_SIG=y/CONFIG_MODULE_SIG=n/g' "$CONFIG_FILE"
-              if grep -q "CONFIG_ZSMALLOC" -- "$CONFIG_FILE"; then
-                  echo "Hint: The file $CONFIG_FILE contains the string CONFIG_ZSMALLOC."
-                  sed -i 's/CONFIG_ZSMALLOC=m/CONFIG_ZSMALLOC=y/g' "$CONFIG_FILE"
-              else
-                  echo "Warning: File $CONFIG_FILE does not contain string CONFIG_ZSMALLOC."
-                  echo "CONFIG_ZSMALLOC=y" >> "$CONFIG_FILE"
-              fi
                 
-              sed -i 's/CONFIG_ZRAM=m/CONFIG_ZRAM=y/g' "$CONFIG_FILE"
-            fi
+            sed -i 's/CONFIG_ZRAM=m/CONFIG_ZRAM=y/g' "$CONFIG_FILE"
+          fi
 
-            if [ "${{ inputs.kernel_version }}" = "6.6" ]; then
-              echo "CONFIG_ZSMALLOC=y" >> "$CONFIG_FILE"
-              sed -i 's/CONFIG_ZRAM=m/CONFIG_ZRAM=y/g' "$CONFIG_FILE"
-            fi
+          if [ "${{ inputs.kernel_version }}" = "6.6" ]; then
+            echo "CONFIG_ZSMALLOC=y" >> "$CONFIG_FILE"
+            sed -i 's/CONFIG_ZRAM=m/CONFIG_ZRAM=y/g' "$CONFIG_FILE"
+          fi
 
-            if [ "${{ inputs.android_version }}" = "android14" ] || [ "${{ inputs.android_version }}" = "android15" ]; then
-              sed -i 's/"drivers\/block\/zram\/zram\.ko",//g; s/"mm\/zsmalloc\.ko",//g' "$CONFIG/common/modules.bzl"
-              echo "CONFIG_MODULE_SIG_FORCE=n" >> "$CONFIG_FILE"
-              echo 'Android14_Bazel: Fixed zram & zsmalloc'
-            elif [ "${{ inputs.kernel_version }}" = "5.10" ] || [ "${{ inputs.kernel_version }}" = "5.15" ]; then
-              rm "$CONFIG/common/android/gki_aarch64_modules"
-              touch "$CONFIG/common/android/gki_aarch64_modules"
-              echo '5.10&5.15: Fixed zram&zsmalloc'
-            fi
+          if [ "${{ inputs.android_version }}" = "android14" ] || [ "${{ inputs.android_version }}" = "android15" ]; then
+            sed -i 's/"drivers\/block\/zram\/zram\.ko",//g; s/"mm\/zsmalloc\.ko",//g' "$CONFIG/common/modules.bzl"
+            echo "CONFIG_MODULE_SIG_FORCE=n" >> "$CONFIG_FILE"
+            echo 'Android14_Bazel: Fixed zram & zsmalloc'
+          elif [ "${{ inputs.kernel_version }}" = "5.10" ] || [ "${{ inputs.kernel_version }}" = "5.15" ]; then
+            rm "$CONFIG/common/android/gki_aarch64_modules"
+            touch "$CONFIG/common/android/gki_aarch64_modules"
+            echo '5.10&5.15: Fixed zram&zsmalloc'
+          fi
 
-             if grep -q "CONFIG_ZSMALLOC=y" "$CONFIG_FILE" && grep -q "CONFIG_ZRAM=y" "$CONFIG_FILE"; then
-              echo "CONFIG_CRYPTO_LZ4HC=y" >> "$CONFIG_FILE"
-              echo "CONFIG_CRYPTO_LZ4K=y" >> "$CONFIG_FILE"
-              echo "CONFIG_CRYPTO_LZ4KD=y" >> "$CONFIG_FILE"
-              echo "CONFIG_CRYPTO_842=y" >> "$CONFIG_FILE"
-              echo "CONFIG_CRYPTO_LZ4K_OPLUS=y" >> "$CONFIG_FILE"
-              echo "CONFIG_ZRAM_WRITEBACK=y" >> "$CONFIG_FILE"
-            fi
-          fi   
+          if grep -q "CONFIG_ZSMALLOC=y" "$CONFIG_FILE" && grep -q "CONFIG_ZRAM=y" "$CONFIG_FILE"; then
+            echo "CONFIG_CRYPTO_LZ4HC=y" >> "$CONFIG_FILE"
+            echo "CONFIG_CRYPTO_LZ4K=y" >> "$CONFIG_FILE"
+            echo "CONFIG_CRYPTO_LZ4KD=y" >> "$CONFIG_FILE"
+            echo "CONFIG_CRYPTO_842=y" >> "$CONFIG_FILE"
+            echo "CONFIG_CRYPTO_LZ4K_OPLUS=y" >> "$CONFIG_FILE"
+            echo "CONFIG_ZRAM_WRITEBACK=y" >> "$CONFIG_FILE"
+          fi
           
       - name: Add SUSFS Configuration Settings
         if: ${{ env.include_susfs == 'true' }}
@@ -535,7 +533,7 @@ jobs:
           echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ${defconfig}
           echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ${defconfig}
           # for sukisu only
-          echo "CONFIG_KSU_MANUAL_SU=y" >> ${defconfig}
+          echo "CONFIG_KSU_MANUAL_SU=n" >> ${defconfig}
           
           cd common
           if ! grep -qxF '#define CMD_SUSFS_HIDE_SUS_MNTS_FOR_ALL_PROCS 0x55561' ./include/linux/susfs_def.h; then
