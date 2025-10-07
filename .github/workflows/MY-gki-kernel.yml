@@ -257,6 +257,7 @@ jobs:
           echo "defconfig=${defconfig}" >> $GITHUB_ENV
 
       - name: Add BBG
+        if: false
         shell: bash
         run: |
           set -euo pipefail
