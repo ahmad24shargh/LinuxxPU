@@ -91,11 +91,11 @@ jobs:
           echo "${C_LAST_COMMIT}" | base64 > ${GITHUB_WORKSPACE}/LAST_COMMIT.ME
           C_VERSION=$(echo "$(git log --oneline | wc -l) - $(git rev-list ${C_LAST_COMMIT}..HEAD --count)" | bc)
           echo "${C_VERSION}" | base64 > ${GITHUB_WORKSPACE}/VERSION.ME
-          C_TAG_NAME=$(for i in $(echo $(git describe --tags --always) | tr '-' '\n');do if [[ "$i" =~ "." || ${#i} < 4  ]];then echo  "$(echo $i | tr -d 'vV')";fi;done | tr '\n' '-' | sed 's/.$//' 2>/dev/null)
+          C_TAG_NAME=$(for i in $(echo $(git describe --tags --always) | tr '-' '\n');do if [[ "$i" =~ "." || ${#i} < 4  ]];then echo  "$i";fi;done | tr '\n' '-' | sed 's/.$//' 2>/dev/null)
           if [ -z "${C_TAG_NAME}" ];then
-            C_TAG_NAME="${tag_ver}-$(git describe --tags --always)"
+            C_TAG_NAME="$(git describe --tags --always)-${tag_ver}"
           else
-            C_TAG_NAME="${tag_ver}-${C_TAG_NAME}"
+            C_TAG_NAME="${C_TAG_NAME}-${tag_ver}"
           fi
           
           echo "${C_TAG_NAME}" | base64 > ${GITHUB_WORKSPACE}/TAG_NAME.ME
@@ -239,6 +239,12 @@ jobs:
           sed -E -i -e 's/(KSU[^[:space:]]+(EXPECTED|MANAGER)_SIZE).+0x.+/\1 := 0x373/g' -e  's/(KSU[^[:space:]]+(EXPECTED|MANAGER)_HASH) := .+/\1 := 5028506331f6c9f189e2f6500d90c3d6972bd7033e960fed4b5dda1fe31a5e95/g' ${repo_folder}/kernel/Makefile
           sed -E -i 's|^([[:space:]]+)android\:label\=.+|\1android:label="LinuxxPU"|g' ${repo_folder}/manager/app/src/main/AndroidManifest.xml
           sed -E -i 's|(ic_launcher)_alt([^[:space:]]*)|\1\2|g' ${repo_folder}/manager/app/src/main/AndroidManifest.xml
+          if grep -Eq 'REPO_OWNER := .+' ${repo_folder}/kernel/Makefile;then
+            REPO_OWNER=$(grep -E 'REPO_OWNER := .+' ${repo_folder}/kernel/Makefile | tr -d ' :' | cut -d'=' -f2-)
+            REPO_NAME=$(grep -E 'REPO_NAME := .+' ${repo_folder}/kernel/Makefile | tr -d ' :' | cut -d'=' -f2-)
+            [ ! -z "$REPO_OWNER" ] && sed -Ei 's/(info --[^$]*)\$\(REPO_OWNER\)(.*)/\1\'${REPO_OWNER}'\2/g' ${repo_folder}/kernel/Makefile
+            [ ! -z "$REPO_NAME" ] && sed -Ei 's/(info --[^$]*)\$\(REPO_NAME\)(.*)/\1\'${REPO_NAME}'\2/g' ${repo_folder}/kernel/Makefile
+          fi
           [ -d ${repo_folder}/userspace/ksud_magic ] && mv ${repo_folder}/userspace/ksud_magic ${repo_folder}/userspace/lpud_magic || echo "${repo_folder}/userspace/ksud_magic does not exist !!!"
           [ -d ${repo_folder}/userspace/ksud_overlayfs ] && mv ${repo_folder}/userspace/ksud_overlayfs ${repo_folder}/userspace/lpud_overlayfs || echo "${repo_folder}/userspace/ksud_overlayfs does not exist !!!"
           [ -d ${repo_folder}/userspace/ksud ] && mv ${repo_folder}/userspace/ksud ${repo_folder}/userspace/lpud || echo "${repo_folder}/userspace/ksud does not exist !!!"
@@ -321,6 +327,8 @@ jobs:
           cp -af ${must_unchange_kernel_files}/.defconfig ${repo_folder}/
           [ -d "${patched_folder}/.github" ] &&  cp -af ${patched_folder}/.github/. ${repo_folder}/.github/
           [ -f "${repo_folder}/manager/app/src/main/cpp/lpu.c" ] && { echo 'debug cpp/lpu.c';sed -i -e 's/lpu_sys_file_open/zako_sys_file_open/g' -e 's/lpu_file_verify_esig/zako_file_verify_esig/g' -e 's/lpu_file_verrcidx2str/zako_file_verrcidx2str/g' ${repo_folder}/manager/app/src/main/cpp/lpu.c || true; } || true
+          for item in ${repo_folder}/.git ${repo_folder}/.github ${repo_folder}/docs ${repo_folder}/Website;do [ -d $item ] && rm -rf $item;done
+          
           
       - name: Delete Artifact
         uses: GeekyEggo/delete-artifact@v5.1.0
