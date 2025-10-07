@@ -440,7 +440,7 @@ jobs:
           rm -rf ./common/android/abi_gki_protected_exports_* || true
           
       - name: Copy source files & apply LZ4KD & ZSTDN patches
-        if: ${{ env.ksu_fork == 'SUKISU' }} && ${{ env.ZRAM  == 'true' }}
+        if: ${{ env.ZRAM  == 'true' }}
         run: |
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG/common"
@@ -460,7 +460,7 @@ jobs:
           echo 'Completed lz4k_oplus patch'
 
       - name: LZ4KD&Lz4k_oplus Configuration
-        if: ${{ env.ksu_fork == 'SUKISU' }} && ${{ env.ZRAM  == 'true' }}
+        if: ${{ env.ZRAM  == 'true' }}
         run: |
           echo "Write LZ4KD&ZSTDN config dependency"
           CONFIG_FILE="${defconfig}"
@@ -532,7 +532,7 @@ jobs:
           echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> ${defconfig}
           echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ${defconfig}
           echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ${defconfig}
-          # for sukisu only
+          # for sukisu only - Setting it to y caused a bootloop (2025-10-07)
           echo "CONFIG_KSU_MANUAL_SU=n" >> ${defconfig}
           
           cd common
@@ -689,7 +689,8 @@ jobs:
             for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'sukisu.ultra' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i 's|sukisu.ultra|linuxxpu|g' $files;done
             for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'SukiSU.Ultra' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU.Ultra/LinuxxPU/g' $files;done
             for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'SUKISU.ULTRA' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i 's|SUKISU.ULTRA|LINUXXPU|g' $files;done
-            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'SUKISU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i 's|SUKISU|LINUXXPU|g' $files;done
+            C_TAG_NAME=$(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME | base64 -d)
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'SUKISU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i '/'${C_TAG_NAME}'/! s|SUKISU|LINUXXPU|g' $files;done
             for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'sukisu' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i 's|sukisu|linuxxpu|g' $files;done
             for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'SukiSU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU/LinuxxPU/g' $files;done
             for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'KernelSU.Next' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i '/REPO_(OWNER|NAME)( :)?=/! s/KernelSU.Next/LinuxxPU/g' $files;done
