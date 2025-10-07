@@ -251,7 +251,8 @@ jobs:
           for file in $(grep -R ${repo_folder} -e 'wild.ksu' 2>/dev/null | cut -d':' -f1 | sort  | uniq);do sed -Ei 's|wild.ksu|linuxxpu|g' $file;done
           for file in $(grep -Ri ${repo_folder} -e 'wksu' 2>/dev/null | cut -d':' -f1 | sort  | uniq);do sed -i -e 's|wksu|lpu|g' -e 's|WKSU|LPU|g' $file;done
           for files in $(grep -R ${repo_folder} -e 'SukiSU.Ultra' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU.Ultra/LinuxxPU/g' $files;done
-          for files in $(grep -R ${repo_folder} -e 'SUKISU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|SUKISU|LinuxxPU|g' $files;done
+          C_TAG_NAME=$(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME | base64 -d)
+          for files in $(grep -R ${repo_folder} -e 'SUKISU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei '/'${C_TAG_NAME}'/! s|SUKISU|LinuxxPU|g' $files;done
           for files in $(grep -R ${repo_folder} -e 'SukiSU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU/LinuxxPU/g' $files;done
           for files in $(grep -R ${repo_folder} -e 'sukisu' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|sukisu|linuxxpu|g' $files;done
           for files in $(grep -R ${repo_folder} -e 'zakoui' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei '/extern /!s/zakoui/lpuui/g' $files;done
