@@ -440,7 +440,7 @@ jobs:
           rm -rf ./common/android/abi_gki_protected_exports_* || true
           
       - name: Copy source files & apply LZ4KD & ZSTDN patches
-        if: ${{ env.ksu_fork == SUKISU }} && ${{ env.ZRAM  == true }}
+        if: ${{ env.ksu_fork == 'SUKISU' }} && ${{ env.ZRAM  == 'true' }}
         run: |
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG/common"
@@ -460,7 +460,7 @@ jobs:
           echo 'Completed lz4k_oplus patch'
 
       - name: LZ4KD&Lz4k_oplus Configuration
-        if: ${{ env.ksu_fork == SUKISU }} && ${{ env.ZRAM  == true }}
+        if: ${{ env.ksu_fork == 'SUKISU' }} && ${{ env.ZRAM  == 'true' }}
         run: |
           echo "Write LZ4KD&ZSTDN config dependency"
           CONFIG_FILE="${defconfig}"
