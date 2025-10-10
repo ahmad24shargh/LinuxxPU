@@ -7,5 +7,5 @@
 <li><a href="https://github.com/ShirkNeko" target="_blank" rel="noopener noreferrer">ShirkNeko</a> (<a href="https://github.com/SukiSU-Ultra/SukiSU-Ultra" target="_blank" rel="noopener noreferrer">SukiSU-Ultra</a>)</li>
 <li><a href="https://github.com/backslashxx" target="_blank" rel="noopener noreferrer">backslashxx</a> (<a href="https://github.com/backslashxx/KernelSU" target="_blank" rel="noopener noreferrer">xxKSU</a> ) Very impressive</li>
 </ul>
-<p>and many other people&nbsp;<img style="vertical-align: middle;" src="https://raw.githubusercontent.com/ahmad24shargh/LinuxxPU/refs/heads/main/.github/myksunext/assets/heart.png" alt="" width="30" height="46" /></p>
+<p>and many other people&nbsp;<img style="vertical-align: middle; margin: 5px 5px 5px 5px" src="https://raw.githubusercontent.com/ahmad24shargh/LinuxxPU/refs/heads/main/.github/myksunext/assets/heart.png" alt="" width="45" height="69" /></p>
 <p>i know. This is literally spaghetti code.</p>
