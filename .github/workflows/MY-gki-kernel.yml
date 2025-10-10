@@ -769,6 +769,9 @@ jobs:
           for dir in {kernel,manager,userspace,'.git','.github','TAG_NAME.ME','LPU_FORK.ME','LAST_COMMIT.ME','VERSION.ME','USE_PERSHOOT_SUSFS.ME'};do
             cp -af $dir linuxxpu || true
           done
+          cd $CONFIG/common/security/selinux
+          cp selinuxfs.c hooks.c Makefile $GITHUB_WORKSPACE/linuxxpu
+          cp ../Makefile $GITHUB_WORKSPACE/linuxxpu/Makefile_parent
           
       - name: Delete linuxxpu Artifact
         uses: GeekyEggo/delete-artifact@v5.1.0
