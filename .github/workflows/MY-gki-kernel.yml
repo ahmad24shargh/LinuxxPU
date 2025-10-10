@@ -262,7 +262,7 @@ jobs:
           set -euo pipefail
           cd "$CONFIG"
           echo "Adding BBG..."
-          wget -O- https://github.com/vc-teahouse/Baseband-guard/raw/main/setup.sh | bash
+          wget -O- https://github.com/ahmad24shargh/Baseband-guard/raw/main/setup.sh | bash
           echo "CONFIG_BBG=y" >> ${defconfig}
           # Enable Baseband Protection for Boot/init_boot Partitions
           #echo "CONFIG_BBG_BLOCK_BOOT=y" >> ${defconfig}
