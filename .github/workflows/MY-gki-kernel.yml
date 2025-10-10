@@ -81,8 +81,8 @@ jobs:
         run: |
           repo="${{ github.repository_owner }}/${{ github.event.repository.name }}"
         
-          #clang older than 10 days
-          if [ $(echo $(( ($(date +%s) - $(date --date=$(gh cache list --repo $repo -k clang-22-${{ runner.os }}-v1 --json  'createdAt' | grep 'createdAt' | cut -d'"' -f4) +%s) )/(60*60*24) ))) -gt 9 ];then
+          #clang older than 30 days
+          if [ $(echo $(( ($(date +%s) - $(date --date=$(gh cache list --repo $repo -k clang-22-${{ runner.os }}-v1 --json  'createdAt' | grep 'createdAt' | cut -d'"' -f4) +%s) )/(60*60*24) ))) -gt 29 ];then
             echo "remove clang-22-${{ runner.os }}-v1 from chache ..."
             gh cache delete clang-22-${{ runner.os }}-v1 --repo $repo
           fi
