@@ -766,11 +766,12 @@ jobs:
       - name: Preparing linuxxpu for upload
         run: |
           mkdir -p linuxxpu
+          relesae_path=$(cd linuxxpu;pwd)
           for dir in {kernel,manager,userspace,'.git','.github','TAG_NAME.ME','LPU_FORK.ME','LAST_COMMIT.ME','VERSION.ME','USE_PERSHOOT_SUSFS.ME'};do
             cp -af $dir linuxxpu || true
           done
-          cp $CONFIG/common/security/selinux/{selinuxfs.c,hooks.c,Makefile} $GITHUB_WORKSPACE/linuxxpu/
-          cp $CONFIG/common/security//Makefile $GITHUB_WORKSPACE/linuxxpu/Makefile_parent
+          cp $CONFIG/common/security/selinux/{selinuxfs.c,hooks.c,Makefile} $relesae_path/
+          cp $CONFIG/common/security//Makefile $relesae_path/Makefile_parent
           
       - name: Delete linuxxpu Artifact
         uses: GeekyEggo/delete-artifact@v5.1.0
