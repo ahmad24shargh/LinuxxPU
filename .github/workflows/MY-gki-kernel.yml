@@ -349,12 +349,6 @@ jobs:
             patch -p1 -F 3 < xx_hybridized.patch
             cp ../../kernel_patches/xxksu/manual_lsm_security_hook.patch ./
             patch -p1 -F 3 < manual_lsm_security_hook.patch
-            if [ -f ../../kernel_patches/xxksu/add_prctl_run_support.patch ];then
-              # The kernelsu soft link must be created in the drivers folder
-              cp ../../kernel_patches/xxksu/add_prctl_run_support.patch ./
-              patch -p1 -F 3 < add_prctl_run_support.patch
-              cp -f drivers/kernelsu/core_hook.c ${GITHUB_WORKSPACE}/kernel/ && rm -rf drivers/kernelsu
-            fi
           elif [ "${{ inputs.ksu_fork }}" == "KSUN" -a "${{ env.kernel_variant }}" != "chickernel" ]; then
             echo "Applying scope_minimized_manual_hooks_v1. $( [ -f ${GITHUB_WORKSPACE}/USE_PERSHOOT_SUSFS.ME ] && echo -n "5.patch for pershoot fork of ksun" || echo -n "4.patch for ksun")..."
             cp ../../kernel_patches/next/scope_minimized_manual_hooks_* ./
@@ -367,6 +361,12 @@ jobs:
             echo "Applying tracepoint hooks v1.1 for SukiSU Ultra..."
             cp ../../kernel_patches/sukisu/sukisu_tracepoint_hooks_v1.1.patch ./
             patch -p1 -F 3 < sukisu_tracepoint_hooks_v1.1.patch
+          fi
+          if [ -f ../../kernel_patches/xxksu/map_spoof_reboot_prctl.patch ];then
+            # The ksu driver must be copied in the drivers folder
+            cp ../../kernel_patches/xxksu/map_spoof_reboot_prctl.patch ./
+            patch -p1 -F 3 < map_spoof_reboot_prctl.patch || true
+            cp -f drivers/kernelsu/core_hook.c ${GITHUB_WORKSPACE}/kernel/ && rm -rf drivers/kernelsu
           fi
           
       - name: Add Configuration Settings
