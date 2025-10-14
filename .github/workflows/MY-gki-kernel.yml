@@ -362,12 +362,7 @@ jobs:
             cp ../../kernel_patches/sukisu/sukisu_tracepoint_hooks_v1.1.patch ./
             patch -p1 -F 3 < sukisu_tracepoint_hooks_v1.1.patch
           fi
-          if [ -f ../../kernel_patches/xxksu/map_spoof_reboot_prctl.patch ];then
-            # The ksu driver must be copied in the drivers folder
-            cp ../../kernel_patches/xxksu/map_spoof_reboot_prctl.patch ./
-            patch -p1 -F 3 < map_spoof_reboot_prctl.patch || true
-            cp -f drivers/kernelsu/core_hook.c ${GITHUB_WORKSPACE}/kernel/ && rm -rf drivers/kernelsu
-          fi
+          
           
       - name: Add Configuration Settings
         run: |
@@ -517,7 +512,20 @@ jobs:
           #echo "CONFIG_BUG=n" >> ${defconfig}
           #echo "CONFIG_DEBUG_INFO=n" >> ${defconfig}
           #echo "CONFIG_DEBUG_MISC=n" >> ${defconfig}
-        
+          
+      - name: Apply xx_maps patch (thanks to fatalcoder524)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$CONFIG"
+          git clone https://github.com/ahmad24shargh/map_spoof
+          cd "common"
+          patch -p1 --forward < "../map_spoof/kernel.diff"
+          cp -r "../map_spoof/map_spoof" drivers
+          grep -q "map_spoof" drivers/Makefile || printf "\nobj-\$(CONFIG_MAP_SPOOF) += map_spoof/\n" >> drivers/Makefile && echo "[+] Modified Makefile."
+          grep -q "source \"drivers/map_spoof/Kconfig\"" drivers/Kconfig || sed -i "/endmenu/i\source \"drivers/map_spoof/Kconfig\"" drivers/Kconfig && echo "[+] Modified Kconfig."
+          echo "CONFIG_MAP_SPOOF=y" >> ${defconfig}  
+          
       - name: Build kernel
         env:
           ACTIONS_STEP_DEBUG: true
