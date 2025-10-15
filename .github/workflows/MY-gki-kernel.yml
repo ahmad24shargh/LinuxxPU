@@ -89,10 +89,11 @@ jobs:
               echo "clang-22-${{ runner.os }}-v1 creation date: ${clang_cache_creation_time}"
               echo "removing old clang-22-${{ runner.os }}-v1 from cache ..."
               gh cache delete clang-22-${{ runner.os }}-v1 --repo $repo
+            else
+              echo "Latest release of clang-22: $(echo ${clang_latest_relase} | cut -d':' -f2-)"
+              echo "clang-22-${{ runner.os }}-v1 creation date: ${clang_cache_creation_time}"
             fi
-            echo "Latest release of clang-22: $(echo ${clang_latest_relase} | cut -d':' -f2-)"
-            echo "clang-22-${{ runner.os }}-v1 creation date: ${clang_cache_creation_time}"
-          else
+            else
             echo "clang-22-${{ runner.os }}-v1 cache not found in ${repo}"
           fi
           
