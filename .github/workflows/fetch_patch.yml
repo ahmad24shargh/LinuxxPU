@@ -122,14 +122,14 @@ jobs:
               mv SukiSU-Ultra/kernel .
               rm -rf SukiSU-Ultra
             elif [ ${{ env.ksu_fork }} == 'xxKSU' ];then
-              wget https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/xxksu/10_susfs_backslashxx_ksu_patches.patch
-              patch -p1 --forward < 10_susfs_backslashxx_ksu_patches.patch
+              wget https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/xxksu/susfs_backslashxx_ksu_patches.patch
+              patch -p1 --forward < susfs_backslashxx_ksu_patches.patch
             elif [ ${{ env.ksu_fork }} == 'KSUN'  ];then
               if [ "${use_pershoot_susfs}" == "false" ];then
                 #if $use_wild_manager;then
                   #patch_file="https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/Wild_KSUN-susfs-1.5.9.patch"
                 #else
-                  patch_file="https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/KSUN-SUSFS-1.5.11.patch"
+                  patch_file="https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/KSUN-SUSFS-1.5.12.patch"
                 #fi
                 wget ${patch_file}
                 cp $(echo ${patch_file} | rev | cut -d '/' -f1 | rev) ./ksun_susfs_latest.patch
