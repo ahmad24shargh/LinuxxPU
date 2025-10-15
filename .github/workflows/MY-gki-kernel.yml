@@ -84,16 +84,13 @@ jobs:
             clang_latest_relase=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/ZyCromerZ/Clang/releases  | grep -Eo '"name":[^,]+' | head -n 1)
             [ -z "$clang_latest_relase" ] && { echo "Failed to extract clang latest release";exit 1;false; }
             clang_latest_release_date=$(echo "${clang_latest_relase}" | grep -Eo '[[:digit:]]{8}' | sed -E 's/(.{4})(.{2})(.{2})/\1-\2-\3/g')
+            echo "Latest release of clang-22: $(echo ${clang_latest_relase} | cut -d':' -f2-)"
+            echo "clang-22-${{ runner.os }}-v1 creation date: ${clang_cache_creation_time}"
             if [[ $clang_latest_release_date > $clang_cache_creation_time ]];then
-              echo "Latest release of clang-22: $(echo ${clang_latest_relase} | cut -d':' -f2-)"
-              echo "clang-22-${{ runner.os }}-v1 creation date: ${clang_cache_creation_time}"
               echo "removing old clang-22-${{ runner.os }}-v1 from cache ..."
               gh cache delete clang-22-${{ runner.os }}-v1 --repo $repo
-            else
-              echo "Latest release of clang-22: $(echo ${clang_latest_relase} | cut -d':' -f2-)"
-              echo "clang-22-${{ runner.os }}-v1 creation date: ${clang_cache_creation_time}"
             fi
-            else
+          else
             echo "clang-22-${{ runner.os }}-v1 cache not found in ${repo}"
           fi
           
