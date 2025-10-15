@@ -84,7 +84,7 @@ jobs:
               echo "Latest release of clang-22: ${clang_latest_relase}"
               echo "removing clang-22-${{ runner.os }}-v1 from cache ..."
             fi
-            echo "Latest release of clang-22: ${clang_latest_relase}"
+            echo "Latest release of clang-22: $(echo ${clang_latest_relase} | cut -d':' -f2-)"
             echo "clang-22-${{ runner.os }}-v1 creation date: ${clang_cache_creation_time}"
           fi
           
