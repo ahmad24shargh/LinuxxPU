@@ -528,7 +528,12 @@ jobs:
         continue-on-error: true
         run: |
           tag_array="($(gh api --paginate -H "Accept: application/vnd.github+json"  -H "X-GitHub-Api-Version: 2022-11-28" /repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/tags | grep -Eo '"name":[^,]+' | tr -d '"' | cut -d':' -f2))"
-          [[ "${tag_array[@]}" =~ "${{ env.TAG_NAME }}" ]] && gh release delete ${{ env.TAG_NAME }} --cleanup-tag --yes -R ${{ github.repository_owner }}/${{ github.event.repository.name }}
+          if [[ "${tag_array[@]}" =~ "${{ env.TAG_NAME }}" ]];then
+            echo "removing the ${{ env.TAG_NAME }} tag and its assets to recreate it ..."
+            gh release delete ${{ env.TAG_NAME }} --cleanup-tag --yes -R ${{ github.repository_owner }}/${{ github.event.repository.name }}
+          else
+            echo "The ${{ env.TAG_NAME }} tag is new in this repo."
+          fi
           
       - name: release
         if: ${{ env.build_type == 'build_all' }}
