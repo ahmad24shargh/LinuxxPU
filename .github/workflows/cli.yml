@@ -9,27 +9,6 @@ concurrency:
 on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-    inputs:
-      ksu_support:
-        description: 'support official,rksu,xx managers?'
-        required: true
-        type: boolean
-        default: true
-      ksun_support:
-        description: 'support kernelsu-next manager?'
-        required: true
-        type: boolean
-        default: true
-      mksu_support:
-        description: 'support mksu manager?'
-        required: true
-        type: boolean
-        default: true
-      sukisu_support:
-        description: 'support sukisu manager?'
-        required: true
-        type: boolean
-        default: false
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -39,17 +18,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: exit
+        if: false
         run: |
           echo "I gave the exit command myself."
           gh release delete "v1.0.7-45" --cleanup-tag -R "${{ github.repository_owner }}/${{ github.event.repository.name }}"
           exit 0
           false
           
-      - name: Checkout code
-        uses: actions/checkout@v5.0.0
-        with:
-          fetch-depth: 0 # fetch full history
-          filter: tree:0
+      #- name: Checkout code
+        #uses: actions/checkout@v5.0.0
+        #with:
+          #fetch-depth: 0 # fetch full history
+          #filter: tree:0
 
       - name: Test Codes
       # Randomization of package ID and app label
@@ -94,11 +74,10 @@ jobs:
       - name: Test Codes 2
         if: true
         run: |
-          echo '.....'
-          ls ${ANDROID_NDK_HOME}
-          echo ......
-          ls ${ANDROID_NDK_LATEST_HOME}
-           
+          repo="${{ github.repository_owner }}/${{ github.event.repository.name }}"
+          gh cache list --repo $repo -k clang-22-linux-v1 --json  'createdAt' 2>/dev/null | grep 'createdAt' | cut -d'"' -f4
+          clang_cache_epoc_timestamp=$(date --date=$(gh cache list --repo $repo -k clang-22-linux-v1 --json  'createdAt' 2>/dev/null | grep 'createdAt' | cut -d'"' -f4) +%s 2>/dev/null)
+          echo $clang_cache_epoc_timestamp
           
 
           
