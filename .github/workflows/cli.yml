@@ -75,7 +75,7 @@ jobs:
         if: true
         run: |
           repo="${{ github.repository_owner }}/${{ github.event.repository.name }}"
-          gh cache list --repo $repo -k clang-22-Linux-v1 --json  'createdAt' 2>/dev/null | grep 'createdAt' | cut -d'"' -f4
+          gh cache list --repo $repo -k clang-22-nux-v1 --json  'createdAt' 2>/dev/null | grep 'createdAt' | cut -d'"' -f4
           clang_cache_epoc_timestamp=$(date --date=$(gh cache list --repo $repo -k clang-22-linux-v1 --json  'createdAt' 2>/dev/null | grep 'createdAt' | cut -d'"' -f4) +%s 2>/dev/null)
           echo $clang_cache_epoc_timestamp
           echo $(date +%s)
