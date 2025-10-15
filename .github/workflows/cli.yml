@@ -74,7 +74,7 @@ jobs:
       - name: Test Codes 2
         if: true
         run: |
-          echo $(gh cache list --repo $repo -k clang-22-${{ runner.os }}-v1 --json  'createdAt' 2>/dev/null | grep 'createdAt')
+          gh cache list --repo $repo -k clang-22-${{ runner.os }}-v1 --json  'createdAt' 2>/dev/null | grep 'createdAt'
           exit
           false
           repo="${{ github.repository_owner }}/${{ github.event.repository.name }}"
