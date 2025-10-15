@@ -122,6 +122,7 @@ jobs:
               mv SukiSU-Ultra/kernel .
               rm -rf SukiSU-Ultra
             elif [ ${{ env.ksu_fork }} == 'xxKSU' ];then
+              # xxksu & susfs !!! I haven't made it yet
               wget https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/xxksu/susfs_backslashxx_ksu_patches.patch
               patch -p1 --forward < susfs_backslashxx_ksu_patches.patch
             elif [ ${{ env.ksu_fork }} == 'KSUN'  ];then
