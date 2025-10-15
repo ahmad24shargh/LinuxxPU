@@ -74,6 +74,7 @@ jobs:
       - name: Test Codes 2
         if: true
         run: |
+          set -ex
           repo="${{ github.repository_owner }}/${{ github.event.repository.name }}"
           clang_cache_creation_time=$(gh cache list --repo $repo -k clang-22-${{ runner.os }}-v1 --json  'createdAt' 2>/dev/null | grep 'createdAt' | grep -Eo '[0-9]{4}-[0-9]{2}-[0-9]{2}')
           if [ ! -z "${clang_cache_creation_time}" ];then
