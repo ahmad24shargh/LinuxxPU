@@ -1,0 +1,827 @@
+name: MY GKI Kernel Build
+permissions:
+  contents: write  # (for pushing tags)
+  actions: write   # Allows triggering actions
+on:
+    
+  workflow_call: # This allows this workflow to be called from another workflow
+    inputs:
+      kernel_variant:
+        required: true
+        type: string
+      ksu_fork:
+        required: true
+        type: string
+      hook_method:
+        required: true
+        type: string   
+      include_susfs:
+        required: true
+        type: boolean
+      android_version:
+        required: true
+        type: string
+      kernel_version:
+        required: true
+        type: string
+      sub_level:
+        required: true
+        type: string
+      os_patch_level:
+        required: true
+        type: string
+      manager_supports:
+        required: true
+        type: string
+        
+
+jobs:
+  build-kernel-kernelsu:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      kernel_variant: ${{ inputs.kernel_variant }}
+      ksu_fork: ${{ inputs.ksu_fork }}
+      hook_method: ${{ inputs.hook_method }}
+      include_susfs: ${{ inputs.include_susfs }}
+      #permissive cause bootloop
+      selinux_permissive: false
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@master
+        with:
+          root-reserve-mb: 8192
+          temp-reserve-mb: 2048
+          swap-size-mb: 8192
+          remove-dotnet: "true"
+          remove-android: "true"
+          remove-haskell: "true"
+          remove-codeql: "true"
+          remove-docker-images: "true"
+            
+      - name: download linuxxpu with patched dir
+        uses: actions/download-artifact@v5.0.0
+        with:
+          name: linuxxpu
+          path: .
+          github-token: '${{ env.GH_TOKEN }}'
+
+      - name: Set CONFIG Environment Variable
+        run: |
+          sudo apt update && sudo apt install -y pahole aria2
+          CONFIG="${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}"
+
+          echo "CONFIG=$CONFIG" >> $GITHUB_ENV
+          echo "CONFIG set to: $CONFIG"  
+            
+      - name: delete toolchain and clang-22 caches if older than a certain amount
+        run: |
+          repo="${{ github.repository_owner }}/${{ github.event.repository.name }}"
+          clang_cache_creation_time=$(gh cache list --repo $repo -k clang-22-${{ runner.os }}-v1 --json  'createdAt' 2>/dev/null  | grep 'createdAt' | grep -Eo '[0-9]{4}-[0-9]{2}-[0-9]{2}') || true
+          if [ ! -z "${clang_cache_creation_time}" ];then
+            clang_latest_relase=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/ZyCromerZ/Clang/releases  | grep -Eo '"name":[^,]+' | head -n 1)
+            [ -z "$clang_latest_relase" ] && { echo "Failed to extract clang latest release";exit 1;false; }
+            clang_latest_release_date=$(echo "${clang_latest_relase}" | grep -Eo '[[:digit:]]{8}' | sed -E 's/(.{4})(.{2})(.{2})/\1-\2-\3/g')
+            echo "Latest release of clang-22: $(echo ${clang_latest_relase} | cut -d':' -f2-)"
+            echo "clang-22-${{ runner.os }}-v1 creation date: ${clang_cache_creation_time}"
+            if [[ $clang_latest_release_date > $clang_cache_creation_time ]];then
+              echo "removing old clang-22-${{ runner.os }}-v1 from cache ..."
+              gh cache delete clang-22-${{ runner.os }}-v1 --repo $repo
+            fi
+          else
+            echo "clang-22-${{ runner.os }}-v1 cache not found in ${repo}"
+          fi
+          
+          #toolchain older than 30 days
+          if [ $(echo $(( ($(date +%s) - $(date --date=$(gh cache list --repo $repo -k toolchain-${{ runner.os }}-v1 --json  'createdAt' | grep 'createdAt' | cut -d'"' -f4) +%s) )/(60*60*24) ))) -gt 29 ];then
+            echo "removing toolchain-${{ runner.os }}-v1 from chache ..."
+            gh cache delete toolchain-${{ runner.os }}-v1 --repo $repo
+          fi
+        
+      - name: Cache toolchain
+        id: cache-toolchain
+        uses: actions/cache@v4.2.4
+        with:
+          path: |
+            kernel-build-tools
+            mkbootimg
+          key: toolchain-${{ runner.os }}-v1
+
+      - name: Download toolchain (if cache not found)
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
+        run: |
+          AOSP_MIRROR=https://android.googlesource.com
+          BRANCH=main-kernel-2025
+          git clone $AOSP_MIRROR/kernel/prebuilts/build-tools -b $BRANCH --depth 1 kernel-build-tools
+          git clone $AOSP_MIRROR/platform/system/tools/mkbootimg -b $BRANCH --depth 1 mkbootimg
+      
+      - name: Cache clang-22
+        id: cache-clang-22
+        uses: actions/cache@v4.2.4
+        with:
+          path: |
+            clang-22
+          key: clang-22-${{ runner.os }}-v1
+
+      - name: Download clang-22 (if cache not found)
+        if: steps.cache-clang-22.outputs.cache-hit != 'true'
+        run: |
+          clang_latest_ulr=$(curl -s https://api.github.com/repos/ZyCromerZ/Clang/releases/latest | grep browser_download_url | cut -d '"' -f 4)
+          [ -z $clang_latest_ulr ] && { echo 'The clang-22 download link could not be extracted!!!';false; } || echo -e "Download link for the latest build of clang-22:\n${clang_latest_ulr}"
+          mkdir -p clang-22
+          aria2c -x 16 -s 16 -o clang-22.tar.gz ${clang_latest_ulr}
+          tar -xzf clang-22.tar.gz -C clang-22
+          rm -rf clang-22.tar.gz
+          
+      - name: Set environment variables
+        run: |
+          echo "AVBTOOL=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/bin/avbtool" >> $GITHUB_ENV
+          echo "MKBOOTIMG=$GITHUB_WORKSPACE/mkbootimg/mkbootimg.py" >> $GITHUB_ENV
+          echo "UNPACK_BOOTIMG=$GITHUB_WORKSPACE/mkbootimg/unpack_bootimg.py" >> $GITHUB_ENV
+          
+      - name: Set boot sign key
+        env:
+          BOOT_SIGN_KEY: ${{ secrets.BOOT_SIGN_KEY }}
+        run: |
+          if [ ! -z "$BOOT_SIGN_KEY" ]; then
+            echo "$BOOT_SIGN_KEY" > $GITHUB_WORKSPACE/testkey_rsa2048.pem
+            echo "BOOT_SIGN_KEY_PATH=$GITHUB_WORKSPACE/testkey_rsa2048.pem" >> $GITHUB_ENV
+          else
+            echo "BOOT_SIGN_KEY_PATH=GITHUB_WORKSPACE/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem" >> $GITHUB_ENV
+          fi
+
+      - name: Install Repo
+        run: |
+          mkdir -p ./git-repo
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ./git-repo/repo
+          chmod a+rx ./git-repo/repo
+          echo "REPO=$GITHUB_WORKSPACE/./git-repo/repo" >> $GITHUB_ENV
+
+      - name: Clone Dependencies
+        run: |
+          echo "Cloning AnyKernel3 and other dependencies..."
+          SUSFS_BRANCH="gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}"
+          echo "Using branch for SUSFS: $SUSFS_BRANCH"
+          git clone https://gitlab.com/simonpunk/susfs4ksu.git -b "$SUSFS_BRANCH"
+          git clone https://github.com/ahmad24shargh/kernel_patches.git
+          
+      - name: Initialize and Sync Kernel Source
+        run: |
+          echo "Creating folder for configuration: $CONFIG..."
+          mkdir -p "$CONFIG"
+          cd "$CONFIG"
+
+          echo "Initializing and syncing kernel source..."
+          FORMATTED_BRANCH="${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.os_patch_level }}"
+          $REPO init --no-tags --depth=1 --dissociate -u https://android.googlesource.com/kernel/manifest -m ${GITHUB_WORKSPACE}/.github/manifests/${{ env.kernel_variant }}.xml 
+          
+
+          REMOTE_BRANCH=$(git ls-remote https://android.googlesource.com/kernel/common ${FORMATTED_BRANCH})
+          DEFAULT_MANIFEST_PATH=.repo/manifests/default.xml
+
+          # Check if branch is deprecated
+          if grep -q deprecated <<< $REMOTE_BRANCH; then
+            echo "Found deprecated branch: $FORMATTED_BRANCH"
+            sed -i "s/\"${FORMATTED_BRANCH}\"/\"deprecated\/${FORMATTED_BRANCH}\"/g" $DEFAULT_MANIFEST_PATH
+          fi
+          $REPO sync --no-tags --clone-bundle --current-branch --optimized-fetch --force-sync -j$(nproc --all)
+      
+      - name: defconfig customization and various changes
+        run: |
+          for file in $(find $CONFIG/common/arch/arm64/configs -type f 2>/dev/null);do sed -E -i -e '/CONFIG_LOCALVERSION/d' -e '/_LTO/d' $file;done
+          if [[ "${{ env.kernel_variant }}" == "common-android-mainline" ]];then
+            defconfig="${GITHUB_WORKSPACE}/.defconfig"
+          elif [[ "${{ env.kernel_variant }}" == "chickernel" ]];then
+            defconfig="$GITHUB_WORKSPACE/$CONFIG/common/arch/arm64/configs/chickernel_defconfig"
+            rm -rf $CONFIG/common/KernelSU-Next
+          elif [[ "${{ env.kernel_variant }}" == *"topnotchfreaks"* ]];then
+            if [ -f $CONFIG/common/arch/arm64/configs/topaz_defconfig ];then
+              defconfig="$GITHUB_WORKSPACE/$CONFIG/common/arch/arm64/configs/topaz_defconfig"
+            elif [ -f $CONFIG/common/arch/arm64/configs/unified_defconfig ];then
+              defconfig="$GITHUB_WORKSPACE/$CONFIG/common/arch/arm64/configs/unified_defconfig"
+            else
+              defconfig="$GITHUB_WORKSPACE/$CONFIG/common/arch/arm64/configs/gki_defconfig"
+            fi
+          fi
+          sed -i '/LOCALVERSION/d' ${defconfig}
+          echo 'CONFIG_LOCALVERSION=""' >> ${defconfig}
+          echo 'CONFIG_LOCALVERSION_AUTO=y' >> ${defconfig}
+          sed -i '/CONFIG_WERROR/d' ${defconfig}
+          echo "CONFIG_WERROR=n" >> ${defconfig}
+          sed -i '/CONFIG_KSU/d' ${defconfig}
+          echo "CONFIG_LTO=y" >> ${defconfig}
+          echo "CONFIG_LTO_CLANG=y" >> ${defconfig}
+          echo "CONFIG_ARCH_SUPPORTS_LTO_CLANG=y" >> ${defconfig}
+          echo "CONFIG_ARCH_SUPPORTS_LTO_CLANG_THIN=y" >> ${defconfig}
+          echo "CONFIG_HAS_LTO_CLANG=y" >> ${defconfig}
+          echo "CONFIG_LTO_NONE=n" >> ${defconfig}
+          echo "CONFIG_LTO_CLANG_FULL=n" >> ${defconfig}
+          echo "CONFIG_LTO_CLANG_THIN=y" >> ${defconfig}
+          #Make sure to unspoof KCONFIG_FILE in common/kernel/Makefile
+          sed -E -i 's|\$\(obj\)/config_data:.+|\$(obj)/config_data: \$(KCONFIG_CONFIG) FORCE|g' $GITHUB_WORKSPACE/$CONFIG/common/kernel/Makefile
+          pushd $CONFIG/common/kernel/
+          echo '#!/bin/bash' > manipulating_conf_data.sh
+          echo 'SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"' >> manipulating_conf_data.sh
+          echo 'for conf_data in $(find $SCRIPTPATH/../.. -type f -name ".config" -o -name "config_data" 2>/dev/null);do' >> manipulating_conf_data.sh
+          echo 'echo $conf_data' >> manipulating_conf_data.sh
+          #echo 'loglevel=1;sed -E -i '\''s/(CONFIG_.+_LOGLEVEL_[^=]+=)(.+)/\1'\''$loglevel'\''/g'\'' $conf_data' >> manipulating_conf_data.sh
+          echo 'array=$(cat $conf_data | grep -E '\''_LPU(_|=)'\'' | tr '\''\n'\'' '\''@'\'')' >> manipulating_conf_data.sh
+          echo 'IFS='\''@'\'';for item  in ${array}; do sed -i '\''s/'\''${item}'\''/'\''${item}'\''\n'\''$(echo $item | sed '\''s/LPU/KSU/g'\'')'\''/g'\'' $conf_data; done; done' >> manipulating_conf_data.sh
+          #echo 'sed -E -i '\''s/_LPU(_|=)/_KSU\1/g'\'' $conf_data; done' >> manipulating_conf_data.sh 
+          chmod +x manipulating_conf_data.sh
+          popd
+          sed -E -i 's|(^[[:space:]]+)(\$\(call if_changed,gzip\))|\1\$(srctree)/kernel/manipulating_conf_data.sh $(realpath kernel/config_data)\; \\\n\1\2|g' $CONFIG/common/kernel/Makefile
+
+          # for clang-22
+          if [ -d $GITHUB_WORKSPACE/clang-22 ];then
+            cd $GITHUB_WORKSPACE/$CONFIG
+            #Remove old clang revisions and create a link to clang-22
+            [ -e $GITHUB_WORKSPACE/clang-22/bin/clang ] && clang_bin="$GITHUB_WORKSPACE/clang-22/bin/clang"
+            [ -z $clang_bin ] && echo "clang not found" && false
+            rm -rf prebuilts/clang/host/linux-x86/clang-*
+            cd prebuilts/clang/host/linux-x86/ && ln -s -T $GITHUB_WORKSPACE/clang-22 clang-$($clang_bin -dumpversion)
+
+            # Update build config constants
+            sed -i \
+             -e 's/^BRANCH=.*/BRANCH=android13-5.15/' \
+             -e 's/^CLANG_VERSION=.*/CLANG_VERSION='$($clang_bin -dumpversion)'/' \
+             ${GITHUB_WORKSPACE}/$CONFIG/common/build.config.constants
+
+             # Remove defconfig check (if exists)
+             sed -i '/^POST_DEFCONFIG_CMDS="check_defconfig"/d' ${GITHUB_WORKSPACE}/$CONFIG/common/build.config.gki
+
+             ##this fix the error that present on clang 21,22 and so on.
+             #cp ${GITHUB_WORKSPACE}/kernel_patches/0001-treewide-clang-compilation-fixup.patch ${GITHUB_WORKSPACE}/$CONFIG/common
+             #cd ${GITHUB_WORKSPACE}/$CONFIG/common
+             #patch -p1 < 0001-treewide-clang-compilation-fixup.patch || true
+          fi
+
+          curl https://android.googlesource.com/kernel/common/+/refs/heads/android13-5.15-lts/scripts/setlocalversion?format=TEXT | base64 -d > ${GITHUB_WORKSPACE}/$CONFIG/common/scripts/setlocalversion && chmod +x ${GITHUB_WORKSPACE}/$CONFIG/common/scripts/setlocalversion
+          ## Apply Module Symbol Version Fix Patch(from wild+ GKI_KernelSU_SUSFS)(bootloop for me)
+          #sed -i '/bad_version:/{:a;n;/return 0;/{s/return 0;/return 1;/;b};ba}' ${GITHUB_WORKSPACE}/$CONFIG/common/kernel/module.c
+          
+          # Don't force DEBUG_KERNEL when EXPERT is enabled
+          #sed -i '/# Unhide debug options.*/ {N; /# Unhide debug options.*select DEBUG_KERNEL/d}' ${GITHUB_WORKSPACE}/$CONFIG/common/init/Kconfig
+
+          # strip debug always
+          sed -E -i 's/^([[:space:]]*)LDFLAGS_MODULE  =[[:space:]]*$/\1LDFLAGS_MODULE = --strip-debug/g' $(find ${GITHUB_WORKSPACE}/$CONFIG/common/ -maxdepth 1 -type f -name 'Makefile')
+          
+          echo "defconfig=${defconfig}" >> $GITHUB_ENV
+
+      - name: Add BBG
+        #if: false
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$CONFIG"
+          echo "Adding BBG..."
+          wget -O- https://github.com/vc-teahouse/Baseband-guard/raw/main/setup.sh | bash
+          echo "CONFIG_BBG=y" >> ${defconfig}
+          # Enable Baseband Protection for Boot/init_boot Partitions
+          #echo "CONFIG_BBG_BLOCK_BOOT=y" >> ${defconfig}
+          sed -i '/^config LSM$/,/^help$/{ /^[[:space:]]*default/ { /baseband_guard/! s/lockdown/lockdown,baseband_guard/ } }' common/security/Kconfig
+
+      - name: Add KernelSU
+        run: |
+          echo "Changing to configuration directory: $CONFIG..."
+          cd "$CONFIG"
+          [ ${{ env.ksu_fork }} == 'KSUN' ]  && echo "Adding KernelSU Next..."
+          [ ${{ env.ksu_fork }} == 'SUKISU' ] && echo "Adding SukiSU Ultra..."
+          [ ${{ env.ksu_fork }} == 'xxKSU' ] && echo "Adding backslashxx KSU..."
+          #if [ ${{ env.ksu_fork }} == 'KSUN' -o ${{ env.include_susfs }} == 'false'  ];then
+          GKI_ROOT=$(pwd)
+          test -d "$GKI_ROOT/common/drivers" &&  DRIVER_DIR="$GKI_ROOT/common/drivers" ||  DRIVER_DIR="$GKI_ROOT/drivers"
+          DRIVER_MAKEFILE=$DRIVER_DIR/Makefile
+          DRIVER_KCONFIG=$DRIVER_DIR/Kconfig
+          [ ! -d $DRIVER_DIR ] && exit 123
+          cd "$DRIVER_DIR"
+          cp -af "${GITHUB_WORKSPACE}/kernel" kernelsu
+          pwd && ls kernelsu
+          ln -sf "${GITHUB_WORKSPACE}/kernel" "linuxxpu" && echo "[+] Symlink created."
+          # Add entries in Makefile and Kconfig if not already existing
+          grep -q "linuxxpu" "$DRIVER_MAKEFILE" || printf "\nobj-\$(CONFIG_LPU) += linuxxpu/\n" >> "$DRIVER_MAKEFILE" && echo "[+] Modified Makefile."
+          grep -q "source \"drivers/linuxxpu/Kconfig\"" "$DRIVER_KCONFIG" || sed -i "/endmenu/i\source \"drivers/linuxxpu/Kconfig\"" "$DRIVER_KCONFIG" && echo "[+] Modified Kconfig."
+          echo '[+] Done.'
+          #fi
+          cd "${GITHUB_WORKSPACE}/$CONFIG"
+          ln -s ${GITHUB_WORKSPACE} ./KernelSU-Next
+          ln -s ${GITHUB_WORKSPACE} ./kernelsu
+          for files in $(grep -R ../kernel_patches -e 'ksud' 2>/dev/null | grep -v 'https' | grep -v 'rustix::' | cut -d':' -f1 | sort | uniq);do sed -i 's|ksud|lpud|g' $files;done
+          for files in $(grep -R ../kernel_patches -e 'ksu' 2>/dev/null | grep -v 'https' | grep -v 'rustix::' | cut -d':' -f1 | sort | uniq);do sed -i 's|ksu|lpu|g' $files;done
+          
+      - name: Symbol magic
+        run: |
+          echo "[+] Export all symbol from abi_gki_aarch64.xml"
+          COMMON_ROOT=${CONFIG}/common
+          KSU_ROOT=$GITHUB_WORKSPACE
+          ABI_XML=$COMMON_ROOT/android/abi_gki_aarch64.xml
+          SYMBOL_LIST=$COMMON_ROOT/android/abi_gki_aarch64
+          echo "[+] Add KernelSU-Next symbols"
+          cat $KSU_ROOT/kernel/export_symbol.txt | awk '{sub("[ \t]+","");print "  "$0}' >> $SYMBOL_LIST
+          
+      - name: Apply SUSFS Patches for KernelSU Variants
+        if: ${{ env.include_susfs == 'true' }}
+        run: |
+          echo "Changing to configuration directory: $CONFIG..."
+          cd "$CONFIG"
+          
+          # MY CHANGES
+          for files in $(grep -R ../susfs4ksu -e 'ksud' 2>/dev/null | grep -v 'https' | grep -v 'rustix::' | cut -d':' -f1 | sort | uniq);do sed -i 's|ksud|lpud|g' $files;done
+          for files in $(grep -R ../susfs4ksu -e 'ksu' 2>/dev/null | grep -v 'https' | grep -v 'rustix::' | cut -d':' -f1 | sort | uniq);do sed -i 's|ksu|lpu|g' $files;done
+
+          echo "Applying SUSFS patches..."
+          
+          # Copy SUSFS patches
+          cp $GITHUB_WORKSPACE/susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch ./common/
+          cp $GITHUB_WORKSPACE/susfs4ksu/kernel_patches/fs/* ./common/fs/
+          cp $GITHUB_WORKSPACE/susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
+          [ ${{ env.ksu_fork }} == 'KSUN' ]  && echo "Applying SUSFS patches for KernelSU-Next..."
+          [ ${{ env.ksu_fork }} == 'SUKISU' ] && echo "Applying SUSFS patches for SukiSU Ultra..."
+          [ ${{ env.ksu_fork }} == 'xxKSU' ] && echo "Applying SUSFS patches for backslashxx KSU..."
+          # Change to common directory and apply common SUSFS patch
+          cd $GITHUB_WORKSPACE/$CONFIG/common
+          if [[ "${{ env.kernel_variant }}" != "chickernel" ]];then patch -p1 < 50_add_susfs_in_gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch;fi
+          
+      - name: Apply New Hooks Patches
+        run: |
+          echo "Changing to configuration directory: $CONFIG..."
+          cd "$CONFIG/common"
+
+          if [ "${{ inputs.ksu_fork }}" == "xxKSU" ]; then
+            # ksu_hooks.patch: Only 2 hooks, with ultimatum patch
+            # scope_minimized_manual_hooks_v1.5.patch: Traditional full hook
+            # with kprobe only ultimatum patch or xx_hybridized.patch(Not both together)
+            echo "Applying xx_hybridized and getname_flags patches for backslashxx KSU..."
+            cp ../../kernel_patches/xxksu/xx_hybridized.patch ./
+            patch -p1 -F 3 < xx_hybridized.patch
+            cp ../../kernel_patches/xxksu/manual_lsm_security_hook.patch ./
+            patch -p1 -F 3 < manual_lsm_security_hook.patch
+          elif [ "${{ inputs.ksu_fork }}" == "KSUN" -a "${{ env.kernel_variant }}" != "chickernel" ]; then
+            echo "Applying scope_minimized_manual_hooks_v1. $( [ -f ${GITHUB_WORKSPACE}/USE_PERSHOOT_SUSFS.ME ] && echo -n "5.patch for pershoot fork of ksun" || echo -n "4.patch for ksun")..."
+            cp ../../kernel_patches/next/scope_minimized_manual_hooks_* ./
+            [ -f ${GITHUB_WORKSPACE}/USE_PERSHOOT_SUSFS.ME ] && patch -p1 -F 3 < scope_minimized_manual_hooks_v1.5.patch || patch -p1 -F 3 < scope_minimized_manual_hooks_v1.4.patch
+          elif [ "${{ inputs.ksu_fork }}" == "SUKISU" -a "${{ env.kernel_variant }}" != "chickernel"  -a "${{ env.hook_method }}" == "manual" ]; then
+            echo "Applying manual hooks v1.5 for SukiSU Ultra..."
+            cp ../../kernel_patches/sukisu/scope_min_manual_hooks_v1.5.patch ./
+            patch -p1 -F 3 < scope_min_manual_hooks_v1.5.patch
+          elif [ "${{ inputs.ksu_fork }}" == "SUKISU" -a "${{ env.kernel_variant }}" != "chickernel"  -a "${{ env.hook_method }}" == "tracepoint" ]; then
+            echo "Applying tracepoint hooks v1.1 for SukiSU Ultra..."
+            cp ../../kernel_patches/sukisu/sukisu_tracepoint_hooks_v1.1.patch ./
+            patch -p1 -F 3 < sukisu_tracepoint_hooks_v1.1.patch
+          fi
+          
+          
+      - name: Add Configuration Settings
+        run: |
+          echo "Changing to configuration directory: $CONFIG..."
+          cd "$CONFIG"
+
+          echo "Adding configuration settings to gki_defconfig..."
+          
+          # Add KSU configuration settings
+          echo "CONFIG_KSU=y" >> ${defconfig}
+          #echo "CONFIG_KSU_CMDLINE=y" >> ${defconfig}
+          echo "CONFIG_KPM=y" >> ${defconfig}
+          if [ ${{ env.ksu_fork }} == 'SUKISU' -a "${{ env.hook_method }}" == "tracepoint" ];then
+            echo "CONFIG_TRACEPOINTS=y" >> ${defconfig}
+            echo "CONFIG_KSU_TRACEPOINT_HOOK=y" >> ${defconfig}
+          else
+            [ ${{ env.ksu_fork }} != 'xxKSU' ] && echo "CONFIG_KSU_MANUAL_HOOK=y" >> ${defconfig}
+          fi
+          
+          if [ ${{ env.ksu_fork }} == 'xxKSU' ];then
+            echo "CONFIG_KSU_KPROBES_HOOK=y"  >> ${defconfig}
+            echo "CONFIG_KSU_KPROBES_KSUD=y"  >> ${defconfig}
+            echo "CONFIG_KSU_KRETPROBES_SUCOMPAT=n"  >> ${defconfig}
+            # ⚠️ caution ⚠️
+            echo "CONFIG_KSU_THRONE_TRACKER_ALWAYS_THREADED=y"  >> ${defconfig}
+            # manual_lsm_security_hook.patch
+            echo "CONFIG_KSU_LSM_SECURITY_HOOKS=n" >> ${defconfig}
+          else
+            echo "CONFIG_KSU_KPROBES_HOOK=n"  >> ${defconfig}
+            echo "CONFIG_KSU_LSM_SECURITY_HOOKS=y" >> ${defconfig}
+          fi
+            
+          # Add additional tmpfs config setting
+          echo "CONFIG_TMPFS_XATTR=y" >> ${defconfig}
+          echo "CONFIG_TMPFS_POSIX_ACL=y" >> ${defconfig}
+
+          # Add additional config setting
+          echo "CONFIG_IP_NF_TARGET_TTL=y" >> ${defconfig}
+          echo "CONFIG_IP6_NF_TARGET_HL=y" >> ${defconfig}
+          echo "CONFIG_IP6_NF_MATCH_HL=y" >> ${defconfig}
+
+          # Basic optimizations
+          echo "CONFIG_KALLSYMS=y" >> ${defconfig}
+          echo "CONFIG_KALLSYMS_ALL=y" >> ${defconfig}
+          sed -i '/CC_OPTIMIZE_FOR_PERFORMANCE/d' ${defconfig}
+          echo "CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE_O3=y" >> ${defconfig}
+          
+
+          # Add BBR & network Configs
+          echo "CONFIG_TCP_CONG_ADVANCED=y" >> ${defconfig} 
+          echo "CONFIG_TCP_CONG_BIC=n" >> ${defconfig}
+          echo "CONFIG_TCP_CONG_WESTWOOD=y" >> ${defconfig}
+          echo "CONFIG_TCP_CONG_HTCP=n" >> ${defconfig}
+          echo "CONFIG_NET_SCH_FQ=y" >> ${defconfig}
+          sed -i '/CONFIG_TCP_CONG_BBR/d' ${defconfig}
+          echo "CONFIG_TCP_CONG_BBR=y" >> ${defconfig}
+          sed -i '/CONFIG_DEFAULT_TCP_CONG/d' ${defconfig}
+          echo 'CONFIG_DEFAULT_TCP_CONG="BBR"' >> ${defconfig}
+          echo 'CONFIG_DEFAULT_BBR=y' >> ${defconfig}
+           
+
+          # Remove check_defconfig
+          sed -i 's/check_defconfig//' ./common/build.config.gki
+          if [ ! -f build/build.sh ];then
+            tar -xzkf ${GITHUB_WORKSPACE}/.github/scripts/build.tar.gz -C build/
+            for file in $(find build/ -type f -name '*.sh' 2>/dev/null);do sed -i 's|/\/build\/|build\/|g' $file;chmod +x $file;done
+          fi
+
+          KERNEL_VERSION="${{ inputs.kernel_version }}"
+          MIN_VERSION="5.16"
+          
+          if [ "$(printf '%s\n' "$KERNEL_VERSION" "$MIN_VERSION" | sort -V | head -n1)" = "$KERNEL_VERSION" ]; then
+            echo "Patching ptrace!"
+            #curl -Ls https://raw.githubusercontent.com/fatalcoder524/kernel_patches_additional/refs/heads/main/ptrace.patch  | patch -p1 -F 3
+            cd "${GITHUB_WORKSPACE}/${CONFIG}/common"
+            cp $GITHUB_WORKSPACE/kernel_patches/ptrace.patch ./
+            patch -p1 -F 3 < ptrace.patch
+          else
+            echo "Kernel >= $MIN_VERSION, skipping ptrace patch"
+          fi
+
+          #Remove Abi Exports and Error
+          rm -rf ./common/android/abi_gki_protected_exports_* || true
+
+          # try to disable audit but bootloop
+          #if [  -f $GITHUB_WORKSPACE/kernel_patches/xxksu/selinux_remove_audit_dependency.patch ];then
+            #cd "${GITHUB_WORKSPACE}/${CONFIG}/common"
+            #cp $GITHUB_WORKSPACE/kernel_patches/xxksu/selinux_remove_audit_dependency.patch ./
+            #patch -p1 -F 3 < selinux_remove_audit_dependency.patch
+            #sed -E -i '/_AUDIT.*=/d' ${defconfig}
+            #echo 'CONFIG_AUDIT=n' >> ${defconfig}
+          #fi
+          
+      - name: Add SUSFS Configuration Settings
+        if: ${{ env.include_susfs == 'true' }}
+        run: |
+          echo "Changing to configuration directory: $CONFIG..."
+          cd "$CONFIG"
+
+          echo "Adding SUSFS configuration settings to gki_defconfig..."
+          echo "CONFIG_KSU_SUSFS=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ${defconfig}
+          # for sukisu only - Setting it to y caused a bootloop (2025-10-07)
+          echo "CONFIG_KSU_MANUAL_SU=n" >> ${defconfig}
+          
+          cd common
+          if ! grep -qxF '#define CMD_SUSFS_HIDE_SUS_MNTS_FOR_ALL_PROCS 0x55561' ./include/linux/susfs_def.h; then
+            #curl -Ls https://raw.githubusercontent.com/fatalcoder524/kernel_patches_additional/refs/heads/main/hide_sus_mnts_for_all_procs.patch  | patch -p1 -F 3
+            echo "applying hide_sus_mnts_for_all_procs patch ..."
+            cp ../../kernel_patches/hide_sus_mnts_for_all_procs.patch ./
+            patch -p1 -F 3 < hide_sus_mnts_for_all_procs.patch
+          else
+            echo "Line already present. Skipping SUSFS_HIDE_SUS_MNTS_FOR_ALL_PROCS Patch."
+          fi
+
+      - name: Adding log reduction and debug reduction configurations
+        #if: false
+        run: |
+          cd "$CONFIG"
+          #if grep -Eq '^CONFIG_CMDLINE=.+' ${defconfig};then cmdline_str=$(echo "CONFIG_CMDLINE=\"$(grep -E '^CONFIG_CMDLINE=.+' ${defconfig} | cut -d '"' -f2) audit=0 printk.devkmsg=off\"");else cmdline_str='CONFIG_CMDLINE="audit=0 printk.devkmsg=off"';fi
+          cmdline_str='CONFIG_CMDLINE="mminit_loglevel=0 stack_depot_disable=on kasan.stacktrace=off kvm-arm.mode=protected cgroup_disable=pressure audit=0 loglevel=1 printk.devkmsg=off quiet lpm_levels.sleep_disabled=1 console=ttyMSM0,115200n8 msm_rtb.filter=0x237 service_locator.enable=1 swiotlb=2048 loop.max_part=7 cpufreq.default_governor=performance rcupdate.rcu_expedited=1 rcu_nocbs=0-7 kpti=off export_pmu_events movable_node ftrace_dump_on_oops ssbd=force-off disable_dma32=on cgroup.memory=nokmem,nosocket video=vfb:640x400,bpp=32,memsize=3072000 no_debug_objects qcom_geni_serial.con_enabled=0 bootconfig bootinfo.pureason=0x40001 bootinfo.pdreason=0x2 msm_drm.dsi_display0=qcom,mdss_dsi_panel_m7_38_0c_0a_fhdp_video: fpc1020_platform_tee.fpsensor=2 focaltech_ts_i2c.tpsensor=focaltech_ts rootwait ro init=/init mem= memhp_default_state=online log_buf_len=2M"'
+          #echo $cmdline_str
+          sed -i -e '/CONFIG_CMDLINE=/d' -e '/CONFIG_CMDLINE_EXTEND/d'  -e '/CONFIG_CMDLINE_FORCE/d' -e '/CMDLINE_FROM_BOOTLOADER/d' ${defconfig}
+          echo "$cmdline_str" >> ${defconfig}
+          #echo "CONFIG_CMDLINE_EXTEND=y" >> ${defconfig}
+          echo "CONFIG_CMDLINE_FORCE=y" >> ${defconfig}
+          sed -i -e '/CONFIG_CONSOLE_LOGLEVEL_DEFAULT/d' -e '/CONFIG_CONSOLE_LOGLEVEL_QUIET/d' -e '/CONFIG_MESSAGE_LOGLEVEL_DEFAULT/d' ${defconfig}
+          echo "CONFIG_CONSOLE_LOGLEVEL_DEFAULT=1" >> ${defconfig}
+          echo "CONFIG_CONSOLE_LOGLEVEL_QUIET=1" >> ${defconfig}
+          echo "CONFIG_MESSAGE_LOGLEVEL_DEFAULT=1" >> ${defconfig}
+          sed -i -e 's/CONSOLE_LOGLEVEL_DEFAULT/CONSOLE_LOGLEVEL_MIN/g' -e 's/MESSAGE_LOGLEVEL_DEFAULT/CONSOLE_LOGLEVEL_MIN/g' ./common/kernel/printk/printk.c
+          #sed -i -e '/CONFIG_BUG=/d' -e '/CONFIG_DEBUG_INFO=/d' ${defconfig}
+          #sed -i '/CONFIG_DEBUG_INFO=/d' ${defconfig}
+          #echo "CONFIG_BUG=n" >> ${defconfig}
+          #echo "CONFIG_DEBUG_INFO=n" >> ${defconfig}
+          #echo "CONFIG_DEBUG_MISC=n" >> ${defconfig}
+          
+      - name: Apply xx_maps patch (thanks to fatalcoder524)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$CONFIG"
+          git clone https://github.com/ahmad24shargh/map_spoof
+          cd "common"
+          patch -p1 --forward < "../map_spoof/kernel.diff"
+          cp -r "../map_spoof/map_spoof" drivers
+          grep -q "map_spoof" drivers/Makefile || printf "\nobj-\$(CONFIG_MAP_SPOOF) += map_spoof/\n" >> drivers/Makefile && echo "[+] Modified Makefile."
+          grep -q "source \"drivers/map_spoof/Kconfig\"" drivers/Kconfig || sed -i "/endmenu/i\source \"drivers/map_spoof/Kconfig\"" drivers/Kconfig && echo "[+] Modified Kconfig."
+          echo "CONFIG_MAP_SPOOF=y" >> ${defconfig}  
+          
+      - name: Build kernel
+        env:
+          ACTIONS_STEP_DEBUG: true
+        run: |
+          set -ex
+          cd "$CONFIG"
+
+          if [ ! -d $GITHUB_WORKSPACE/clang-22 ];then
+            export LIBRARY_PATH=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/lib64
+            export CPATH=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/include
+          fi
+          export API=$(echo ${{ inputs.android_version }} | sed 's/android1/3/g')
+          My_Args=' -mcpu=cortex-a53+crypto+crc -mtune=cortex-a73 -march=armv8-a+crypto+crc -O3 -funroll-loops '
+          #export KBUILD_BUILD_TIMESTAMP=$(date -u -d "3 month ago")
+          export KBUILD_BUILD_TIMESTAMP='Mon Aug 11 14:47:10 UTC 2025'
+          export KBUILD_BUILD_USER='ahmad'
+          export KBUILD_BUILD_HOST='Forozan'
+          sed -E -i -e 's|LC_ALL=C|LC_ALL=C;KBUILD_BUILD_TIMESTAMP="'"${KBUILD_BUILD_TIMESTAMP}"'";KBUILD_BUILD_USER="'"${KBUILD_BUILD_USER}"'";KBUILD_BUILD_HOST="'"${KBUILD_BUILD_HOST}"'";|g' -e 's|LINUX_COMPILE_BY=.+|LINUX_COMPILE_BY="'${KBUILD_BUILD_USER}'"|g' -e 's|LINUX_COMPILE_HOST=.+|LINUX_COMPILE_HOST="'${KBUILD_BUILD_HOST}'"|g' ./common/scripts/mkcompile_h
+          if test -d ${GITHUB_WORKSPACE}/manager ;then
+            set +e
+            set +x
+            declare -a options
+            # Array with 8 members (root managers)
+            for i in {0..7};do options+=(false);done
+            case "${{ inputs.manager_supports }}" in 'All managers') for i in $(seq 0 $((${#options[@]}-1)));do options[$i]=true;done;;'none') for i in $(seq 0 $((${#options[@]}-1)));do options[$i]=false;done;;'official') options[0]=true;;'rsuntk') options[1]=true;;'backslashxx') options[2]=true;;'kernelsu-next') options[3]=true;;'mksu') options[4]=true;;'sukisu') options[5]=true;;'wild-ksun') options[6]=true;;'kowx712-ksu') options[7]=true;;*) for i in $(seq 0 $((${#options[@]}-1)));do options[$i]=false;done;;esac
+            #options="${{ inputs.manager_supports }}" 
+            #echo "${options}"
+            if [[ ${options[*]} =~ true ]];then
+              default_size='0x373'
+              default_hash='5028506331f6c9f189e2f6500d90c3d6972bd7033e960fed4b5dda1fe31a5e95'
+              declare -a managers_size;
+              declare -a managers_hash;
+              managers_size=(${default_size})
+              managers_hash=(${default_hash})
+              #1 : official ksu
+              if [[ ${options[0]} == true ]];then
+                if [ ${default_size} != "0x33b" ];then
+                  managers_size+=("0x33b")
+                  managers_hash+=("c371061b19d8c7d7d6133c6a9bafe198fa944e50c1b31c9d8daa8d7f1fc2d2d6")
+                fi
+              fi
+              #2 : rsuntk //Rissu KernelSU Fork
+              if [[ ${options[1]} == true ]];then
+                if [ ${default_size} != "0x396" ];then
+                  managers_size+=("0x396")
+                  managers_hash+=("f415f4ed9435427e1fdf7f1fccd4dbc07b3d6b8751e4dbcec6f19671f427870b")
+                fi
+              fi
+              #3 : backslashxx
+              if [[ ${options[2]} == true ]];then
+                if [ ${default_size} != "0x363" ];then
+                  managers_size+=("0x363")
+                  managers_hash+=("4359c171f32543394cbc23ef908c4bb94cad7c8087002ba164c8230948c21549")
+                fi
+              fi
+              #4 : kernelsu-next // rifsxd
+              if [[ ${options[3]} == true ]];then
+                if [ ${default_size} != "0x3e6" ];then
+                  managers_size+=("0x3e6")
+                  managers_hash+=("79e590113c4c4c0c222978e413a5faa801666957b1212a328e46c00c69821bf7")
+                fi
+              fi
+              #5 : mksu // MKSU 5ec1cff 💜
+              if [[ ${options[4]} == true ]];then
+                if [ ${default_size} != "384" ];then
+                  managers_size+=("384")
+                  managers_hash+=("7e0c6d7278a3bb8e364e0fcba95afaf3666cf5ff3c245a3b63c8833bd0445cc4")
+                fi
+              fi
+              #6 : sukisu // ShirkNeko
+              if [[ ${options[5]} == true ]];then
+                if [ ${default_size} != "0x35c" ];then
+                  managers_size+=("0x35c")
+                  managers_hash+=("947ae944f3de4ed4c21a7e4f7953ecf351bfa2b36239da37a34111ad29993eef")
+                fi
+              fi
+              #7 : wild-ksun // James McConnell's ksun fork
+              if [[ ${options[6]} == true ]];then
+                if [ ${default_size} != "0x35c" ];then
+                  managers_size+=("0x39b")
+                  managers_hash+=("593d4ce870c02468639efeef631e07ca4d852d63f154be56706229f9a5be0800")
+                fi
+              fi
+              #8 : KOWX712/KernelSU // KOWX712's mksu fork with lkm-goodies patch from xx
+              if [[ ${options[7]} == true ]];then
+                if [ ${default_size} != "0x35c" ];then
+                  managers_size+=("0x375")
+                  managers_hash+=("484fcba6e6c43b1fb09700633bf2fb4758f13cb0b2f4457b80d075084b26c588")
+                fi
+              fi
+              SUPPORTED_MANAGER_COUNT="${#managers_size[@]}"
+              #for (( i=0; i<$SUPPORTED_MANAGER_COUNT; i++ )); do echo "${managers_size[$i]}:${managers_hash[$i]}" ; done
+              
+              # Cleaning up the "is manager apk" function in apk_sign.c to apply my own patch
+              line_num_1=$(grep -En 'return \(check_v2_signature\(.+' ${GITHUB_WORKSPACE}/kernel/apk_sign.c 2>/dev/null | tail -1 | cut -d ':' -f1)
+              line_num_2=$(grep -En '^[[:space:]]+\);$' ${GITHUB_WORKSPACE}/kernel/apk_sign.c 2>/dev/null | tail -1 | cut -d ':' -f1)
+              if [ ! -z ${line_num_2} ];then
+                [ ${line_num_2} -gt ${line_num_1} ] && sed -i ''${line_num_2}'d' ${GITHUB_WORKSPACE}/kernel/apk_sign.c
+              fi
+              sed -E -i '/^[[:space:]]+[\|]{2} check_v2_signature\(.+/d' ${GITHUB_WORKSPACE}/kernel/apk_sign.c
+              #
+              
+              grep -Eq 'apk_sign_keys\[\] =.+' ${GITHUB_WORKSPACE}/kernel/apk_sign.c
+              if [ $? -eq 0 ];then
+                temp_str="$(grep -E '.+apk_sign_keys\[\] = .*' ${GITHUB_WORKSPACE}/kernel/apk_sign.c 2>/dev/null)\n"
+                for (( i=0; i<$SUPPORTED_MANAGER_COUNT; i++ )); do 
+                  temp_str="${temp_str}\t\{${managers_size[$i]}, \"${managers_hash[$i]}\"\},\n"
+                done
+                sed -E -i -e '/.*\{(EXPECTED|MANAGER)_SIZE.*\,.*(EXPECTED|MANAGER)_HASH.*\}.+/d' -e '/.*\{(expected|manager)_size.*\,.*(expected|manager)_hash.*\}.+/d' ${GITHUB_WORKSPACE}/kernel/apk_sign.c
+                sed -E -i 's/(.+apk_sign_keys\[\] \=.*)/'"${temp_str}"'/g' ${GITHUB_WORKSPACE}/kernel/apk_sign.c
+                for file in $(grep -R {GITHUB_WORKSPACE}/kernel -e 'define MAX_MANAGERS' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -E -i 's|#define MAX_MANAGERS.+|#define MAX_MANAGERS '$SUPPORTED_MANAGER_COUNT'|g' $file;cat $file;done
+              else
+                sed -E -i -e 's|(bool .*)(is_manager_apk\(char \*.+\))|\n#define SUPPORTED_MANAGER_COUNT '${SUPPORTED_MANAGER_COUNT}'\nunsigned MANAGER_SIZE\[SUPPORTED_MANAGER_COUNT\]=\{'$(echo "${managers_size[*]}" | tr ' ' ', ')'\}\;\nconst char *MANAGER_HASH\[SUPPORTED_MANAGER_COUNT\]=\{'$(echo $(for i in "${managers_hash[@]}" ; do printf '"%s" ' "$i";done) | tr ' ' ', ')'\}\;\n\n\1is_manager_apk(char *path)|g' -e 's|return [^[:space:]]?check_v2_signature\(.+|int i\;\n        bool result = false\;\n\n        for \(i = 0\; i \< SUPPORTED_MANAGER_COUNT\; i++\)\n        \{\n           result = check_v2_signature\(path, MANAGER_SIZE[i], MANAGER_HASH[i]\)\;\n           if (result\)  \{ return result\;\}\n        \}\n     return result\;\n|g' ${GITHUB_WORKSPACE}/kernel/apk_sign.c
+              fi
+              cat ${GITHUB_WORKSPACE}/kernel/apk_sign.c
+            fi
+            sed  -i 's/_KSU_/_LPU_/g' ${defconfig}
+            sed  -i 's/CONFIG_KSU/CONFIG_LPU/g' ${defconfig}
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'sukisu.ultra' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i 's|sukisu.ultra|linuxxpu|g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'SukiSU.Ultra' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU.Ultra/LinuxxPU/g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'SUKISU.ULTRA' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i 's|SUKISU.ULTRA|LINUXXPU|g' $files;done
+            C_TAG_NAME=$(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME | base64 -d)
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'SUKISU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i '/'${C_TAG_NAME}'/! s|SUKISU|LINUXXPU|g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'sukisu' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i 's|sukisu|linuxxpu|g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'SukiSU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU/LinuxxPU/g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'KernelSU.Next' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i '/REPO_(OWNER|NAME)( :)?=/! s/KernelSU.Next/LinuxxPU/g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'kernelsu.next' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i 's|kernelsu.next|linuxxpu|g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'KSU.NEXT' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i 's|KSU.NEXT|LinuxxPU|g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'ksunext' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's|ksunext|linuxxpu|g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'KERNELSU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's|KERNELSU|LINUXXPU|g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'KERNEL_SU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's|KERNEL_SU|LINUXXPU|g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'KernelSU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i '/REPO_(OWNER|NAME)( :)?=/! s/KernelSU/LinuxxPU/g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'kernelsu' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's|kernelsu|linuxxpu|g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'KSURC' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's|KSURC|LPURC|g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'KSUD' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed  -i 's|KSUD|LPUD|g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'KSU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed  -i '/xxKSU/! s/KSU/LPU/g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'Ksu' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -i 's|Ksu|Lpu|g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'KSURC' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's|KSURC|LPURC|g' $files;done
+            for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'ksu' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do echo $files;sed -i 's|ksu|lpu|g' $files;done
+            files=('/fs/Makefile' '/fs/Kconfig' '/fs/dcache.c' '/fs/devpts/inode.c' '/fs/exec.c' '/fs/namei.c' '/fs/namespace.c' '/fs/notify/fdinfo.c' '/fs/open.c' '/fs/overlayfs/inode.c' '/fs/overlayfs/readdir.c' '/fs/overlayfs/super.c' '/fs/proc/bootconfig.c' '/fs/proc/fd.c' '/fs/proc/task_mmu.c' '/fs/proc_namespace.c' '/fs/readdir.c' '/fs/stat.c' '/fs/statfs.c' '/include/linux/mount.h' '/include/linux/sched.h' '/kernel/kallsyms.c' '/kernel/sys.c' '/drivers/input/input.c' '/drivers/tty/pty.c' '/fs/read_write.c' '/drivers/Makefile' '/drivers/Kconfig' '/include/linux/sus_su.h' '/include/linux/susfs_def.h' '/include/linux/susfs.h' '/fs/sus_su.c' '/fs/susfs.c' '/security/selinux/avc.c' '/security/security.c')
+            for each in "${files[@]}";do if [ -f "./common${each}" ];then sed -E -i -e 's|KSU|LPU|g' -e 's|KERNEL_SU|LINUXXPU|g' -e  '/REPO_(OWNER|NAME)( :)?=/! s/KernelSU/LinuxxPU/g' -e 's|ksu|lpu|g' -e '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU-Ultra/LINUXXPU/g' -e 's|sukisu|linuxxpu|g' -e '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU Ultra/LINUXXPU/g' -e 's|SUKISU|LINUXXPU|g'  -e '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU/LinuxxPU/g' -e 's|kernelsu|linuxxpu|g' ./common${each};fi;done
+            set -e
+          else
+            exit 1
+            false
+          fi
+
+          if [ ! -d ${GITHUB_WORKSPACE}/clang-22 ];then
+            #for ndk
+            export TOOLCHAIN=${ANDROID_NDK_LATEST_HOME}/toolchains/llvm/prebuilt/linux-x86_64
+            export My_PATH="${ANDROID_NDK_LATEST_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin:${ANDROID_NDK_LATEST_HOME}/prebuilt/linux-x86_64/bin/:${PATH}:$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/bin"
+          fi
+          
+          export TARGET=aarch64-linux-android
+          #[ ${{ env.ksu_fork }} == 'xxKSU' ] && export KCFLAGS="${KCFLAGS} -Wno-error=return-mismatch"
+          export CC="clang --target=${TARGET}${API} ${My_Args}"
+          
+          BUILD_CONFIG='common/build.config.gki.aarch64'
+          sed -i -e '/^KMI_SYMBOL_LIST_STRICT_MODE=/d' -e '/^TRIM_NONLISTED_KMI=/d' -e '/^KMI_ENFORCED=/d' -e '$a\KMI_SYMBOL_LIST_STRICT_MODE=0' -e '$a\TRIM_NONLISTED_KMI=0' -e '$a\KMI_ENFORCED=0' -e '/^MODULES_ORDER=/d' -e '/^MODULES_LIST=/d' common/build.config.gki.aarch64
+
+          if [ ${{ env.selinux_permissive }} == 'true' ];then
+            if grep -Eq '^CONFIG_CMDLINE=.+' ${defconfig};then cmdline_str=$(echo "CONFIG_CMDLINE=\"$(grep -E '^CONFIG_CMDLINE=.+' ${defconfig} | cut -d '"' -f2) selinux=0\"");else cmdline_str='CONFIG_CMDLINE="selinux=0"';fi
+            echo $cmdline_str
+            sed -i -e '/CONFIG_CMDLINE=/d' -e '/CONFIG_SECURITY_SELINUX_BOOTPARAM/d' ${defconfig}
+            echo "$cmdline_str" >> ${defconfig}
+            echo "CONFIG_CMDLINE_EXTEND=y" >> ${defconfig}
+            echo "CONFIG_SECURITY_SELINUX_BOOTPARAM=y" >> ${defconfig}
+          fi
+
+          if [[ "${{ env.kernel_variant }}" == "chickernel" ]];then
+            sed -i '/kernelsu/d' ./common/drivers/Kconfig
+            sed -i '/kernelsu/d' ./common/drivers/Makefile
+            rm -f ./common/drivers/kernelsu || true
+            BUILD_CONFIG='common/build.config.gki.aarch64.chickernel'
+            rm -f ./common/arch/arm64/configs/chickernel_defconfig ./common/arch/arm64/configs/defconfig
+            cp  ${defconfig} ./common/arch/arm64/configs/chickernel_defconfig
+            cp  ${defconfig} ./common/arch/arm64/configs/defconfig
+          elif [[ "${{ env.kernel_variant }}" == *"topnotchfreaks"* ]];then  
+            #cp  ${defconfig} ./common/arch/arm64/configs/defconfig
+            [ ! -f ./common/arch/arm64/configs/topaz_defconfig ] && cp ${defconfig} ./common/arch/arm64/configs/topaz_defconfig
+          fi
+
+          
+          echo "Building the kernel..."
+          if [ -f "build/build.sh" ]; then
+            sed -i 's/-dirty//' ./common/scripts/setlocalversion
+            export BUILD_SCRIPT_DIR=$(dirname $(realpath build/build.sh))
+
+            #for ndk and arm-toolchain and clang-22
+            sed -E -i '/.*sysroot_flags\+=.+/d' build/_setup_env.sh
+
+            if [ ! -d ${GITHUB_WORKSPACE}/clang-22 ];then
+              sed -E -i 's|source .+_setup_env.sh.+|source "${ROOT_DIR}/build/_setup_env.sh";export PATH="${My_PATH}"|g' build/build.sh
+              sed -E -i 's|.*export ROOT_DIR=.+dirname.+$|export ROOT_DIR=$($(find ${BUILD_SCRIPT_DIR} -type f -name "gettop.sh"))|g' build/build.sh
+              sed -E -i 's|(if \[ -n \"\$\{MODULES_ORDER\}\" \]\;.+)|\1\n  cp ${OUT_DIR}/modules.order ${KERNEL_DIR}/${MODULES_ORDER}\n|g' build/build.sh
+            
+              #for ndk 28
+              echo "ANDROID_NDK_LATEST_HOME : ${ANDROID_NDK_LATEST_HOME}"
+              sudo test -d "${ANDROID_NDK_LATEST_HOME}/toolchains/llvm/prebuilt/linux-x86_64/lib/clang/19/lib/linux/" && sudo ln -s /usr/lib/llvm-18/lib/clang/18/lib/linux/libclang_rt.builtins-x86_64.a  ${ANDROID_NDK_LATEST_HOME}/toolchains/llvm/prebuilt/linux-x86_64/lib/clang/19/lib/linux/libclang_rt.builtins-x86_64.a
+              sed -E -i 's|(^[[:space:]]+)build_[^[:space:]]+_dlkm.*|\1echo "dlkm image creation ignored"|g' build/build.sh
+              #for ndk
+              mkdir -p ./out/${CONFIG}/common && cp ${defconfig} ./out/${CONFIG}/common/.config
+              mkdir -p ./out/$(echo ${CONFIG} | cut -d'-' -f1,2)/common && cp ${defconfig} ./out/$(echo ${CONFIG} | cut -d'-' -f1,2)/common/.config
+            fi   
+            [ -f ./common/kernel/manipulating_conf_data.sh ] && cat ./common/kernel/manipulating_conf_data.sh
+            if [ "${BUILD_CONFIG}" != "nothing" ];then
+              LTO=thin BUILD_CONFIG=${BUILD_CONFIG} SKIP_EXT_MODULES=1 SKIP_CP_KERNEL_HDR=1 SKIP_VENDOR_BOOT=1 SKIP_MRPROPER=1 SYSTEM_DLKM_RE_SIGN=0 BUILD_SYSTEM_DLKM=0 KMI_SYMBOL_LIST_STRICT_MODE=0 build/build.sh CC="${CC}" 
+            else
+              LTO=thin SKIP_EXT_MODULES=1 SKIP_CP_KERNEL_HDR=1 SKIP_VENDOR_BOOT=1 SKIP_MRPROPER=1 SYSTEM_DLKM_RE_SIGN=0 BUILD_SYSTEM_DLKM=0 KMI_SYMBOL_LIST_STRICT_MODE=0 build/build.sh CC="${CC}" 
+            fi
+          fi
+
+      - name: Patch Image File A12 & A13
+        if: ${{ env.ksu_fork  == 'SUKISU' &&  (inputs.android_version == 'android12' || inputs.android_version == 'android13') }}
+        #if: false
+        run: |
+          if [ "${{ inputs.kernel_version }}" != "6.6" ]; then
+            echo "Changing to out directory: $CONFIG/out/${{ inputs.android_version }}-${{ inputs.kernel_version }}/dist..."
+            cd "$CONFIG/out/${{ inputs.android_version }}-${{ inputs.kernel_version }}/dist"
+            [ ! -f Image ] && { echo "The file "Image" was not found in the current path!!!";false; }
+            chmod 777 $GITHUB_WORKSPACE/kernel_patches/sukisu/patch_linux
+            for file in $(find . -type f -name 'Image');do
+              cd $(dirname $file)
+              echo "Patching Image file...(${file})"
+              $GITHUB_WORKSPACE/kernel_patches/sukisu/patch_linux
+              rm -rf Image
+              mv oImage Image || false
+            done
+          fi      
+          
+      - name: Create Bootimgs Folder and Copy Images
+        run: |
+          mkdir bootimgs
+
+          if [ -f "$CONFIG/out/${{ inputs.android_version }}-${{ inputs.kernel_version }}/dist/Image" ];then
+            bootimage_dir="./$CONFIG/out/${{ inputs.android_version }}-${{ inputs.kernel_version }}/dist"
+          else
+            bootimage_dir=$(dirname $(find ./$CONFIG -type f -name 'Image' 2>/dev/null))
+          fi
+          
+          echo "Creating bootimgs folder and copying images..."
+          for file in $(find ${bootimage_dir} -type f -name 'Image*' 2>/dev/null);do echo $file;cp $file ./bootimgs;cp $file ./;done
+          
+
+      - name: Run Boot Image ${{ inputs.android_version }} Build Script
+        run: |
+          cd bootimgs
+          echo "Building boot.img"
+          $MKBOOTIMG --header_version 4 --kernel Image --output boot.img
+          $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot.img --algorithm SHA256_RSA2048 --key $BOOT_SIGN_KEY_PATH
+          zip boot.img.zip boot.img
+          cp ./boot.img.zip ../${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-boot.img.zip
+          
+      - name: Compress all img files with gzip
+        run: |
+          for image in $(find . -type f -name "*.img" 2>/dev/null); do
+            [ -f $image ] && gzip -vnf9 $image
+          done
+          
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: kernel-${{ env.CONFIG }}
+          path: |
+            *.zip
+            *.img
+
+      - name: Preparing linuxxpu for upload
+        run: |
+          mkdir -p linuxxpu
+          for dir in {kernel,manager,userspace,'.git','.github','TAG_NAME.ME','LPU_FORK.ME','LAST_COMMIT.ME','VERSION.ME','USE_PERSHOOT_SUSFS.ME'};do
+            cp -af $dir linuxxpu || true
+          done
+          cp $GITHUB_WORKSPACE/$CONFIG/common/security/selinux/{selinuxfs.c,hooks.c,Makefile} linuxxpu
+          ls linuxxpu/
+          
+      - name: Delete linuxxpu Artifact
+        uses: GeekyEggo/delete-artifact@v5.1.0
+        with: 
+          name: linuxxpu
+          failOnError: false
+          
+      - name: Upload the linuxxpu with the latest changes
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: linuxxpu
+          path: linuxxpu
+          include-hidden-files: true
+
+    

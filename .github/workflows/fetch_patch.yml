@@ -1,0 +1,346 @@
+name: fetch upstream & patch it
+permissions: write-all
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+#concurrency:
+  #group: staging_environment
+  ##cancel-in-progress: true
+## Controls when the workflow will run
+on:
+  #schedule:
+    #- cron: '* 0,12 * * *'
+
+  workflow_call:
+    inputs:
+      ksu_fork:
+        required: true
+        type: string
+      include_susfs:
+        required: true
+        type: boolean
+      android_version:
+        required: true
+        type: string
+      kernel_version:
+        required: true
+        type: string
+  
+jobs:
+  fetch_upstream:
+    env:
+      ksu_fork: ${{ inputs.ksu_fork }}
+      include_susfs: ${{ inputs.include_susfs }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5.0.0
+        with:
+          fetch-depth: 0
+          token: ${{ env.GH_TOKEN }}
+      
+      - name: fetch upstream ... 
+        run: |
+          if [ ${{ env.ksu_fork }} == 'KSUN' ];then
+            use_pershoot_susfs=true
+            use_wild_manager=false
+            
+            if $use_wild_manager ;then
+              git clone --single-branch https://github.com/WildKernels/Wild_KSU KSU
+              owner=WildKernels
+              repo=Wild_KSU
+              workflow=build-manager-ci.yml
+              tag_ver='Wild'
+            else
+              git clone --single-branch https://github.com/KernelSU-Next/KernelSU-Next KSU
+              owner=KernelSU-Next
+              repo=KernelSU-Next
+              workflow=build-manager-ci.yml
+              tag_ver='KSUN'
+            fi
+          elif [ ${{ env.ksu_fork }} == 'SUKISU' ];then
+            git clone --single-branch https://github.com/ShirkNeko/SukiSU-Ultra KSU
+            owner=SukiSU-Ultra
+            repo=SukiSU-Ultra
+            workflow='build-manager.yml'
+            tag_ver='SUKISU'
+          elif [ ${{ env.ksu_fork }} == 'xxKSU' ];then
+            # master branch : release.yml
+            # staging branch : build-manager.yml 
+            # update MY-lpud.yml
+            git clone -b master https://github.com/backslashxx/KernelSU KSU
+            owner=backslashxx
+            repo=KernelSU
+            workflow='release.yml' 
+            tag_ver='xxKSU'
+          else
+            exit 1
+            false
+          fi
+          cd KSU
+          #last_commite=$(git log -n 1 --no-decorate | grep -E '^commit' | cut -d' ' -f2)
+          #HEADSHA=($(gh run list --limit 50 --repo ${owner}/${repo} --workflow ${workflow}  --json databaseId,createdAt,conclusion,status,headSha --jq 'map(select(.status == "completed" and .conclusion == "success")) | sort_by(.created_at)' | tr ',' '\n' | grep -Eo '[[:alnum:]]{40}'))
+          #if [[ ! ("${HEADSHA[@]}" =~ "${last_commite}")  ]];then
+            #echo "The last commit did not have a successful build, trying to switch to the last successful commit..."
+            #for (( i=0; i<${#HEADSHA[@]}; i++ )); do if $(git cat-file -e ${HEADSHA[$i]});then git reset --hard ${HEADSHA[$i]};break;fi;done
+          #else
+            #echo "The latest commit has a successful build."
+          #fi
+          echo -n "${{ env.ksu_fork }}" | base64 > ${GITHUB_WORKSPACE}/LPU_FORK.ME
+          C_LAST_COMMIT=$(git log -n 1 --no-decorate | grep -E '^commit' | cut -d' ' -f2)
+          echo "${C_LAST_COMMIT}" | base64 > ${GITHUB_WORKSPACE}/LAST_COMMIT.ME
+          C_VERSION=$(echo "$(git log --oneline | wc -l) - $(git rev-list ${C_LAST_COMMIT}..HEAD --count)" | bc)
+          echo "${C_VERSION}" | base64 > ${GITHUB_WORKSPACE}/VERSION.ME
+          C_TAG_NAME=$(for i in $(echo $(git describe --tags --always) | tr '-' '\n');do if [[ "$i" =~ "." || ${#i} < 4  ]];then echo  "$i";fi;done | tr '\n' '-' | sed 's/.$//' 2>/dev/null)
+          if [ -z "${C_TAG_NAME}" ];then
+            C_TAG_NAME="$(git describe --tags --always)-${tag_ver}"
+          else
+            C_TAG_NAME="${C_TAG_NAME}-${tag_ver}"
+          fi
+          
+          echo "${C_TAG_NAME}" | base64 > ${GITHUB_WORKSPACE}/TAG_NAME.ME
+          echo -e "C_TAG_NAME=${C_TAG_NAME}\nC_VERSION=${C_VERSION}\nC_LAST_COMMIT=${C_LAST_COMMIT}"
+          if grep -q 'ccflags-y += -DKSU_VERSION=' ./kernel/Makefile;then
+            version_code=$(echo $(grep -Eo ' [^ ]+ \+ [^ ]+ \+ [^;]+' ./userspace/ksud/build.rs 2>/dev/null | tr -d ' ' | sed "s/version_code/${C_VERSION}/") | bc)
+            if [ ! -z "${version_code}" ];then
+              echo "Changing the hardcoded KSU_VERSION in the Makefile to ${version_code} ..."
+              sed -E -i 's/(ccflags-y \+= -DKSU_VERSION=)(.+)/\1'${version_code}'/' ./kernel/Makefile
+            fi
+          fi
+          for file in $(grep -R --exclude='.github' --exclude='.git' . -e 'let version_name' 2>/dev/null | cut -d':' -f 1 | sort | uniq);do sed -E -i 's/(let version_name = )version_name(\.trim.+)/\1"'${C_TAG_NAME}'"\2/g' $file;cat $file | grep  'let version_';done
+          for file in $(grep -R --exclude='.github' --exclude='.git' . -e 'return getGitDescribe()' 2>/dev/null | cut -d':' -f 1 | sort | uniq);do sed -i 's/return getGitDescribe()/return "'${C_TAG_NAME}'"/g' $file;cat $file | grep  'return';done
+          sed -E -i 's|val managerVersionName by extra.+|val managerVersionName by extra("'${C_TAG_NAME}'")|g' ./manager/build.gradle.kts
+          cd ..
+          repo_folder=$(realpath .)
+          mkdir -p /home/runner/mylinuxxpu
+          patched_folder='/home/runner/myksunext'
+          if [ ${{ env.include_susfs }} == 'true' ];then
+            cd KSU
+            if [ ${{ env.ksu_fork }} == 'SUKISU' ];then
+              git clone --depth 1 -b susfs-main https://github.com/ShirkNeko/SukiSU-Ultra
+              rm  -rf kernel
+              mv SukiSU-Ultra/kernel .
+              rm -rf SukiSU-Ultra
+            elif [ ${{ env.ksu_fork }} == 'xxKSU' ];then
+              # xxksu & susfs !!! I haven't made it yet
+              wget https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/xxksu/susfs_backslashxx_ksu_patches.patch
+              patch -p1 --forward < susfs_backslashxx_ksu_patches.patch
+            elif [ ${{ env.ksu_fork }} == 'KSUN'  ];then
+              if [ "${use_pershoot_susfs}" == "false" ];then
+                #if $use_wild_manager;then
+                  #patch_file="https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/Wild_KSUN-susfs-1.5.9.patch"
+                #else
+                  patch_file="https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/KSUN-SUSFS-1.5.12.patch"
+                #fi
+                wget ${patch_file}
+                cp $(echo ${patch_file} | rev | cut -d '/' -f1 | rev) ./ksun_susfs_latest.patch
+              else
+                git clone --depth 1 -b next-susfs https://github.com/pershoot/KernelSU-Next PERSHOOT
+                rm -rf kernel/
+                cp -a PERSHOOT/kernel .
+                rm -rf PERSHOOT
+                touch ${GITHUB_WORKSPACE}/USE_PERSHOOT_SUSFS.ME
+              fi
+              if [ -f ksun_susfs_latest.patch ];then
+                patch -p1 --forward < ksun_susfs_latest.patch
+              fi
+            else
+              exit 78
+              false
+            fi
+            cd ${GITHUB_WORKSPACE}
+          fi
+          KSU_VERSION="$(expr $(echo "$(grep -E 'shell expr' KSU/kernel/Makefile 2>/dev/null | head -n 1 | grep -Eo '[0-9]*' | tr '\n' '+')$C_VERSION" | sed 's/\+/ + /g'))"
+          echo $KSU_VERSION
+          [ ! -z "$KSU_VERSION" ] && sed -E -i -e 's/KSU_VERSION_FULL :=.+get_ksu_version_full.+/KSU_VERSION_FULL := "'"$C_TAG_NAME (${KSU_VERSION})"'"/g' -e 's/KS_VERSION := .+/KSU_VERSION := '$KSU_VERSION'/g' KSU/kernel/Makefile
+          cp -af KSU/* KSU/.* .
+          rm -rf KSU
+
+      - name: upload linuxxpu with patched dir
+        uses: actions/upload-artifact@v4.6.2
+        with:
+         name: linuxxpu
+         path: .
+         include-hidden-files: true
+          
+  patch:
+    env:
+      ksu_fork: ${{ inputs.ksu_fork }}
+      
+    runs-on: ubuntu-latest
+    needs: fetch_upstream
+    steps:
+      - name: download linuxxpu with patched dir
+        uses: actions/download-artifact@v5.0.0
+        with:
+          name: linuxxpu
+          path: .
+          github-token: '${{ env.GH_TOKEN }}'
+  
+      - name: patch ...
+        #shell: /usr/bin/bash -e -o pipefail {0}
+        run: |
+          must_unchange_kernel_files='/home/runner/mylinuxxpu'
+          mkdir -p ${must_unchange_kernel_files}
+          patched_folder='/home/runner/myksunext'
+          repo_url='git@github.com:ahmad24shargh/LinuxxPU.git'
+          repo_folder=$(realpath .)
+          cp -af ${repo_folder}/.github/myksunext $(dirname ${patched_folder})
+          rm -rf ${repo_folder}/.github/myksunext
+          cd  ${repo_folder}
+          for dirs in $(find ${repo_folder}/manager/app/src/main/res -maxdepth 1 -type d  -name 'values-*');do [ "$(echo $dirs | rev | cut -d'-' -f1 | rev)" != "night" ] && rm -rf $dirs;done
+          sed -i '/app_name_wild_ksu/d' ${repo_folder}/manager/app/src/main/res/values/strings.xml
+          for file in $(find ${repo_folder}/userspace -type f -name 'module.rs' 2>/dev/null);do sed -i '/.env("WKSU", "true")/d' $file;done
+          for files in $(find ${repo_folder}/docs -type f  -name 'README_*');do rm -f ${files};done
+          rm -rf ${repo_folder}/manager/app/src/main/res/mipmap-*
+          
+          for file in $(find ${repo_folder}/manager/app/src/main/jniLibs -name 'libmagiskboot.so' 2>/dev/null);do mv -f $file $(dirname $file)/liblpuboot.so;done
+          for file in $(grep -R ${repo_folder}/manager  -e 'libmagiskboot.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libmagiskboot.so|liblpuboot.so|g' $file;done
+          if [ ${{ env.ksu_fork }} == 'KSUN' ];then
+            echo 'find and replace libsusfsd.so in source code ...'
+            [ -z $(grep -R ${repo_folder}  -e 'libsusfsd.so' 2>/dev/null | base64 | head -n 1) ] && { echo "libsusfsd.so string not found";false; }
+            for file in $(grep -R ${repo_folder}  -e 'libsusfsd.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libsusfsd.so|libsuslpufsd.so|g' $file;done
+          fi
+          if [ ${{ env.ksu_fork }} == 'SUKISU' ];then
+            if [ -d ${repo_folder}/manager/app/src/main/java/zako/zako/zako/zakoui ];then dir="${repo_folder}/manager/app/src/main/java/zako/zako/zako/zakoui";mv $dir "$(dirname $dir)/lpuui";dir="$(dirname $dir)";mv $dir "$(dirname $dir)/lpu";dir="$(dirname $dir)";mv $dir "$(dirname $dir)/lpu";dir="$(dirname $dir)";mv $dir "$(dirname $dir)/lpu";fi
+            for file in $(find ${repo_folder}/manager/app/src/main/jniLibs -name 'libzakosign.so' 2>/dev/null);do mv -f $file $(dirname $file)/liblpuxsign.so;done
+            for file in $(grep -R ${repo_folder}/manager  -e 'zakosign' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|zakosign|lpuxsign|g' $file;done
+            echo 'find and replace libsusfs.so in source code ...'
+            [ -z $(grep -R ${repo_folder}  -e 'libsusfs.so' 2>/dev/null | base64 | head -n 1) ] && { echo "libsusfs.so string not found";false; }
+            for file in $(grep -R ${repo_folder}  -e 'libsusfs.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libsusfs.so|libsuslpufsd.so|g' $file;done
+          fi
+          for dir in $(find ${repo_folder}/manager/ ${repo_folder}/userspace/ -type d 2>/dev/null | grep -E '/(x86_64|armeabi-v7a|arm)$' );do rm -rf $dir ;done
+          rm -rf ${must_unchange_kernel_files}/* ${must_unchange_kernel_files}/.* 
+
+
+          [ -d  "${patched_folder}" ] && cp -af ${patched_folder}/* ${patched_folder}/.* ${repo_folder}/
+          [ -f "${repo_folder}/banner" ] && for dirs in $(find ${repo_folder}/userspace -maxdepth 1 -type d  -name 'ksud*');do cp "${repo_folder}/banner" "$dirs/src/";done
+          [ -f "${repo_folder}/banner" ] && rm -f "${repo_folder}/banner"
+          [ -f ${repo_folder}/manager/app/src/main/res/values/ic_launcher_background.xml -a -f ${repo_folder}/manager/app/src/main/res/values/colors.xml ] && rm ${repo_folder}/manager/app/src/main/res/values/colors.xml
+          cd ${repo_folder}
+          sed -E -i -e 's|^([[:space:]]+)(UpdateCard\(\))|\1//\2|g' -e 's|^([[:space:]]+)(Unofficial\(\))|\1//\2|g' -e 's|^([[:space:]]+)(DonateCard\(\))|\1//\2|g' -e 's|^([[:space:]]+)(LearnMoreCard\(\))|\1//\2|g' -e 's|^([[:space:]]+)(IssueReportCard\(\))|\1//\2|g' -e 's|^([[:space:]]+)(ContributionCard\(\))|\1//\2|g' $(find . -name 'Home.kt')
+          for file in $(find ./userspace -type f -name 'Application.mk' 2>/dev/null);do sed -E -i 's/APP_ABI \:= .+/APP_ABI := arm64-v8a/g' $file;done
+          sed -E -i -e 's|abiFilters\(.+|abiFilters("arm64-v8a")|g' -e 's|abiFilters \+\= listOf\(.+|// abiFilters += listOf("arm64-v8a")|g' ./manager/build.gradle.kts
+          for file in $(grep -R "${repo_folder}" -e 'com.rifsxd.ksunext' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -E -i 's|(com.)rifsxd(.)ksunext|\1ahmad\2linuxxpu|g' $file;done
+          for file in $(grep -R "${repo_folder}" -e 'me.weishu.kernelsu' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -E -i 's|me(.)weishu(.)kernelsu|com\1ahmad\2linuxxpu|g' $file;done
+          for file in $(grep -R "${repo_folder}" -e 'com.twj.wksu' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -E -i 's|(com.)twj(.)wksu|\1ahmad\2linuxxpu|g' $file;done
+          for file in $(grep -R "${repo_folder}" -e 'com.sukisu.ultra' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -E -i 's|(com.)sukisu(.)ultra|\1ahmad\2linuxxpu|g' $file;done
+          for file in $(grep -R "${repo_folder}" -e 'com.sukisu.zako' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -E -i 's|(com.)sukisu(.)zako|\1ahmad\2linuxxpu|g' $file;done
+          for file in $(grep -R ${repo_folder}/manager ${repo_folder}/userspace -e 'rifsxd' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -i 's|rifsxd|ahmad|g' $file;done
+          for file in $(grep -R ${repo_folder}/manager ${repo_folder}/userspace -e 'weishu' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -i 's|weishu|ahmad|g' $file;done
+          for file in $(grep -R ${repo_folder}/manager ${repo_folder}/userspace -e 'twj' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -i 's|twj|ahmad|g' $file;done
+          for file in $(grep -R ${repo_folder}/manager ${repo_folder}/userspace -e 'sukisu_kpm' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -i 's|sukisu_kpm|linuxxpu_kpm|g' $file;done
+          for file in $(grep -R ${repo_folder}/manager ${repo_folder}/userspace -e 'SUKISU_KPM' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -i 's|SUKISU_KPM|LINUXXPU_KPM|g' $file;done
+          for file in $(grep -R ${repo_folder}/manager ${repo_folder}/userspace -e 'sukisu' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -i 's|sukisu|ahmad|g' $file;done
+          for dir in $(find ${repo_folder} -type d -name 'ksunext' 2>/dev/null);do bn="$( cd -- "$(dirname "$dir")" >/dev/null 2>&1 ; pwd -P )";mv $dir "${bn}/linuxxpu";mv "${bn}" "$(echo ${bn} | rev | cut -d'/' -f2- | rev)/ahmad";done
+          for dir in $(find ${repo_folder} -type d -name 'kernelsu' 2>/dev/null);do bn="$( cd -- "$(dirname "$dir")" >/dev/null 2>&1 ; pwd -P )";mv $dir "${bn}/linuxxpu";mv "${bn}" "$(echo ${bn} | rev | cut -d'/' -f2- | rev)/ahmad";bn="$( cd -- "$(dirname "$(dirname $(echo $dir | sed 's/kernelsu/linuxxpu/g'));")" >/dev/null 2>&1 ; pwd -P )";mv "${bn}" "$(echo ${bn} | rev | cut -d'/' -f2- | rev)/com";done
+          for dir in $(find ${repo_folder} -type d -name 'wksu' 2>/dev/null);do bn="$( cd -- "$(dirname "$dir")" >/dev/null 2>&1 ; pwd -P )";mv $dir "${bn}/linuxxpu";mv "${bn}" "$(echo ${bn} | rev | cut -d'/' -f2- | rev)/ahmad";done
+          for dir in $(find ${repo_folder} -type d -name 'ultra' 2>/dev/null);do bn="$( cd -- "$(dirname "$dir")" >/dev/null 2>&1 ; pwd -P )";mv $dir "${bn}/linuxxpu";mv "${bn}" "$(echo ${bn} | rev | cut -d'/' -f2- | rev)/ahmad";done
+          sed -i -e 's|WKSU:|LINUXPU:|g' -e 's|WKSU_|KSU_|g' -e 's|Wild KSU|LinuxxPU|g' ${repo_folder}/kernel/Makefile
+          sed -E -i -e 's/(KSU[^[:space:]]+(EXPECTED|MANAGER)_SIZE).+0x.+/\1 := 0x373/g' -e  's/(KSU[^[:space:]]+(EXPECTED|MANAGER)_HASH) := .+/\1 := 5028506331f6c9f189e2f6500d90c3d6972bd7033e960fed4b5dda1fe31a5e95/g' ${repo_folder}/kernel/Makefile
+          sed -E -i 's|^([[:space:]]+)android\:label\=.+|\1android:label="LinuxxPU"|g' ${repo_folder}/manager/app/src/main/AndroidManifest.xml
+          sed -E -i 's|(ic_launcher)_alt([^[:space:]]*)|\1\2|g' ${repo_folder}/manager/app/src/main/AndroidManifest.xml
+          if grep -Eq 'REPO_OWNER := .+' ${repo_folder}/kernel/Makefile;then
+            REPO_OWNER=$(grep -E 'REPO_OWNER := .+' ${repo_folder}/kernel/Makefile | tr -d ' :' | cut -d'=' -f2-)
+            REPO_NAME=$(grep -E 'REPO_NAME := .+' ${repo_folder}/kernel/Makefile | tr -d ' :' | cut -d'=' -f2-)
+            [ ! -z "$REPO_OWNER" ] && sed -Ei 's/(info --[^$]*)\$\(REPO_OWNER\)(.*)/\1\'${REPO_OWNER}'\2/g' ${repo_folder}/kernel/Makefile
+            [ ! -z "$REPO_NAME" ] && sed -Ei 's/(info --[^$]*)\$\(REPO_NAME\)(.*)/\1\'${REPO_NAME}'\2/g' ${repo_folder}/kernel/Makefile
+          fi
+          [ -d ${repo_folder}/userspace/ksud_magic ] && mv ${repo_folder}/userspace/ksud_magic ${repo_folder}/userspace/lpud_magic || echo "${repo_folder}/userspace/ksud_magic does not exist !!!"
+          [ -d ${repo_folder}/userspace/ksud_overlayfs ] && mv ${repo_folder}/userspace/ksud_overlayfs ${repo_folder}/userspace/lpud_overlayfs || echo "${repo_folder}/userspace/ksud_overlayfs does not exist !!!"
+          [ -d ${repo_folder}/userspace/ksud ] && mv ${repo_folder}/userspace/ksud ${repo_folder}/userspace/lpud || echo "${repo_folder}/userspace/ksud does not exist !!!"
+          [ -d ${repo_folder}/userspace/ksuinit ] && mv ${repo_folder}/userspace/ksuinit ${repo_folder}/userspace/lpuinit || echo "${repo_folder}/userspace/ksuinit does not exist !!!"
+          for file in $(find ${repo_folder} -type f -name '*ksu*');do mv $file $(echo $file | sed -E 's|ksu([d]?)|lpu\1|g');done
+          sed -E -i 's|(.+git clone )https[^[:space:]]+KernelSU[^[:space:]]* (.+)|\1'"$repo_url"' \2|g' ${repo_folder}/kernel/setup.sh
+          cp -af ${repo_folder}/kernel ${repo_folder}/.github  ${repo_folder}/.defconfig  ${must_unchange_kernel_files}/
+
+          for file in $(grep -R ${repo_folder} -e 'Wild.KSU' 2>/dev/null | cut -d':' -f1 | sort  | uniq);do sed -Ei 's|Wild.KSU|LinuxxPU|g' $file;done
+          for file in $(grep -R ${repo_folder} -e 'wild.ksu' 2>/dev/null | cut -d':' -f1 | sort  | uniq);do sed -Ei 's|wild.ksu|linuxxpu|g' $file;done
+          for file in $(grep -Ri ${repo_folder} -e 'wksu' 2>/dev/null | cut -d':' -f1 | sort  | uniq);do sed -i -e 's|wksu|lpu|g' -e 's|WKSU|LPU|g' $file;done
+          for files in $(grep -R ${repo_folder} -e 'SukiSU.Ultra' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU.Ultra/LinuxxPU/g' $files;done
+          C_TAG_NAME=$(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME | base64 -d)
+          for files in $(grep -R ${repo_folder} -e 'SUKISU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei '/'${C_TAG_NAME}'/! s|SUKISU|LinuxxPU|g' $files;done
+          for files in $(grep -R ${repo_folder} -e 'SukiSU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU/LinuxxPU/g' $files;done
+          for files in $(grep -R ${repo_folder} -e 'sukisu' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|sukisu|linuxxpu|g' $files;done
+          for files in $(grep -R ${repo_folder} -e 'zakoui' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei '/extern /!s/zakoui/lpuui/g' $files;done
+          for files in $(grep -R ${repo_folder} -e 'zako' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's/zako/lpu/g' $files;done
+          for files in $(grep -R ${repo_folder} -e 'ZAKO' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's/ZAKO/LPU/g' $files;done
+          for files in $(grep -R ${repo_folder} -e 'Zako' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's/Zako/Lpu/g' $files;done
+          for file in $(find ${repo_folder}/manager/app/src/main/jniLibs/ -type f -name 'liblpuxsign.so' 2>/dev/null);do bash ${repo_folder}/.github/scripts/hex_patch.sh $file zakosign lpuxsign;done
+          for files in $(grep -R ${repo_folder} -e 'KernelSU.Next' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei '/REPO_(OWNER|NAME)( :)?=/! s/KernelSU.Next/LinuxxPU/g' $files;done
+          for files in $(grep -R ${repo_folder} -e 'kernelsu.next' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|kernelsu.next|linuxxpu|g' $files;done
+          for files in $(grep -R ${repo_folder} -e 'KSU.NEXT' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|KSU.NEXT|LinuxxPU|g' $files;done
+          for files in $(grep -R ${repo_folder} -e 'ksunext' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's|ksunext|linuxxpu|g' $files;done
+          for files in $(grep -R ${repo_folder} -e 'KERNELSU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's|KERNELSU|LINUXXPU|g' $files;done
+          for files in $(grep -R ${repo_folder} -e 'KernelSU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei '/REPO_(OWNER|NAME)( :)?=/! s/KernelSU/LinuxxPU/g' $files;done
+          for files in $(grep -R ${repo_folder} -e 'kernelsu' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's|kernelsu|linuxxpu|g' $files;done
+          for files in $(grep -R ${repo_folder} -e 'KSURC' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's/KSURC/LPURC/g' $files;done
+          for files in $(find ${repo_folder} -type f -name '*Ksu*' 2>/dev/null );do mv $files $(echo $files | sed 's|Ksu|Lpu|g' );done
+          for files in $(grep -R ${repo_folder} -e 'Ksu' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -i '/.KsuNext/! s/Ksu/Lpu/g' $files;done
+          for files in $(grep -R ${repo_folder} -e 'KSU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i '/xxKSU/! s/KSU(D?)(_|"|=)/LPU\1\2/g' $files;done
+          for files in $(find ${repo_folder} -type f -name 'KernelSUApplication*' 2>/dev/null );do mv $files $(echo $files | sed 's|KernelSUApplication|LinuxxPUApplication|g' );done
+          for file in $(grep -R ${repo_folder} -e 'KERNEL_SU' 2>/dev/null | cut -d':' -f1 | sort  | uniq);do sed -i 's|KERNEL_SU|LINUXXPU|g' $file;done
+          for file in $(grep -R ${repo_folder} -e 'LPU' 2>/dev/null | grep -E '\.env\("LPU.+' | cut -d':' -f1 | sort | uniq);do sed -E -i -e 's/([[:space:]]+)(\.env\("LPU_LinuxxPU)(.+)/\1\2\3\n\1.env("KSU_SUKISU\3/g' -e 's/([[:space:]]+)(\.env\("LPU)(.+)/\1\2\3\n\1.env("KSU\3/g' $file;done
+          sed -E -i 's|([[:space:]]+)mavenCentral\(\)|\1mavenCentral()\n\1gradlePluginPortal()|g' ${repo_folder}/manager/settings.gradle.kts
+          #grep 'nl.littlerobots.vcu.resolver' ${repo_folder}/manager/gradle.properties || echo "nl.littlerobots.vcu.resolver=true" >> ${repo_folder}/manager/gradle.properties
+          #------------------------------
+          temp_file=$(mktemp)
+          curl https://github.com/littlerobots/version-catalog-update-plugin > $temp_file
+          if [ $? -gt 0 ];then
+            echo "curl returned error in :"
+            echo "https://github.com/littlerobots/version-catalog-update-plugin"
+            exit 10
+          fi
+          vcup_ver=$(grep 'css-truncate css-truncate-target text-bold' $temp_file 2>/dev/null | grep -Eo  '>.+<' | tr -d '<>v' | cut -d ' ' -f2 2>/dev/null)
+          if [  -z $vcup_ver ];then
+            echo "grep cannot find the pattern: "
+            echo "https://github.com/littlerobots/version-catalog-update-plugin"
+            exit 11
+          fi
+          echo > $temp_file
+          curl https://github.com/ben-manes/gradle-versions-plugin > $temp_file
+          if [ $? -gt 0 ];then
+            echo "curl returned error in :"
+            echo "https://github.com/ben-manes/gradle-versions-plugin"
+            exit 10
+          fi
+          gvp_ver=$(grep 'css-truncate css-truncate-target text-bold' $temp_file 2>/dev/null | grep -Eo  '>.+<' | tr -d '<>v' | cut -d ' ' -f2 2>/dev/null)
+          if [  -z $gvp_ver ];then
+            echo "grep cannot find the pattern: "
+            echo "https://github.com/ben-manes/gradle-versions-plugin"
+            exit 11
+          fi
+          sed -E -i 's|([[:space:]]+)(alias\(libs\.plugins\.lsplugin\.cmaker\))|\1\2\n\1id("com.github.ben-manes.versions") version "'${gvp_ver}'"\n\1id("nl.littlerobots.version-catalog-update") version "'${vcup_ver}'"\n|g'  ${repo_folder}/manager/build.gradle.kts      
+          #------------------------------
+ 
+
+
+
+          [ -d  "${must_unchange_kernel_files}/kernel" ] && cp -af ${must_unchange_kernel_files}/kernel ${repo_folder}/ 
+          for files in $(grep -R ${repo_folder} -e 'ksud' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's|ksud|lpud|g' $files;done
+          for files in $(grep -R ${repo_folder} -e 'ksu' 2>/dev/null | grep -v 'https' | grep -v 'rustix::' | cut -d':' -f1 | sort | uniq);do sed -i '/rustix::/ n; /override var name\: String/! s/ksu/lpu/g' $files;done
+          sed -E -i 's|(addJavascriptInterface.+)\"lpu\"|\1"ksu"|g' ${repo_folder}/manager/app/src/main/java/com/ahmad/linuxxpu/ui/webui/WebUIActivity.kt
+          
+          [ -d  "${must_unchange_kernel_files}/.github" ] && cp -af ${must_unchange_kernel_files}/.git* ${repo_folder}/
+          [ -f  "${must_unchange_kernel_files}/.defconfig" ] && cp -f ${must_unchange_kernel_files}/.defconfig ${repo_folder}/
+          [ -f ${temp_file} ] && rm ${temp_file} 
+          cp -af ${patched_folder} ${repo_folder}/.github/ || true
+          cp -af ${must_unchange_kernel_files}/.defconfig ${repo_folder}/
+          [ -d "${patched_folder}/.github" ] &&  cp -af ${patched_folder}/.github/. ${repo_folder}/.github/
+          [ -f "${repo_folder}/manager/app/src/main/cpp/lpu.c" ] && { echo 'debug cpp/lpu.c';sed -i -e 's/lpu_sys_file_open/zako_sys_file_open/g' -e 's/lpu_file_verify_esig/zako_file_verify_esig/g' -e 's/lpu_file_verrcidx2str/zako_file_verrcidx2str/g' ${repo_folder}/manager/app/src/main/cpp/lpu.c || true; } || true
+          #for item in ${repo_folder}/.git ${repo_folder}/.github ${repo_folder}/docs ${repo_folder}/Website;do [ -d $item ] && rm -rf $item;done
+          
+          
+      - name: Delete Artifact
+        uses: GeekyEggo/delete-artifact@v5.1.0
+        with: 
+          name: linuxxpu
+          failOnError: false
+        
+      - name: upload linuxxpu with patched dir
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: linuxxpu
+          path: .
+          include-hidden-files: true
+        
