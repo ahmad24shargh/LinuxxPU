@@ -793,6 +793,20 @@ jobs:
           for image in $(find . -type f -name "*.img" 2>/dev/null); do
             [ -f $image ] && gzip -vnf9 $image
           done
+
+      - name: Find and compress kernel driver module files (if present)
+        run: |
+          mkdir -p kernel_modules
+          for file in $(find "$CONFIG" -type f -name '*.ko' 2>/dev/null | grep '/out/'); do
+            cp $file kernel_modules
+          done
+          if [ ! -z "$( ls -A 'kernel_modules' )" ]; then
+            cd kernel_modules
+            zip kernel_modules.zip *
+            mv kernel_modules.zip ..
+          else
+            rmdir kernel_modules
+          fi
           
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4.6.2
