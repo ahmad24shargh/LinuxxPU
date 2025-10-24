@@ -369,7 +369,7 @@ jobs:
           if [ ${{ env.ksu_fork }} == 'xxKSU' ];then
             echo "CONFIG_KSU_KPROBES_KSUD=y"  >> ${defconfig}
             echo "CONFIG_KSU_EXTRAS=n" >> ${defconfig}
-            echo "CONFIG_KSU_KRETPROBES_SUCOMPAT=y"  >> ${defconfig}
+            echo "CONFIG_KSU_KRETPROBES_SUCOMPAT=n"  >> ${defconfig}
             # ⚠️ caution ⚠️
             echo "CONFIG_KSU_THRONE_TRACKER_ALWAYS_THREADED=y"  >> ${defconfig}
             # manual_lsm_security_hook.patch
@@ -392,8 +392,8 @@ jobs:
           echo "CONFIG_KALLSYMS=y" >> ${defconfig}
           echo "CONFIG_KALLSYMS_ALL=y" >> ${defconfig}
           # o3 optimization
-          #sed -i '/CC_OPTIMIZE_FOR_PERFORMANCE/d' ${defconfig}
-          #echo "CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE_O3=y" >> ${defconfig}
+          sed -i '/CC_OPTIMIZE_FOR_PERFORMANCE/d' ${defconfig}
+          echo "CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE_O3=y" >> ${defconfig}
           
 
           # Add BBR & network Configs
@@ -454,9 +454,9 @@ jobs:
             # ksu_hooks.patch: Only 2 hooks, with ultimatum patch
             # scope_minimized_manual_hooks_v1.5.patch: Traditional full hook
             # with kprobe only ultimatum patch or xx_hybridized.patch(Not both together)
-            echo "Applying ultimatum(getname_flags) patches(2 hooks) for backslashxx KSU..."
-            cp ../../kernel_patches/xxksu/ksu_hooks.patch ./
-            patch -p1 -F 3 < ksu_hooks.patch
+            echo "Applying xx_hybridized patches(3 hooks) for backslashxx KSU..."
+            cp ../../kernel_patches/xxksu/xx_hybridized.patch ./
+            patch -p1 -F 3 < xx_hybridized.patch
             cp ../../kernel_patches/xxksu/manual_lsm_security_hook.patch ./
             patch -p1 -F 3 < manual_lsm_security_hook.patch
             # test avc_spoof (on CONFIG_KSU_EXTRAS)
@@ -539,8 +539,8 @@ jobs:
           #echo "CONFIG_DEBUG_MISC=n" >> ${defconfig}
           
       - name: add map spoof from backslashxx
-        if: ${{ env.ksu_fork == 'xxKSU' }}
-        #if: false
+        #if: ${{ env.ksu_fork == 'xxKSU' }}
+        if: false
         shell: bash
         run: |
           set -euo pipefail
@@ -565,7 +565,7 @@ jobs:
             export CPATH=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/include
           fi
           export API=$(echo ${{ inputs.android_version }} | sed 's/android1/3/g')
-          My_Args=' -mcpu=cortex-a53+crypto+crc -mtune=cortex-a73 -march=armv8-a+crypto+crc -O2 -funroll-loops '
+          My_Args=' -mcpu=cortex-a53+crypto+crc -mtune=cortex-a73 -march=armv8-a+crypto+crc -funroll-loops '
           #export KBUILD_BUILD_TIMESTAMP=$(date -u -d "3 month ago")
           export KBUILD_BUILD_TIMESTAMP='Wed Oct  8 15:53:46 UTC 2025'
           export KBUILD_BUILD_USER='ahmad'
@@ -797,7 +797,6 @@ jobs:
           echo "Creating bootimgs folder and copying images..."
           for file in $(find ${bootimage_dir} -type f -name 'Image*' 2>/dev/null);do echo $file;cp $file ./bootimgs;cp $file ./;done
           
-
       - name: Run Boot Image ${{ inputs.android_version }} Build Script
         run: |
           cd bootimgs
@@ -826,6 +825,11 @@ jobs:
           else
             rmdir kernel_modules
           fi
+          for file in $(find $CONFIG -type f -name 'config_data.gz' 2>/dev/null | grep '/out/');do
+            echo $file
+            cp $file ..
+            break
+          done
           
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4.6.2
@@ -834,6 +838,7 @@ jobs:
           path: |
             *.zip
             *.img
+            *.gz
 
       - name: Preparing linuxxpu for upload
         run: |
