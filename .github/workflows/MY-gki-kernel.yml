@@ -367,8 +367,7 @@ jobs:
           fi
           
           if [ ${{ env.ksu_fork }} == 'xxKSU' ];then
-            #echo "CONFIG_KSU_KPROBES_HOOK=n"  >> ${defconfig}
-            echo "CONFIG_KSU_KPROBES_KSUD=n"  >> ${defconfig}
+            echo "CONFIG_KSU_KPROBES_KSUD=y"  >> ${defconfig}
             echo "CONFIG_KSU_EXTRAS=y" >> ${defconfig}
             echo "CONFIG_KSU_KRETPROBES_SUCOMPAT=n"  >> ${defconfig}
             # ⚠️ caution ⚠️
@@ -518,7 +517,7 @@ jobs:
           fi
 
       - name: Adding log reduction and debug reduction configurations
-        if: false
+        #if: false
         run: |
           cd "$CONFIG"
           #if grep -Eq '^CONFIG_CMDLINE=.+' ${defconfig};then cmdline_str=$(echo "CONFIG_CMDLINE=\"$(grep -E '^CONFIG_CMDLINE=.+' ${defconfig} | cut -d '"' -f2) audit=0 printk.devkmsg=off\"");else cmdline_str='CONFIG_CMDLINE="audit=0 printk.devkmsg=off"';fi
