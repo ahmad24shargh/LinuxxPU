@@ -368,7 +368,7 @@ jobs:
           
           if [ ${{ env.ksu_fork }} == 'xxKSU' ];then
             echo "CONFIG_KSU_KPROBES_KSUD=y"  >> ${defconfig}
-            echo "CONFIG_KSU_EXTRAS=y" >> ${defconfig}
+            echo "CONFIG_KSU_EXTRAS=n" >> ${defconfig}
             echo "CONFIG_KSU_KRETPROBES_SUCOMPAT=y"  >> ${defconfig}
             # ⚠️ caution ⚠️
             echo "CONFIG_KSU_THRONE_TRACKER_ALWAYS_THREADED=y"  >> ${defconfig}
