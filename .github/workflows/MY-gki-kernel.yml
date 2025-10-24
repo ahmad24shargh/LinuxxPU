@@ -369,7 +369,7 @@ jobs:
           if [ ${{ env.ksu_fork }} == 'xxKSU' ];then
             echo "CONFIG_KSU_KPROBES_KSUD=y"  >> ${defconfig}
             echo "CONFIG_KSU_EXTRAS=y" >> ${defconfig}
-            echo "CONFIG_KSU_KRETPROBES_SUCOMPAT=n"  >> ${defconfig}
+            echo "CONFIG_KSU_KRETPROBES_SUCOMPAT=y"  >> ${defconfig}
             # ⚠️ caution ⚠️
             echo "CONFIG_KSU_THRONE_TRACKER_ALWAYS_THREADED=y"  >> ${defconfig}
             # manual_lsm_security_hook.patch
@@ -454,9 +454,9 @@ jobs:
             # ksu_hooks.patch: Only 2 hooks, with ultimatum patch
             # scope_minimized_manual_hooks_v1.5.patch: Traditional full hook
             # with kprobe only ultimatum patch or xx_hybridized.patch(Not both together)
-            echo "Applying xx_hybridized patches(3 hooks) for backslashxx KSU..."
-            cp ../../kernel_patches/xxksu/xx_hybridized.patch ./
-            patch -p1 -F 3 < xx_hybridized.patch
+            echo "Applying ultimatum(getname_flags) patches(2 hooks) for backslashxx KSU..."
+            cp ../../kernel_patches/xxksu/ksu_hooks.patch ./
+            patch -p1 -F 3 < ksu_hooks.patch
             cp ../../kernel_patches/xxksu/manual_lsm_security_hook.patch ./
             patch -p1 -F 3 < manual_lsm_security_hook.patch
             # test avc_spoof (on CONFIG_KSU_EXTRAS)
