@@ -825,10 +825,9 @@ jobs:
           else
             rmdir kernel_modules
           fi
-          for file in $(find $CONFIG -type f -name 'config_data' 2>/dev/null | grep '/out/');do
+          for file in $(find $CONFIG -type f -name \.config 2>/dev/null | grep '/out/');do
             echo $file
-            zip $(basename $file).zip $file
-            cp $(basename $file).zip ..
+            zip kernel_config.zip $file
             break
           done
           
