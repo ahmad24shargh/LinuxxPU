@@ -825,9 +825,10 @@ jobs:
           else
             rmdir kernel_modules
           fi
-          for file in $(find $CONFIG -type f -name 'config_data.gz' 2>/dev/null | grep '/out/');do
+          for file in $(find $CONFIG -type f -name 'config_data' 2>/dev/null | grep '/out/');do
             echo $file
-            cp $file ..
+            zip $(basename $file).zip $file
+            cp $(basename $file).zip ..
             break
           done
           
@@ -838,7 +839,6 @@ jobs:
           path: |
             *.zip
             *.img
-            *.gz
 
       - name: Preparing linuxxpu for upload
         run: |
