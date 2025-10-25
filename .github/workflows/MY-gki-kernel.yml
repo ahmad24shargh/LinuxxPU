@@ -33,6 +33,10 @@ on:
       manager_supports:
         required: true
         type: string
+      BBG:
+        required: true
+        type: boolean
+        default: true
         
 
 jobs:
@@ -44,6 +48,7 @@ jobs:
       ksu_fork: ${{ inputs.ksu_fork }}
       hook_method: ${{ inputs.hook_method }}
       include_susfs: ${{ inputs.include_susfs }}
+      BBG: ${{ inputs.BBG }}
       #permissive cause bootloop
       selinux_permissive: false
       GH_TOKEN: ${{ github.token }}
@@ -272,14 +277,19 @@ jobs:
 
           echo "defconfig=${defconfig}" >> $GITHUB_ENV
 
-      - name: Add BBG
-        #if: false
+      - name: Add BBG (Baseband-guard)
+        if: ${{ env.include_susfs == 'true' }}
         shell: bash
         run: |
           set -euo pipefail
           cd "$CONFIG"
-          echo "Adding BBG..."
-          wget -O- https://github.com/vc-teahouse/Baseband-guard/raw/main/setup.sh | bash
+          if [ ${{ env.ksu_fork }} == 'SUKISU' ];then
+            echo "Adding Baseband-guard from ShirkNeko fork ..."
+            wget -O- https://github.com/ShirkNeko/Baseband-guard/raw/main/setup.sh | bash
+          else
+            echo "Adding Baseband-guard from main repo ..."
+            wget -O- https://github.com/vc-teahouse/Baseband-guard/raw/main/setup.sh | bash
+          fi
           echo "CONFIG_BBG=y" >> ${defconfig}
           # Enable Baseband Protection for Boot/init_boot Partitions
           #echo "CONFIG_BBG_BLOCK_BOOT=y" >> ${defconfig}
@@ -489,7 +499,7 @@ jobs:
 
           echo "Adding SUSFS configuration settings to gki_defconfig..."
           echo "CONFIG_KSU_SUSFS=y" >> ${defconfig}
-          echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> ${defconfig}
+          echo "CONFIG_KSU_SUSFS_SUS_MAP=y" >> ${defconfig}
           echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> ${defconfig}
           echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> ${defconfig}
           echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> ${defconfig}
