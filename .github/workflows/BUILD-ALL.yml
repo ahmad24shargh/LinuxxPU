@@ -59,7 +59,12 @@ on:
           - 'sukisu'
           - 'wild-ksun'
           - 'kowx712-ksu'
-       
+          
+      BBG:
+        required: true
+        type: boolean
+        default: true
+        
       #chickernel contains the susfs patch built into the source code
       include_susfs:
         description: Includes susfs patch
@@ -155,6 +160,7 @@ jobs:
     with:
       kernel_variant: ${{ inputs.kernel_variant }}
       include_susfs: ${{ inputs.include_susfs }}
+      BBG: ${{ inputs.BBG }}
       android_version: "android13"
       kernel_version: "5.15"
       sub_level: ${{ matrix.sub_level }}
