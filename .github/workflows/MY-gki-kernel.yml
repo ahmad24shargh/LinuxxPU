@@ -369,6 +369,10 @@ jobs:
           echo "CONFIG_KSU=y" >> ${defconfig}
           #echo "CONFIG_KSU_CMDLINE=y" >> ${defconfig}
           echo "CONFIG_KPM=y" >> ${defconfig}
+          
+          # for sukisu only - Setting it to y caused a bootloop (2025-10-07)
+          echo "CONFIG_KSU_MANUAL_SU=n" >> ${defconfig}
+          
           if [ ${{ env.ksu_fork }} == 'SUKISU' -a "${{ env.hook_method }}" == "tracepoint" ];then
             echo "CONFIG_TRACEPOINTS=y" >> ${defconfig}
             echo "CONFIG_KSU_TRACEPOINT_HOOK=y" >> ${defconfig}
@@ -513,8 +517,6 @@ jobs:
           echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> ${defconfig}
           echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ${defconfig}
           echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ${defconfig}
-          # for sukisu only - Setting it to y caused a bootloop (2025-10-07)
-          echo "CONFIG_KSU_MANUAL_SU=n" >> ${defconfig}
           
           cd common
           if ! grep -qxF '#define CMD_SUSFS_HIDE_SUS_MNTS_FOR_ALL_PROCS 0x55561' ./include/linux/susfs_def.h; then
