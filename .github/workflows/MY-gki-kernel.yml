@@ -75,7 +75,10 @@ jobs:
 
       - name: Set CONFIG Environment Variable
         run: |
-          sudo apt install -y pahole aria2
+          sudo apt purge man-db
+          sudo rm -rf /var/lib/man-db/auto-update
+          sudo apt update
+          sudo apt install -y --no-install-recommends pahole aria2
           CONFIG="${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}"
 
           echo "CONFIG=$CONFIG" >> $GITHUB_ENV
@@ -845,7 +848,10 @@ jobs:
           fi
           for file in $(find $CONFIG -type f -name "config_data" 2>/dev/null | grep '/out/');do
             echo $file
-            zip kernel_config.zip $file
+            pushd $(dirname $file)
+            zip kernel_config.zip $(basename $file)
+            mv kernel_config.zip $GITHUB_WORKSPACE/
+            popd
             break
           done
           
