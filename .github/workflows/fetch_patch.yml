@@ -209,7 +209,7 @@ jobs:
             for file in $(grep -R ${repo_folder}  -e 'libsusfsd.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libsusfsd.so|libsuslpufsd.so|g' $file;done
           fi
           if [ ${{ env.ksu_fork }} == 'SUKISU' ];then
-            for dir in $(find ${repo_folder}/ -type d -name 'zako' | grep -E '/com/sukisu/zako$');do echo mv $dir $(dirname $dir)/linuxxpu  ;done
+            for dir in $(find ${repo_folder}/ -type d -name 'zako' | grep -E '/com/sukisu/zako$');do mv $dir $(dirname $dir)/linuxxpu ;done
             for file in $(find ${repo_folder}/manager/app/src/main/jniLibs -name 'libzakosign.so' 2>/dev/null);do mv -f $file $(dirname $file)/liblpuxsign.so;done
             for file in $(grep -R ${repo_folder}/manager  -e 'zakosign' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|zakosign|lpuxsign|g' $file;done
             echo 'find and replace libsusfs.so in source code ...'
