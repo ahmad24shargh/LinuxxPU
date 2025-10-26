@@ -209,7 +209,7 @@ jobs:
             for file in $(grep -R ${repo_folder}  -e 'libsusfsd.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libsusfsd.so|libsuslpufsd.so|g' $file;done
           fi
           if [ ${{ env.ksu_fork }} == 'SUKISU' ];then
-            if [ -d ${repo_folder}/manager/app/src/main/java/zako/zako/zako/zakoui ];then dir="${repo_folder}/manager/app/src/main/java/zako/zako/zako/zakoui";mv $dir "$(dirname $dir)/lpuui";dir="$(dirname $dir)";mv $dir "$(dirname $dir)/lpu";dir="$(dirname $dir)";mv $dir "$(dirname $dir)/lpu";dir="$(dirname $dir)";mv $dir "$(dirname $dir)/lpu";fi
+            for dir in $(find ${repo_folder}/ -type d -name 'zako' | grep -E '/com/sukisu/zako$');do echo mv $dir $(dirname $dir)/linuxxpu  ;done
             for file in $(find ${repo_folder}/manager/app/src/main/jniLibs -name 'libzakosign.so' 2>/dev/null);do mv -f $file $(dirname $file)/liblpuxsign.so;done
             for file in $(grep -R ${repo_folder}/manager  -e 'zakosign' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|zakosign|lpuxsign|g' $file;done
             echo 'find and replace libsusfs.so in source code ...'
@@ -239,10 +239,7 @@ jobs:
           for file in $(grep -R ${repo_folder}/manager ${repo_folder}/userspace -e 'sukisu_kpm' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -i 's|sukisu_kpm|linuxxpu_kpm|g' $file;done
           for file in $(grep -R ${repo_folder}/manager ${repo_folder}/userspace -e 'SUKISU_KPM' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -i 's|SUKISU_KPM|LINUXXPU_KPM|g' $file;done
           for file in $(grep -R ${repo_folder}/manager ${repo_folder}/userspace -e 'sukisu' 2>/dev/null | cut -d':' -f1 |  sort | uniq );do sed -i 's|sukisu|ahmad|g' $file;done
-          for dir in $(find ${repo_folder} -type d -name 'ksunext' 2>/dev/null);do bn="$( cd -- "$(dirname "$dir")" >/dev/null 2>&1 ; pwd -P )";mv $dir "${bn}/linuxxpu";mv "${bn}" "$(echo ${bn} | rev | cut -d'/' -f2- | rev)/ahmad";done
-          for dir in $(find ${repo_folder} -type d -name 'kernelsu' 2>/dev/null);do bn="$( cd -- "$(dirname "$dir")" >/dev/null 2>&1 ; pwd -P )";mv $dir "${bn}/linuxxpu";mv "${bn}" "$(echo ${bn} | rev | cut -d'/' -f2- | rev)/ahmad";bn="$( cd -- "$(dirname "$(dirname $(echo $dir | sed 's/kernelsu/linuxxpu/g'));")" >/dev/null 2>&1 ; pwd -P )";mv "${bn}" "$(echo ${bn} | rev | cut -d'/' -f2- | rev)/com";done
-          for dir in $(find ${repo_folder} -type d -name 'wksu' 2>/dev/null);do bn="$( cd -- "$(dirname "$dir")" >/dev/null 2>&1 ; pwd -P )";mv $dir "${bn}/linuxxpu";mv "${bn}" "$(echo ${bn} | rev | cut -d'/' -f2- | rev)/ahmad";done
-          for dir in $(find ${repo_folder} -type d -name 'ultra' 2>/dev/null);do bn="$( cd -- "$(dirname "$dir")" >/dev/null 2>&1 ; pwd -P )";mv $dir "${bn}/linuxxpu";mv "${bn}" "$(echo ${bn} | rev | cut -d'/' -f2- | rev)/ahmad";done
+          for item in 'kernelsu' 'weishu' 'me' 'zako' 'sukisu' 'ultra' 'zakoui' 'wksu' 'twj' 'ksunext' 'rifsxd';do for dir in $(find ${repo_folder}/manager -type d -name $item | grep -E '/'$item'$' | awk '{ print length, $0 }' | sort -rn |  cut -d' ' -f2-);do case $(basename $dir) in 'me') mv $dir $(dirname $dir)/com;;'sukisu'|'weishu'|'twj'|'rifsxd') mv $dir $(dirname $dir)/ahmad;;'ultra'|'kernelsu'|'wksu'|'ksunext') mv $dir $(dirname $dir)/linuxxpu;;'zako'|'zakoui') mv $dir $(dirname $dir)/$(echo $(basename $dir) | sed 's/zako/lpu/g');;esac ;done ;done
           sed -i -e 's|WKSU:|LINUXPU:|g' -e 's|WKSU_|KSU_|g' -e 's|Wild KSU|LinuxxPU|g' ${repo_folder}/kernel/Makefile
           sed -E -i -e 's/(KSU[^[:space:]]+(EXPECTED|MANAGER)_SIZE).+0x.+/\1 := 0x373/g' -e  's/(KSU[^[:space:]]+(EXPECTED|MANAGER)_HASH) := .+/\1 := 5028506331f6c9f189e2f6500d90c3d6972bd7033e960fed4b5dda1fe31a5e95/g' ${repo_folder}/kernel/Makefile
           sed -E -i 's|^([[:space:]]+)android\:label\=.+|\1android:label="LinuxxPU"|g' ${repo_folder}/manager/app/src/main/AndroidManifest.xml
