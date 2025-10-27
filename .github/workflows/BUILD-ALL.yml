@@ -112,15 +112,15 @@ jobs:
         C_TAG_NAME=$(cat TAG_NAME.ME | base64 -d)
         C_LAST_COMMIT=$(cat LAST_COMMIT.ME | base64 -d)
         C_VERSION=$(cat VERSION.ME | base64 -d)
-        determine_os_patch_level() { declare -n result="$1";case "${result}" in 94) result=2023-05;;104) result=2023-07;;123) result=2023-11;;137) result=2024-01;;144) result=2024-03;;148) result=2024-05;;149) result=2024-07;;151) result=2024-08;;153) result=2024-09;;167) result=2024-11;;170) result=2025-01;;178) result=2025-03;;180) result=2025-05;;185) result=2025-07;;189) result=2025-09;;*) result=lts;;esac; }
-        C_KERNEL_SUBLEVEL=148
-        C_OS_PATCH_LEVEL=148
+        determine_os_patch_level() { declare -n result="$1";case "${result}" in 167) result=2024-11;;170) result=2025-01;;178) result=2025-03;;180) result=2025-05;;185) result=2025-07;;189) result=2025-09;;*) result=lts;;esac; }
+        C_KERNEL_SUBLEVEL=167
+        C_OS_PATCH_LEVEL=167
         topnotchfreaks_codelinaro_branch=null
         if "${{ inputs.kernel_variant == 'chickernel' }}";then
           wget https://raw.githubusercontent.com/chickendrop89/device_xiaomi_unified-kernel/refs/heads/android13-5.15-lts/Makefile 2>/dev/null
           if [ -f ./Makefile ];then
             C_KERNEL_SUBLEVEL=$(head -n 10 Makefile  | grep SUBLEVEL | cut -d' ' -f 3)
-            [ -z ${C_KERNEL_SUBLEVEL} ] && C_KERNEL_SUBLEVEL=167
+            [ -z ${C_KERNEL_SUBLEVEL} ] &&  { echo "The sublevel value could not be extracted.";exit 13;false; }
           fi
           C_OS_PATCH_LEVEL="${C_KERNEL_SUBLEVEL}"
         fi
@@ -135,7 +135,7 @@ jobs:
           fi
           if [ -f ./Makefile ];then
             C_KERNEL_SUBLEVEL=$(head -n 10 Makefile  | grep SUBLEVEL | cut -d' ' -f 3)
-            [ -z ${C_KERNEL_SUBLEVEL} ] && C_KERNEL_SUBLEVEL=170
+            [ -z ${C_KERNEL_SUBLEVEL} ] && { echo "The sublevel value could not be extracted.";exit 13;false; }
           fi
           C_OS_PATCH_LEVEL="${C_KERNEL_SUBLEVEL}"
         fi
@@ -457,7 +457,7 @@ jobs:
           echo "-> Magic Mount Support" >> $GITHUB_ENV
           echo "-> Ptrace message leak fix for kernels < 5.16" >> $GITHUB_ENV
           echo "-> CONFIG_TMPFS_XATTR Support [Mountify Support]" >> $GITHUB_ENV
-          echo "-> Added Baseband Guard (BBG) support to prevent unauthorised writes to certain partitions" >> $GITHUB_ENV
+          [ ${{ inputs.BBG }} == 'true'  ] && echo "-> Added Baseband Guard (BBG) support to prevent unauthorised writes to certain partitions" >> $GITHUB_ENV
           echo -e "-> BBRv1 and westwood Support\n\n" >> $GITHUB_ENV
           echo -e 'Commit Hashes and Links:\nLinuxxPU-Dev: ['${LPU_REF}']('${LPU_URL}')' >> $GITHUB_ENV
           if [ ${{ inputs.include_susfs }} == 'true'  ];then
