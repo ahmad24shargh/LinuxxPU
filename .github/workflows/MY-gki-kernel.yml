@@ -286,13 +286,13 @@ jobs:
         run: |
           set -euo pipefail
           cd "$CONFIG"
-          if [ ${{ env.ksu_fork }} == 'SUKISU' ];then
-            echo "Adding Baseband-guard from ShirkNeko fork ..."
-            wget -O- https://github.com/ShirkNeko/Baseband-guard/raw/main/setup.sh | bash
-          else
-            echo "Adding Baseband-guard from main repo ..."
-            wget -O- https://github.com/vc-teahouse/Baseband-guard/raw/main/setup.sh | bash
-          fi
+          #if [ ${{ env.ksu_fork }} == 'SUKISU' ];then
+            #echo "Adding Baseband-guard from ShirkNeko fork ..."
+            #wget -O- https://github.com/ShirkNeko/Baseband-guard/raw/main/setup.sh | bash
+          #else
+          echo "Adding Baseband-guard from main repo ..."
+          wget -O- https://github.com/vc-teahouse/Baseband-guard/raw/main/setup.sh | bash
+          #fi
           echo "CONFIG_BBG=y" >> ${defconfig}
           # Enable Baseband Protection for Boot/init_boot Partitions
           #echo "CONFIG_BBG_BLOCK_BOOT=y" >> ${defconfig}
@@ -421,14 +421,14 @@ jobs:
           echo "CONFIG_NET_SCH_FQ=y" >> ${defconfig}
           sed -i '/CONFIG_TCP_CONG_BBR/d' ${defconfig}
           echo "CONFIG_TCP_CONG_BBR=y" >> ${defconfig}
-          sed -i '/CONFIG_DEFAULT_TCP_CONG/d' ${defconfig}
-          echo 'CONFIG_DEFAULT_TCP_CONG="BBR"' >> ${defconfig}
-          echo 'CONFIG_DEFAULT_BBR=y' >> ${defconfig}
+          #sed -i '/CONFIG_DEFAULT_TCP_CONG/d' ${defconfig}
+          #echo 'CONFIG_DEFAULT_TCP_CONG="BBR"' >> ${defconfig}
+          #echo 'CONFIG_DEFAULT_BBR=y' >> ${defconfig}
 
           # activate sample configs(kprobe & kretprobe modules)
-          echo 'CONFIG_SAMPLES=y' >> ${defconfig}
-          echo 'CONFIG_SAMPLE_KPROBES=m' >> ${defconfig}
-          echo 'CONFIG_SAMPLE_KRETPROBES=m' >> ${defconfig}
+          #echo 'CONFIG_SAMPLES=y' >> ${defconfig}
+          #echo 'CONFIG_SAMPLE_KPROBES=m' >> ${defconfig}
+          #echo 'CONFIG_SAMPLE_KRETPROBES=m' >> ${defconfig}
 
           # Remove check_defconfig
           sed -i 's/check_defconfig//' ./common/build.config.gki
@@ -537,21 +537,15 @@ jobs:
           cd "$CONFIG"
           #if grep -Eq '^CONFIG_CMDLINE=.+' ${defconfig};then cmdline_str=$(echo "CONFIG_CMDLINE=\"$(grep -E '^CONFIG_CMDLINE=.+' ${defconfig} | cut -d '"' -f2) audit=0 printk.devkmsg=off\"");else cmdline_str='CONFIG_CMDLINE="audit=0 printk.devkmsg=off"';fi
           cmdline_str='CONFIG_CMDLINE="mminit_loglevel=0 stack_depot_disable=on kasan.stacktrace=off kvm-arm.mode=protected cgroup_disable=pressure audit=0 loglevel=1 printk.devkmsg=off quiet lpm_levels.sleep_disabled=1 console=ttyMSM0,115200n8 msm_rtb.filter=0x237 service_locator.enable=1 swiotlb=2048 loop.max_part=7 cpufreq.default_governor=performance rcupdate.rcu_expedited=1 rcu_nocbs=0-7 kpti=off export_pmu_events movable_node ftrace_dump_on_oops ssbd=force-off disable_dma32=on cgroup.memory=nokmem,nosocket video=vfb:640x400,bpp=32,memsize=3072000 no_debug_objects qcom_geni_serial.con_enabled=0 bootconfig bootinfo.pureason=0x40001 bootinfo.pdreason=0x2 msm_drm.dsi_display0=qcom,mdss_dsi_panel_m7_38_0c_0a_fhdp_video: fpc1020_platform_tee.fpsensor=2 focaltech_ts_i2c.tpsensor=focaltech_ts rootwait ro init=/init mem= memhp_default_state=online log_buf_len=2M"'
-          #echo $cmdline_str
           sed -i -e '/CONFIG_CMDLINE=/d' -e '/CONFIG_CMDLINE_EXTEND/d'  -e '/CONFIG_CMDLINE_FORCE/d' -e '/CMDLINE_FROM_BOOTLOADER/d' ${defconfig}
           echo "$cmdline_str" >> ${defconfig}
           #echo "CONFIG_CMDLINE_EXTEND=y" >> ${defconfig}
           echo "CONFIG_CMDLINE_FORCE=y" >> ${defconfig}
-          sed -i -e '/CONFIG_CONSOLE_LOGLEVEL_DEFAULT/d' -e '/CONFIG_CONSOLE_LOGLEVEL_QUIET/d' -e '/CONFIG_MESSAGE_LOGLEVEL_DEFAULT/d' ${defconfig}
-          echo "CONFIG_CONSOLE_LOGLEVEL_DEFAULT=1" >> ${defconfig}
-          echo "CONFIG_CONSOLE_LOGLEVEL_QUIET=1" >> ${defconfig}
-          echo "CONFIG_MESSAGE_LOGLEVEL_DEFAULT=1" >> ${defconfig}
-          sed -i -e 's/CONSOLE_LOGLEVEL_DEFAULT/CONSOLE_LOGLEVEL_MIN/g' -e 's/MESSAGE_LOGLEVEL_DEFAULT/CONSOLE_LOGLEVEL_MIN/g' ./common/kernel/printk/printk.c
-          #sed -i -e '/CONFIG_BUG=/d' -e '/CONFIG_DEBUG_INFO=/d' ${defconfig}
-          #sed -i '/CONFIG_DEBUG_INFO=/d' ${defconfig}
-          #echo "CONFIG_BUG=n" >> ${defconfig}
-          #echo "CONFIG_DEBUG_INFO=n" >> ${defconfig}
-          #echo "CONFIG_DEBUG_MISC=n" >> ${defconfig}
+          #sed -i -e '/CONFIG_CONSOLE_LOGLEVEL_DEFAULT/d' -e '/CONFIG_CONSOLE_LOGLEVEL_QUIET/d' -e '/CONFIG_MESSAGE_LOGLEVEL_DEFAULT/d' ${defconfig}
+          #echo "CONFIG_CONSOLE_LOGLEVEL_DEFAULT=1" >> ${defconfig}
+          #echo "CONFIG_CONSOLE_LOGLEVEL_QUIET=1" >> ${defconfig}
+          #echo "CONFIG_MESSAGE_LOGLEVEL_DEFAULT=1" >> ${defconfig}
+          #sed -i -e 's/CONSOLE_LOGLEVEL_DEFAULT/CONSOLE_LOGLEVEL_MIN/g' -e 's/MESSAGE_LOGLEVEL_DEFAULT/CONSOLE_LOGLEVEL_MIN/g' ./common/kernel/printk/printk.c
           
       - name: add map spoof from backslashxx
         #if: ${{ env.ksu_fork == 'xxKSU' }}
