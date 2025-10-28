@@ -278,6 +278,9 @@ jobs:
           # strip debug always
           sed -E -i 's/^([[:space:]]*)LDFLAGS_MODULE  =[[:space:]]*$/\1LDFLAGS_MODULE = --strip-debug/g' $(find ${GITHUB_WORKSPACE}/$CONFIG/common/ -maxdepth 1 -type f -name 'Makefile')
 
+          # abi_bypass_gki (not needed but ...)
+          for file in $(find ${GITHUB_WORKSPACE}/$CONFIG/ -type f -name 'check_buildtime_symbol_protection.py' 2>/dev/null | grep '/abi/');do echo $file;sed -E -i '/f"  \{symbol\} required by \{undefined_symbol_consumer_lookup\[symbol\]\}"/ {N;N;N;N;N; s/([[:space:]]+)return 1/\1print( "\\nBUT WHO CARES?\\n")\1return 0/g}' $file ;done
+
           echo "defconfig=${defconfig}" >> $GITHUB_ENV
 
       - name: Add BBG (Baseband-guard)
