@@ -63,7 +63,7 @@ on:
       BBG:
         required: true
         type: boolean
-        default: true
+        default: false
         
       #chickernel contains the susfs patch built into the source code
       include_susfs:
