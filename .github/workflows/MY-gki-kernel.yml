@@ -154,12 +154,12 @@ jobs:
           [ -z $clang_llvm_latest_url ] && { echo 'The clang-llvm download link could not be extracted!!!';false; } || echo -e "Download link for the latest build of clang-llvm:\n${clang_llvm_latest_url}"
           mkdir -p clang-llvm
           aria2c -x 16 -s 16 -o clang-llvm.tar.$([ "${{ env.clang22_compiler }}" == "true" ] && echo "gz" || echo "xz") ${clang_llvm_latest_url}
-          tar -xf clang-llvm.tar.$([ "${{ env.clang22_compiler }}" == "true" ] && echo "gz" || echo "xz") -C clang-llvm
+          tar -x$([ "${{ env.clang22_compiler }}" == "true" ] && echo "z" || echo "J")f clang-llvm.tar.$([ "${{ env.clang22_compiler }}" == "true" ] && echo "gz" || echo "xz") -C clang-llvm
           rm -rf clang-llvm.tar.$([ "${{ env.clang22_compiler }}" == "true" ] && echo "gz" || echo "xz")
           cd clang-llvm
           find . -type f -name clang
           echo .........
-          ls .
+          ls -R .
           false
           
       - name: Set environment variables
