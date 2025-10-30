@@ -156,6 +156,11 @@ jobs:
           aria2c -x 16 -s 16 -o clang-llvm.tar.$([ "${{ env.clang22_compiler }}" == "true" ] && echo "gz" || echo "xz") ${clang_llvm_latest_url}
           tar -xf clang-llvm.tar.$([ "${{ env.clang22_compiler }}" == "true" ] && echo "gz" || echo "xz") -C clang-llvm
           rm -rf clang-llvm.tar.$([ "${{ env.clang22_compiler }}" == "true" ] && echo "gz" || echo "xz")
+          cd clang-llvm
+          find . -type f -name clang
+          echo .........
+          ls .
+          false
           
       - name: Set environment variables
         run: |
