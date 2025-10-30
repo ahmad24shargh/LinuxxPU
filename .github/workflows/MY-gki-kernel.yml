@@ -200,7 +200,7 @@ jobs:
       
       - name: defconfig customization and various changes
         run: |
-          for file in $(find $CONFIG/common/arch/arm64/configs -type f 2>/dev/null);do sed -E -i -e '/CONFIG_LOCALVERSION[^[:space:]]*=/d' -e '/[^[:space:]]+_LTO[^[:space:]]*=/d' -e '/CONFIG_WERROR=y/d' -e '/CFI_CLANG=y/d' $file;done
+          for file in $(find $CONFIG/common/arch/arm64/configs -type f 2>/dev/null);do sed -E -i -e '/CONFIG_LOCALVERSION[^[:space:]]*=/d' -e '/[^[:space:]]+_LTO[^[:space:]]*=/d' -e '/CONFIG_WERROR=y/d' $file;done
           if [[ "${{ env.kernel_variant }}" == "common-android-mainline" ]];then
             defconfig="${GITHUB_WORKSPACE}/.defconfig"
           elif [[ "${{ env.kernel_variant }}" == "chickernel" ]];then
@@ -228,8 +228,8 @@ jobs:
           echo "CONFIG_LTO_NONE=n" >> ${defconfig}
           echo "CONFIG_LTO_CLANG_FULL=n" >> ${defconfig}
           echo "CONFIG_LTO_CLANG_THIN=y" >> ${defconfig}
-          echo "CONFIG_CFI_CLANG=n" >> ${defconfig}
-          echo "CONFIG_FORTIFY_SOURCE=y" >> ${defconfig}
+          echo "CONFIG_CFI_PERMISSIVE=y" >> ${defconfig}
+          #echo "CONFIG_FORTIFY_SOURCE=y" >> ${defconfig}
           #Make sure to unspoof KCONFIG_FILE in common/kernel/Makefile
           sed -E -i 's|\$\(obj\)/config_data:.+|\$(obj)/config_data: \$(KCONFIG_CONFIG) FORCE|g' $GITHUB_WORKSPACE/$CONFIG/common/kernel/Makefile
           pushd $CONFIG/common/kernel/
