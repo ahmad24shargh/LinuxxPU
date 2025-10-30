@@ -200,7 +200,7 @@ jobs:
       
       - name: defconfig customization and various changes
         run: |
-          for file in $(find $CONFIG/common/arch/arm64/configs -type f 2>/dev/null);do sed -E -i -e '/CONFIG_LOCALVERSION/d' -e '/_LTO/d' -e '/CONFIG_WERROR=y/d' -e '/CFI_CLANG=y/d' $file;done
+          for file in $(find $CONFIG/common/arch/arm64/configs -type f 2>/dev/null);do sed -E -i -e '/CONFIG_LOCALVERSION[^[:space:]]*=/d' -e '/[^[:space:]]+_LTO[^[:space:]]*=/d' -e '/CONFIG_WERROR=y/d' -e '/CFI_CLANG=y/d' $file;done
           if [[ "${{ env.kernel_variant }}" == "common-android-mainline" ]];then
             defconfig="${GITHUB_WORKSPACE}/.defconfig"
           elif [[ "${{ env.kernel_variant }}" == "chickernel" ]];then
