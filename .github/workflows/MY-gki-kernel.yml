@@ -86,8 +86,8 @@ jobs:
             
       - name: delete toolchain and clang-llvm caches if older than a certain amount
         run: |
+          repo="${{ github.repository_owner }}/${{ github.event.repository.name }}"
           if false;then
-            repo="${{ github.repository_owner }}/${{ github.event.repository.name }}"
             clang22_latest_relase=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/ZyCromerZ/Clang/releases  | grep -Eo '"name":[^,]+' | head -n 1)
             llvm_latest_relase=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/llvm/llvm-project/releases  | grep -Eo '"name":[^,]+' | grep 'Linux-X64.tar.xz"' | head -n 1)
             [ -z "$clang22_latest_relase" ] && { echo "Failed to extract clang22 latest release";exit 1;false; }
@@ -890,9 +890,8 @@ jobs:
           for file in $(find $CONFIG -type f -name "config_data" 2>/dev/null | grep '/out/');do
             echo $file
             cd $(dirname $file)
-            CC_VERSION_TEXT=$(grep 'CONFIG_CC_VERSION_TEXT=' $file 2>/dev/null | cut -d'=' -f2-)
-            echo $CC_VERSION_TEXT
-            echo "$CC_VERSION_TEXT" > ${GITHUB_WORKSPACE}/CLANG_VER.ME
+            CC_VERSION_TEXT=$(grep 'CONFIG_CC_VERSION_TEXT=' $(basename $file) 2>/dev/null | cut -d'=' -f2-)
+            [ -n "${CC_VERSION_TEXT}" ] && echo "${CC_VERSION_TEXT}" > ${GITHUB_WORKSPACE}/CLANG_VER.ME
             zip kernel_config.zip $(basename $file)
             mv kernel_config.zip $GITHUB_WORKSPACE/
             break
