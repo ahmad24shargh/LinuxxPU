@@ -868,12 +868,11 @@ jobs:
           fi
           for file in $(find $CONFIG -type f -name "config_data" 2>/dev/null | grep '/out/');do
             echo $file
-            pushd $(dirname $file)
+            cd $(dirname $file)
             CC_VERSION_TEXT=$(grep -E 'CONFIG_CC_VERSION_TEXT=.+' $file 2>/dev/null | cut -d'=' -f2-)
             [ -n "${CC_VERSION_TEXT}" ] && echo "${CC_VERSION_TEXT}" > ${GITHUB_WORKSPACE}/CLANG_VER.ME
             zip kernel_config.zip $(basename $file)
             mv kernel_config.zip $GITHUB_WORKSPACE/
-            popd
             break
           done
           
@@ -888,8 +887,8 @@ jobs:
       - name: Preparing linuxxpu for upload
         run: |
           mkdir -p linuxxpu
-          for dir in {kernel,manager,userspace,'.git','.github','TAG_NAME.ME','LPU_FORK.ME','LAST_COMMIT.ME','VERSION.ME','USE_PERSHOOT_SUSFS.ME'};do
-            cp -af $dir linuxxpu || true
+          for dir in {kernel,manager,userspace,'.git','.github','TAG_NAME.ME','LPU_FORK.ME','LAST_COMMIT.ME','VERSION.ME','USE_PERSHOOT_SUSFS.ME','CLANG_VER.ME'};do
+            cp -af $dir linuxxpu || :
           done
           #cp $GITHUB_WORKSPACE/$CONFIG/common/security/selinux/{selinuxfs.c,hooks.c,Makefile} linuxxpu
           #ls linuxxpu/
