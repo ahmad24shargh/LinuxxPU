@@ -888,7 +888,7 @@ jobs:
         run: |
           mkdir -p linuxxpu
           for dir in {kernel,manager,userspace,'.git','.github','TAG_NAME.ME','LPU_FORK.ME','LAST_COMMIT.ME','VERSION.ME','USE_PERSHOOT_SUSFS.ME','CLANG_VER.ME'};do
-            cp -af $dir linuxxpu || :
+            cp -a $dir linuxxpu || :
           done
           #cp $GITHUB_WORKSPACE/$CONFIG/common/security/selinux/{selinuxfs.c,hooks.c,Makefile} linuxxpu
           #ls linuxxpu/
