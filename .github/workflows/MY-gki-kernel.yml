@@ -890,8 +890,9 @@ jobs:
           for file in $(find $CONFIG -type f -name "config_data" 2>/dev/null | grep '/out/');do
             echo $file
             cd $(dirname $file)
-            CC_VERSION_TEXT=$(grep -E 'CONFIG_CC_VERSION_TEXT=.+' $file 2>/dev/null | cut -d'=' -f2-)
-            [ -n "${CC_VERSION_TEXT}" ] && echo "${CC_VERSION_TEXT}" > ${GITHUB_WORKSPACE}/CLANG_VER.ME
+            CC_VERSION_TEXT=$(grep 'CONFIG_CC_VERSION_TEXT=' $file 2>/dev/null | cut -d'=' -f2-)
+            echo $CC_VERSION_TEXT
+            echo "$CC_VERSION_TEXT" > ${GITHUB_WORKSPACE}/CLANG_VER.ME
             zip kernel_config.zip $(basename $file)
             mv kernel_config.zip $GITHUB_WORKSPACE/
             break
