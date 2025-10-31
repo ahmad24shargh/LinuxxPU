@@ -174,7 +174,7 @@ jobs:
             fi
           else
             aria2c -x 16 -s 16 -o clang-llvm.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/mirror-goog-main-llvm-toolchain-source/clang-r574158.tar.gz
-            tar -xzf clang-llvm.tar.gz clang-llvm
+            tar -xzf clang-llvm.tar.gz -C clang-llvm
             rm -rf clang-llvm.tar.gz
             if [ "$(find clang-llvm -maxdepth 1 -printf %y)" = "dd" ]; then
               cd clang-llvm
