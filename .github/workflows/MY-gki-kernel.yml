@@ -120,14 +120,14 @@ jobs:
             # clang-llvm older than 30 days
             if [ $(echo $(( ($(date +%s) - $(date --date=$(gh cache list --repo $repo -k clang-llvm-${{ runner.os }}-v1 --json  'createdAt' | grep 'createdAt' | cut -d'"' -f4) +%s) )/(60*60*24) ))) -gt 29 ];then
               echo "removing clang-llvm-${{ runner.os }}-v1 from cache ..."
-              gh cache delete clang-llvm-${{ runner.os }}-v1 --repo $repo
+              gh cache delete clang-llvm-${{ runner.os }}-v1 --repo $repo 2>/dev/null
             fi
           fi
           
           # toolchain older than 30 days
           if [ $(echo $(( ($(date +%s) - $(date --date=$(gh cache list --repo $repo -k toolchain-${{ runner.os }}-v1 --json  'createdAt' | grep 'createdAt' | cut -d'"' -f4) +%s) )/(60*60*24) ))) -gt 29 ];then
             echo "removing toolchain-${{ runner.os }}-v1 from cache ..."
-            gh cache delete toolchain-${{ runner.os }}-v1 --repo $repo
+            gh cache delete toolchain-${{ runner.os }}-v1 --repo $repo 2>/dev/null
           fi
         
       - name: Cache toolchain
@@ -173,7 +173,7 @@ jobs:
               rmdir ${dir}
             fi
           else
-            aria2c -x 16 -s 16 -o clang-llvm.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r547379.tar.gz
+            aria2c -x 16 -s 16 -o clang-llvm.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/mirror-goog-main-llvm-toolchain-source/clang-r574158.tar.gz
             tar -xzf clang-llvm.tar.gz clang-llvm
             rm -rf clang-llvm.tar.gz
             if [ "$(find clang-llvm -maxdepth 1 -printf %y)" = "dd" ]; then
