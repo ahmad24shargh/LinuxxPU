@@ -158,10 +158,10 @@ jobs:
       - name: Download clang-llvm (if cache not found)
         if: steps.cache-clang-llvm.outputs.cache-hit != 'true'
         run: |
+          mkdir -p clang-llvm
           if false;then
             clang_llvm_latest_url=$(curl -s https://api.github.com/repos/$( [ "${{ env.clang22_compiler }}" == "true" ] && echo "ZyCromerZ/Clang" || echo "llvm/llvm-project")/releases/latest | grep browser_download_url | cut -d '"' -f 4 | grep -E '/(Clang-22.+.tar.gz|[^/]+Linux-X64.tar.xz)$')
             [ -z $clang_llvm_latest_url ] && { echo 'The clang-llvm download link could not be extracted!!!';false; } || echo -e "Download link for the latest build of clang-llvm:\n${clang_llvm_latest_url}"
-            mkdir -p clang-llvm
             aria2c -x 16 -s 16 -o clang-llvm.tar.$([ "${{ env.clang22_compiler }}" == "true" ] && echo "gz" || echo "xz") ${clang_llvm_latest_url}
             tar -x$([ "${{ env.clang22_compiler }}" == "true" ] && echo "z" || echo "J")f clang-llvm.tar.$([ "${{ env.clang22_compiler }}" == "true" ] && echo "gz" || echo "xz") -C clang-llvm
             rm -rf clang-llvm.tar.$([ "${{ env.clang22_compiler }}" == "true" ] && echo "gz" || echo "xz")
