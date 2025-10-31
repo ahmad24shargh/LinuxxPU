@@ -459,6 +459,7 @@ jobs:
           echo "-> CONFIG_TMPFS_XATTR Support [Mountify Support]" >> $GITHUB_ENV
           [ ${{ inputs.BBG }} == 'true'  ] && echo "-> Added Baseband Guard (BBG) support to prevent unauthorised writes to certain partitions" >> $GITHUB_ENV
           echo -e "-> BBRv1 and westwood Support\n\n" >> $GITHUB_ENV
+          [ -s "${GITHUB_WORKSPACE}/CLANG_VER.ME" ] && echo "-> Kernel built with: $(cat ${GITHUB_WORKSPACE}/CLANG_VER.ME)" >> $GITHUB_ENV
           echo -e 'Commit Hashes and Links:\nLinuxxPU-Dev: ['${LPU_REF}']('${LPU_URL}')' >> $GITHUB_ENV
           if [ ${{ inputs.include_susfs }} == 'true'  ];then
             echo "SUSFS4KSU:" >> $GITHUB_ENV
