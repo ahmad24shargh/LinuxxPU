@@ -250,7 +250,7 @@ jobs:
           echo "CONFIG_LTO_NONE=n" >> ${defconfig}
           echo "CONFIG_LTO_CLANG_FULL=n" >> ${defconfig}
           echo "CONFIG_LTO_CLANG_THIN=y" >> ${defconfig}
-          echo "CONFIG_CFI_PERMISSIVE=y" >> ${defconfig}
+          #echo "CONFIG_CFI_PERMISSIVE=y" >> ${defconfig}
           #echo "CONFIG_FORTIFY_SOURCE=y" >> ${defconfig}
           #Make sure to unspoof KCONFIG_FILE in common/kernel/Makefile
           sed -E -i 's|\$\(obj\)/config_data:.+|\$(obj)/config_data: \$(KCONFIG_CONFIG) FORCE|g' $GITHUB_WORKSPACE/$CONFIG/common/kernel/Makefile
@@ -869,6 +869,8 @@ jobs:
           for file in $(find $CONFIG -type f -name "config_data" 2>/dev/null | grep '/out/');do
             echo $file
             pushd $(dirname $file)
+            CC_VERSION_TEXT=$(grep -E 'CONFIG_CC_VERSION_TEXT=.+' $file 2>/dev/null | cut -d'=' -f2-)
+            [ -n "${CC_VERSION_TEXT}" ] && echo "${CC_VERSION_TEXT}" > ${GITHUB_WORKSPACE}/CLANG_VER.ME
             zip kernel_config.zip $(basename $file)
             mv kernel_config.zip $GITHUB_WORKSPACE/
             popd
