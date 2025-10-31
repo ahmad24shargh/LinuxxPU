@@ -773,7 +773,7 @@ jobs:
           export CC="clang --target=${TARGET}${API} ${My_Args}"
           
           BUILD_CONFIG='common/build.config.gki.aarch64'
-          sed -i -e '/^KMI_SYMBOL_LIST_STRICT_MODE=/d' -e '/^TRIM_NONLISTED_KMI=/d' -e '/^KMI_ENFORCED=/d' -e '$a\KMI_SYMBOL_LIST_STRICT_MODE=0' -e '$a\TRIM_NONLISTED_KMI=0' -e '$a\KMI_ENFORCED=0' -e '/^MODULES_ORDER=/d' -e '/^MODULES_LIST=/d' common/build.config.gki.aarch64
+          #sed -i -e '/^KMI_SYMBOL_LIST_STRICT_MODE=/d' -e '/^TRIM_NONLISTED_KMI=/d' -e '/^KMI_ENFORCED=/d' -e '$a\KMI_SYMBOL_LIST_STRICT_MODE=0' -e '$a\TRIM_NONLISTED_KMI=0' -e '$a\KMI_ENFORCED=0' -e '/^MODULES_ORDER=/d' -e '/^MODULES_LIST=/d' common/build.config.gki.aarch64
 
           if [ ${{ env.selinux_permissive }} == 'true' ];then
             if grep -Eq '^CONFIG_CMDLINE=.+' ${defconfig};then cmdline_str=$(echo "CONFIG_CMDLINE=\"$(grep -E '^CONFIG_CMDLINE=.+' ${defconfig} | cut -d '"' -f2) selinux=0\"");else cmdline_str='CONFIG_CMDLINE="selinux=0"';fi
@@ -804,7 +804,7 @@ jobs:
             export BUILD_SCRIPT_DIR=$(dirname $(realpath build/build.sh))
 
             #for ndk and arm-toolchain and clang-llvm
-            sed -E -i '/.*sysroot_flags\+=.+/d' build/_setup_env.sh
+            #sed -E -i '/.*sysroot_flags\+=.+/d' build/_setup_env.sh
 
             if [ ! -d ${GITHUB_WORKSPACE}/clang-llvm ];then
               sed -E -i 's|source .+_setup_env.sh.+|source "${ROOT_DIR}/build/_setup_env.sh";export PATH="${My_PATH}"|g' build/build.sh
@@ -821,9 +821,10 @@ jobs:
             fi   
             [ -f ./common/kernel/manipulating_conf_data.sh ] && cat ./common/kernel/manipulating_conf_data.sh
             if [ "${BUILD_CONFIG}" != "nothing" ];then
-              LTO=thin BUILD_CONFIG=${BUILD_CONFIG} SKIP_EXT_MODULES=1 SKIP_CP_KERNEL_HDR=1 SKIP_VENDOR_BOOT=1 SKIP_MRPROPER=1 SYSTEM_DLKM_RE_SIGN=0 BUILD_SYSTEM_DLKM=0 KMI_SYMBOL_LIST_STRICT_MODE=0 build/build.sh CC="${CC}" 
+              #LTO=thin BUILD_CONFIG=${BUILD_CONFIG} SKIP_EXT_MODULES=1 SKIP_CP_KERNEL_HDR=1 SKIP_VENDOR_BOOT=1 SKIP_MRPROPER=1 SYSTEM_DLKM_RE_SIGN=0 BUILD_SYSTEM_DLKM=0 KMI_SYMBOL_LIST_STRICT_MODE=0 build/build.sh CC="${CC}" 
+              LTO=thin BUILD_CONFIG=${BUILD_CONFIG} build/build.sh CC="${CC}"
             else
-              LTO=thin SKIP_EXT_MODULES=1 SKIP_CP_KERNEL_HDR=1 SKIP_VENDOR_BOOT=1 SKIP_MRPROPER=1 SYSTEM_DLKM_RE_SIGN=0 BUILD_SYSTEM_DLKM=0 KMI_SYMBOL_LIST_STRICT_MODE=0 build/build.sh CC="${CC}" 
+              LTO=thin build/build.sh CC="${CC}" 
             fi
           fi
 
