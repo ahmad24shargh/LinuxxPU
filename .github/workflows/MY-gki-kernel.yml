@@ -86,7 +86,7 @@ jobs:
           sudo apt purge man-db
           sudo rm -rf /var/lib/man-db/auto-update
           sudo apt update -qq
-          sudo apt install -y --no-install-recommends pahole aria2
+          sudo apt install -y --no-install-recommends curl aria2
           CONFIG="${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}"
 
           echo "CONFIG=$CONFIG" >> $GITHUB_ENV
@@ -386,6 +386,9 @@ jobs:
             tar -xzf ${GITHUB_WORKSPACE}/.github/scripts/build.tar.gz -C build
           fi
 
+          echo '💡💡💡 debug output 💡💡💡'
+          find ${GITHUB_WORKSPACE}/ -type d -name 'sysroot'
+
           echo "defconfig=${defconfig}" >> $GITHUB_ENV
 
       - name: Add BBG (Baseband-guard)
@@ -662,13 +665,13 @@ jobs:
         run: |
           set -euo pipefail
           cd "$CONFIG"
-          curl -s  https://github.com/backslashxx/map_spoof | grep -q '"message": "Not Found"'
-          if [ $? -eq 0 ];then
-            git clone https://github.com/ahmad24shargh/map_spoof
-          else
-            git clone https://github.com/backslashxx/map_spoof
-          fi
-          cd "common"
+          #curl -s  https://github.com/backslashxx/map_spoof | grep -q '"message": "Not Found"'
+          #if [ $? -eq 0 ];then
+          git clone https://github.com/ahmad24shargh/map_spoof
+          #else
+            #git clone https://github.com/backslashxx/map_spoof
+          #fi
+          cd common
           cp -r "../map_spoof/map_spoof" drivers
           grep -q "map_spoof" drivers/Makefile || printf "\nobj-\$(CONFIG_MAP_SPOOF) += map_spoof/\n" >> drivers/Makefile && echo "[+] Modified Makefile for map_spoof."
           grep -q "source \"drivers/map_spoof/Kconfig\"" drivers/Kconfig || sed -i "/endmenu/i\source \"drivers/map_spoof/Kconfig\"" drivers/Kconfig && echo "[+] Modified Kconfig for map_spoof."
