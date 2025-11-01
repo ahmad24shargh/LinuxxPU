@@ -343,9 +343,9 @@ jobs:
           sed -E -i 's|(^[[:space:]]+)(\$\(call if_changed,gzip\))|\1\$(srctree)/kernel/manipulating_conf_data.sh $(realpath kernel/config_data)\; \\\n\1\2|g' $CONFIG/common/kernel/Makefile
 
           # for clang-llvm
-          if [ -d $GITHUB_WORKSPACE/clang-llvm ];then
+          if [ -e $GITHUB_WORKSPACE/clang-llvm ];then
             cd $GITHUB_WORKSPACE/$CONFIG
-            #Remove old clang revisions and create a link to clang-llvm
+            echo "Remove old clang revisions and create a link to clang-llvm ..."
             [ -e $GITHUB_WORKSPACE/clang-llvm/bin/clang ] && clang_bin="$GITHUB_WORKSPACE/clang-llvm/bin/clang"
             [ -z $clang_bin ] && echo "clang not found" && false
             ls -l prebuilts/clang/host/linux-x86/clang*
@@ -358,13 +358,16 @@ jobs:
              -e 's/^CLANG_VERSION=.*/CLANG_VERSION='$($clang_bin -dumpversion)'/' \
              ${GITHUB_WORKSPACE}/$CONFIG/common/build.config.constants
 
-             # Remove defconfig check (if exists)
-             sed -i '/^POST_DEFCONFIG_CMDS="check_defconfig"/d' ${GITHUB_WORKSPACE}/$CONFIG/common/build.config.gki
+            # Remove defconfig check (if exists)
+            sed -i '/^POST_DEFCONFIG_CMDS="check_defconfig"/d' ${GITHUB_WORKSPACE}/$CONFIG/common/build.config.gki
 
-             ##this fix the error that present on clang 21,22 and so on.
-             #cp ${GITHUB_WORKSPACE}/kernel_patches/0001-treewide-clang-compilation-fixup.patch ${GITHUB_WORKSPACE}/$CONFIG/common
-             #cd ${GITHUB_WORKSPACE}/$CONFIG/common
-             #patch -p1 < 0001-treewide-clang-compilation-fixup.patch || true
+            ##this fix the error that present on clang 21,22 and so on.
+            #cp ${GITHUB_WORKSPACE}/kernel_patches/0001-treewide-clang-compilation-fixup.patch ${GITHUB_WORKSPACE}/$CONFIG/common
+            #cd ${GITHUB_WORKSPACE}/$CONFIG/common
+            #patch -p1 < 0001-treewide-clang-compilation-fixup.patch || true
+            echo "PATH=$(dirname $clang_bin):$PATH" >> $GITHUB_ENV
+          else
+            echo "PATH=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/bin:$PATH" >> $GITHUB_ENV
           fi
 
           curl https://android.googlesource.com/kernel/common/+/refs/heads/android13-5.15-lts/scripts/setlocalversion?format=TEXT | base64 -d > ${GITHUB_WORKSPACE}/$CONFIG/common/scripts/setlocalversion && chmod +x ${GITHUB_WORKSPACE}/$CONFIG/common/scripts/setlocalversion
@@ -695,7 +698,7 @@ jobs:
           set -ex
           cd "$CONFIG"
 
-          if [ ! -d $GITHUB_WORKSPACE/clang-llvm ];then
+          if [ ! -e $GITHUB_WORKSPACE/clang-llvm ];then
             export LIBRARY_PATH=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/lib64
             export CPATH=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/include
           fi
@@ -836,7 +839,7 @@ jobs:
             false
           fi
 
-          if [ ! -d ${GITHUB_WORKSPACE}/clang-llvm ];then
+          if [ ! -e ${GITHUB_WORKSPACE}/clang-llvm ];then
             #for ndk
             export TOOLCHAIN=${ANDROID_NDK_LATEST_HOME}/toolchains/llvm/prebuilt/linux-x86_64
             export My_PATH="${ANDROID_NDK_LATEST_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin:${ANDROID_NDK_LATEST_HOME}/prebuilt/linux-x86_64/bin/:${PATH}:$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/bin"
@@ -879,9 +882,13 @@ jobs:
             sed -E -i 's/(.+Checking the list of modules:.*)/  cp ${OUT_DIR}\/modules.order ${KERNEL_DIR}\/${MODULES_ORDER}\n\1/g' build/build.sh
 
             #for ndk and arm-toolchain and clang-llvm(custom clang)
-            #sed -E -i '/.*sysroot_flags\+=.+/d' build/_setup_env.sh
+            if [ -e $GITHUB_WORKSPACE/clang-llvm ];then
+              result=$(find $GITHUB_WORKSPACE/clang-llvm -type d -name 'sysroot' 2>/dev/null)
+              echo "result of find sysroot dirs: $([ -z "$result" ] && echo NOTHING || echo $result)"
+              [ -z "$result" ] && sed -E -i '/.*sysroot_flags\+=.+/d' build/_setup_env.sh
+            fi
 
-            if [ ! -d ${GITHUB_WORKSPACE}/clang-llvm ];then
+            if [ ! -e ${GITHUB_WORKSPACE}/clang-llvm ];then
               sed -E -i 's|source .+_setup_env.sh.+|source "${ROOT_DIR}/build/_setup_env.sh";export PATH="${My_PATH}"|g' build/build.sh
               sed -E -i 's|.*export ROOT_DIR=.+dirname.+$|export ROOT_DIR=$($(find ${BUILD_SCRIPT_DIR} -type f -name "gettop.sh"))|g' build/build.sh
               sed -E -i 's|(if \[ -n \"\$\{MODULES_ORDER\}\" \]\;.+)|\1\n  cp ${OUT_DIR}/modules.order ${KERNEL_DIR}/${MODULES_ORDER}\n|g' build/build.sh
