@@ -185,22 +185,26 @@ jobs:
           key: clang-custom-${{ runner.os }}-v1
 
       - name: Download clang-custom (if cache not found)
-        if: steps.cache-clang-custom.outputs.cache-hit != 'true' && ${{ env.clang_toolchain == 'custom_clang/llvm' }}
+        if: steps.cache-clang-custom.outputs.cache-hit != 'true'
         run: |
-          mkdir -p clang-custom
-          clang_custom_latest_url=$(curl -s https://api.github.com/repos/$( [ "${{ env.clang22_compiler }}" == "true" ] && echo "ZyCromerZ/Clang" || echo "llvm/llvm-project")/releases/latest | grep browser_download_url | cut -d '"' -f 4 | grep -E '/(Clang-22.+.tar.gz|[^/]+Linux-X64.tar.xz)$')
-          [ -z $clang_custom_latest_url ] && { echo 'The clang-llvm download link could not be extracted!!!';false; } || echo -e "Download link for the latest build of clang-llvm:\n${clang_custom_latest_url}"
-          aria2c -x 16 -s 16 -o clang-llvm.tar.$([ "${{ env.clang22_compiler }}" == "true" ] && echo "gz" || echo "xz") ${clang_custom_latest_url}
-          tar -x$([ "${{ env.clang22_compiler }}" == "true" ] && echo "z" || echo "J")f clang-llvm.tar.$([ "${{ env.clang22_compiler }}" == "true" ] && echo "gz" || echo "xz") -C clang-custom
-          rm -rf clang-llvm.tar.$([ "${{ env.clang22_compiler }}" == "true" ] && echo "gz" || echo "xz")
-          if [ "$(find clang-custom -maxdepth 1 -printf %y)" = "dd" ]; then
-            cd clang-custom
-            dir=$(find . -maxdepth 1 -type d | grep -Ev '\.$')
-            shopt -s dotglob nullglob
-            mv ${dir}/* .
-            rmdir ${dir}
-            cd ..
-            ln -s clang-custom clang-llvm
+          if ${{ env.clang_toolchain == 'custom_clang/llvm' }};then
+            mkdir -p clang-custom
+            clang_custom_latest_url=$(curl -s https://api.github.com/repos/$( [ "${{ env.clang22_compiler }}" == "true" ] && echo "ZyCromerZ/Clang" || echo "llvm/llvm-project")/releases/latest | grep browser_download_url | cut -d '"' -f 4 | grep -E '/(Clang-22.+.tar.gz|[^/]+Linux-X64.tar.xz)$')
+            [ -z $clang_custom_latest_url ] && { echo 'The clang-llvm download link could not be extracted!!!';false; } || echo -e "Download link for the latest build of clang-llvm:\n${clang_custom_latest_url}"
+            aria2c -x 16 -s 16 -o clang-llvm.tar.$([ "${{ env.clang22_compiler }}" == "true" ] && echo "gz" || echo "xz") ${clang_custom_latest_url}
+            tar -x$([ "${{ env.clang22_compiler }}" == "true" ] && echo "z" || echo "J")f clang-llvm.tar.$([ "${{ env.clang22_compiler }}" == "true" ] && echo "gz" || echo "xz") -C clang-custom
+            rm -rf clang-llvm.tar.$([ "${{ env.clang22_compiler }}" == "true" ] && echo "gz" || echo "xz")
+            if [ "$(find clang-custom -maxdepth 1 -printf %y)" = "dd" ]; then
+              cd clang-custom
+              dir=$(find . -maxdepth 1 -type d | grep -Ev '\.$')
+              shopt -s dotglob nullglob
+              mv ${dir}/* .
+              rmdir ${dir}
+              cd ..
+              ln -s clang-custom clang-llvm
+            fi
+          else
+            echo "clang-official selected. aborting ..."
           fi
 
       - name: Cache clang-official
@@ -213,22 +217,26 @@ jobs:
           key: clang-official-${{ runner.os }}-v1
 
       - name: Download clang-official (if cache not found)
-        if: steps.cache-clang-official.outputs.cache-hit != 'true' && ${{ env.clang_toolchain == 'official' }}
+        if: steps.cache-clang-official.outputs.cache-hit != 'true'
         run: |
-          mkdir -p clang-official
-          url="https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/${{ vars.CLANG_OFFICIAL }}.tar.gz"
-          echo -e "Download link for clang-official:\n${url}"
-          aria2c -x 16 -s 16 -o clang-llvm.tar.gz ${url}
-          tar -xzf clang-llvm.tar.gz -C clang-official
-          rm -rf clang-llvm.tar.gz
-          if [ "$(find clang-official -maxdepth 1 -printf %y)" = "dd" ]; then
-            cd clang-official
-            dir=$(find . -maxdepth 1 -type d | grep -Ev '\.$')
-            shopt -s dotglob nullglob
-            mv ${dir}/* .
-            rmdir ${dir}
-            cd ..
-            ln -s clang-official clang-llvm
+          if ${{ env.clang_toolchain == 'official' }};then
+            mkdir -p clang-official
+            url="https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/${{ vars.CLANG_OFFICIAL }}"
+            echo -e "Download link for clang-official:\n${url}"
+            aria2c -x 16 -s 16 -o clang-llvm.tar.gz ${url}
+            tar -xzf clang-llvm.tar.gz -C clang-official
+            rm -rf clang-llvm.tar.gz
+            if [ "$(find clang-official -maxdepth 1 -printf %y)" = "dd" ]; then
+              cd clang-official
+              dir=$(find . -maxdepth 1 -type d | grep -Ev '\.$')
+              shopt -s dotglob nullglob
+              mv ${dir}/* .
+              rmdir ${dir}
+              cd ..
+              ln -s clang-official clang-llvm
+            fi
+          else
+            echo "clang-custom selected. aborting ..."
           fi
           
           
