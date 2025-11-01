@@ -293,10 +293,9 @@ jobs:
           #if [ -d $GITHUB_WORKSPACE/clang-llvm ];then
           cd $GITHUB_WORKSPACE/$CONFIG
           #Remove old clang revisions and create a link to clang-llvm
-          for dir in $(find prebuilts/clang/host/linux-x86/ -type d -name 'clang-*' 2>/dev/null | grep -Ev 'clang-r.+');do echo "removing $dir ...";rm -rf $dir ;done
-          newest_toolchain=$(basename $(find prebuilts/clang/host/linux-x86/ -type d -name 'clang-*' 2>/dev/null | sort -r | head -n 1))
+          newest_toolchain=$(basename $(find prebuilts/clang/host/linux-x86/ -type d -name 'clang-r*' 2>/dev/null | sort -r | head -n 1))
           echo "newest toolchain: $newest_toolchain"
-          for dir in $(find prebuilts/clang/host/linux-x86/ -type d -name 'clang-r*' 2>/dev/null);do [ "$(basename $dir)" != "$newest_toolchain" ] && { echo "removing $dir ...";rm -rf $dir; };done
+          for dir in $(find prebuilts/clang/host/linux-x86/ -type d -name 'clang*' 2>/dev/null);do [ "$(basename $dir)" != "$newest_toolchain" ] && { echo "removing $dir ...";rm -rf $dir; };done
           mv ./prebuilts/clang/host/linux-x86/${newest_toolchain} ./prebuilts/clang/host/linux-x86/clang-llvm
           find . -name 'clang'
           [ -e $GITHUB_WORKSPACE/$CONFIG/prebuilts/clang/host/linux-x86/clang-llvm/bin/clang ] && clang_bin="$GITHUB_WORKSPACE/$CONFIG/prebuilts/clang/host/linux-x86/clang-llvm/bin/clang"
