@@ -194,6 +194,7 @@ jobs:
             aria2c -x 16 -s 16 -o clang-llvm.tar.$([ "${{ env.clang22_compiler }}" == "true" ] && echo "gz" || echo "xz") ${clang_custom_latest_url}
             tar -x$([ "${{ env.clang22_compiler }}" == "true" ] && echo "z" || echo "J")f clang-llvm.tar.$([ "${{ env.clang22_compiler }}" == "true" ] && echo "gz" || echo "xz") -C clang-custom
             rm -rf clang-llvm.tar.$([ "${{ env.clang22_compiler }}" == "true" ] && echo "gz" || echo "xz")
+            ln -s clang-custom clang-llvm
             if [ "$(find clang-custom -maxdepth 1 -printf %y)" = "dd" ]; then
               cd clang-custom
               dir=$(find . -maxdepth 1 -type d | grep -Ev '\.$')
@@ -201,7 +202,6 @@ jobs:
               mv ${dir}/* .
               rmdir ${dir}
               cd ..
-              ln -s clang-custom clang-llvm
             fi
           else
             echo "clang-official selected. aborting ..."
@@ -226,6 +226,7 @@ jobs:
             aria2c -x 16 -s 16 -o clang-llvm.tar.gz ${url}
             tar -xzf clang-llvm.tar.gz -C clang-official
             rm -rf clang-llvm.tar.gz
+            ln -s clang-official clang-llvm
             if [ "$(find clang-official -maxdepth 1 -printf %y)" = "dd" ]; then
               cd clang-official
               dir=$(find . -maxdepth 1 -type d | grep -Ev '\.$')
@@ -233,7 +234,6 @@ jobs:
               mv ${dir}/* .
               rmdir ${dir}
               cd ..
-              ln -s clang-official clang-llvm
             fi
           else
             echo "clang-custom selected. aborting ..."
