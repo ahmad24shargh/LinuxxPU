@@ -1,4 +1,7 @@
 name: CI
+permissions:
+  contents: write  # (for pushing tags)
+  actions: write   # All
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 concurrency:
@@ -74,9 +77,10 @@ jobs:
       - name: Test Codes 2
         if: true
         run: |
-          gh variable list
-          gh variable set clang_official 'NOTHHHING'
-          gh variable list
+          repo="${{ github.repository_owner }}/${{ github.event.repository.name }}"
+          gh variable list -R $repo
+          gh variable set clang_official 'NOTHHHING' -R $repo
+          gh variable list -R $repo
 
           
 
