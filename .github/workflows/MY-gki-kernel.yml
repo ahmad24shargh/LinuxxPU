@@ -647,8 +647,8 @@ jobs:
           #sed -i -e 's/CONSOLE_LOGLEVEL_DEFAULT/CONSOLE_LOGLEVEL_MIN/g' -e 's/MESSAGE_LOGLEVEL_DEFAULT/CONSOLE_LOGLEVEL_MIN/g' ./common/kernel/printk/printk.c
           
       - name: add map spoof from backslashxx
-        #if: ${{ env.ksu_fork == 'xxKSU' }}
-        if: false
+        if: ${{ env.ksu_fork == 'xxKSU' }}
+        #if: false
         shell: bash
         run: |
           set -euo pipefail
@@ -665,6 +665,15 @@ jobs:
           grep -q "source \"drivers/map_spoof/Kconfig\"" drivers/Kconfig || sed -i "/endmenu/i\source \"drivers/map_spoof/Kconfig\"" drivers/Kconfig && echo "[+] Modified Kconfig for map_spoof."
           echo "CONFIG_MAP_SPOOF=y" >> ${defconfig}  
           patch -p1 -F 3 < ../map_spoof/kernel.diff
+
+      - name: sys_reboot hook if needed (only xxKSU)
+        if: ${{ env.ksu_fork == 'xxKSU' }}
+        run: |
+          if grep -Erq $GITHUB_WORKSPACE/kernel -e '(ksu|lpu)_handle_sys_reboot' 2>/dev/null;then
+            echo 'sys_rebbot hook function found in ksu kernel driver'
+            echo "Patch the required kernel tree source code files (reboot.c) ... "
+            sed -E -i -e 's/(.*SYSCALL_DEFINE4\(reboot, int.+)/extern int ksu_handle_sys_reboot(int magic1, int magic2, unsigned int cmd, void __user **arg)\;\n\1/g' -e 's/(.+We only trust the superuser with rebooting the system.+)/\tksu_handle_sys_reboot(magic1, magic2, cmd, \&arg)\;\n\1/g' $GITHUB_WORKSPACE/$CONFIG/common/kernel/reboot.c
+          fi
           
       - name: Build kernel
         env:
