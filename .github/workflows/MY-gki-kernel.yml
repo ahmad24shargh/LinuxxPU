@@ -663,7 +663,7 @@ jobs:
         #if: false
         shell: bash
         run: |
-          set -euo pipefail
+          set -ex
           cd "$CONFIG"
           #curl -s  https://github.com/backslashxx/map_spoof | grep -q '"message": "Not Found"'
           #if [ $? -eq 0 ];then
@@ -677,6 +677,7 @@ jobs:
           grep -q "source \"drivers/map_spoof/Kconfig\"" drivers/Kconfig || sed -i "/endmenu/i\source \"drivers/map_spoof/Kconfig\"" drivers/Kconfig && echo "[+] Modified Kconfig for map_spoof."
           echo "CONFIG_MAP_SPOOF=y" >> ${defconfig}  
           patch -p1 -F 3 < ../map_spoof/kernel.diff
+          set +ex
 
       - name: sys_reboot hook if needed (only xxKSU)
         if: ${{ env.ksu_fork == 'xxKSU' }}
