@@ -126,6 +126,7 @@ jobs:
             fi
           else
             current_clang_official_ver_cached=${{ vars.CLANG_OFFICIAL }}
+            [ -e README.md ] && rm -rf README.md 
             wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+/mirror-goog-main-llvm-toolchain-source/README.md
             url="https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/$(grep -Eo 'Android Linux Kernel.+for Android Mainline kernel.' README.md | grep -Eo 'clang-[^ ]+').tar.gz"
             online_clang_official_ver=$(echo $url | rev | cut -d'/' -f1 | rev)
