@@ -76,8 +76,9 @@ jobs:
         if: true
         run: |
           repo="${{ github.repository_owner }}/${{ github.event.repository.name }}"
+          echo ${{ vars.CLANG_OFFICIAL }}
           gh variable list -R $repo
-          gh  -R $repo variable set CLANG_OFFICIAL --body 'NOTHHHING'
+          gh  -R $repo variable set CLANG_OFFICIAL --body 'NNNN'
           gh variable list -R $repo
 
           
