@@ -128,8 +128,8 @@ jobs:
             current_clang_official_ver_cached=${{ vars.CLANG_OFFICIAL }}
             wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+/mirror-goog-main-llvm-toolchain-source/README.md
             url="https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/$(grep -Eo 'Android Linux Kernel.+for Android Mainline kernel.' README.md | grep -Eo 'clang-[^ ]+').tar.gz"
-            clang_official_cache_creation_time=$(gh cache list --repo $repo -k clang-official-${{ runner.os }}-v1 --json  'createdAt' 2>/dev/null  | grep 'createdAt' | grep -Eo '[0-9]{4}-[0-9]{2}-[0-9]{2}') || true
             online_clang_official_ver=$(echo $url | rev | cut -d'/' -f1 | rev)
+            clang_official_cache_creation_time=$(gh cache list --repo $repo -k clang-official-${{ runner.os }}-v1 --json  'createdAt' 2>/dev/null  | grep 'createdAt' | grep -Eo '[0-9]{4}-[0-9]{2}-[0-9]{2}') || true
             # remove clang-official-${{ runner.os }}-v1 cache if newer version detected
             if curl --output /dev/null --silent --head --fail "$url" 2>/dev/null; then
               if [ -n "${clang_official_cache_creation_time}" ];then
@@ -184,7 +184,7 @@ jobs:
           key: clang-custom-${{ runner.os }}-v1
 
       - name: Download clang-custom (if cache not found)
-        if: steps.cache-clang-custom.outputs.cache-hit != 'true'
+        if: steps.cache-clang-custom.outputs.cache-hit != 'true' && ${{ env.clang_toolchain == 'custom_clang/llvm' }}
         run: |
           mkdir -p clang-custom
           clang_custom_latest_url=$(curl -s https://api.github.com/repos/$( [ "${{ env.clang22_compiler }}" == "true" ] && echo "ZyCromerZ/Clang" || echo "llvm/llvm-project")/releases/latest | grep browser_download_url | cut -d '"' -f 4 | grep -E '/(Clang-22.+.tar.gz|[^/]+Linux-X64.tar.xz)$')
@@ -212,10 +212,23 @@ jobs:
           key: clang-official-${{ runner.os }}-v1
 
       - name: Download clang-official (if cache not found)
-        if: steps.cache-clang-official.outputs.cache-hit != 'true'
+        if: steps.cache-clang-official.outputs.cache-hit != 'true' && ${{ env.clang_toolchain == 'official' }}
         run: |
-          else
-          
+          mkdir -p clang-official
+          url="https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/${{ vars.CLANG_OFFICIAL }}.tar.gz"
+          echo -e "Download link for clang-official:\n${url}"
+          aria2c -x 16 -s 16 -o clang-llvm.tar.gz ${url}
+          tar -xzf clang-llvm.tar.gz -C clang-official
+          rm -rf clang-llvm.tar.gz
+          if [ "$(find clang-official -maxdepth 1 -printf %y)" = "dd" ]; then
+            cd clang-official
+            dir=$(find . -maxdepth 1 -type d | grep -Ev '\.$')
+            shopt -s dotglob nullglob
+            mv ${dir}/* .
+            rmdir ${dir}
+            cd ..
+            ln -s clang-official clang-llvm
+          fi
           
           
       - name: Set environment variables
