@@ -77,7 +77,7 @@ jobs:
         run: |
           sudo apt purge man-db
           sudo rm -rf /var/lib/man-db/auto-update
-          sudo apt update
+          sudo apt update -qq
           sudo apt install -y --no-install-recommends pahole aria2
           CONFIG="${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}"
 
@@ -116,12 +116,12 @@ jobs:
             else
               echo "clang-llvm-${{ runner.os }}-v1 cache not found in ${repo}"
             fi
-          #else
+          else
             # clang-llvm older than 30 days
-            #if [ $(echo $(( ($(date +%s) - $(date --date=$(gh cache list --repo $repo -k clang-llvm-${{ runner.os }}-v1 --json  'createdAt' | grep 'createdAt' | cut -d'"' -f4) +%s) )/(60*60*24) ))) -gt 29 ];then
-              #echo "removing clang-llvm-${{ runner.os }}-v1 from cache ..."
-              #gh cache delete clang-llvm-${{ runner.os }}-v1 --repo $repo 2>/dev/null
-            #fi
+            if [ $(echo $(( ($(date +%s) - $(date --date=$(gh cache list --repo $repo -k clang-llvm-${{ runner.os }}-v1 --json  'createdAt' | grep 'createdAt' | cut -d'"' -f4) +%s) )/(60*60*24) ))) -gt 29 ];then
+              echo "removing clang-llvm-${{ runner.os }}-v1 from cache ..."
+              gh cache delete clang-llvm-${{ runner.os }}-v1 --repo $repo 2>/dev/null
+            fi
           fi
           
           # toolchain older than 30 days
@@ -147,17 +147,16 @@ jobs:
           git clone $AOSP_MIRROR/kernel/prebuilts/build-tools -b $BRANCH --depth 1 kernel-build-tools
           git clone $AOSP_MIRROR/platform/system/tools/mkbootimg -b $BRANCH --depth 1 mkbootimg
       
-      #- name: Cache clang-llvm
-        #id: cache-clang-llvm
-        #uses: actions/cache@v4.2.4
-        #with:
-          #path: |
-            #clang-llvm
-          #key: clang-llvm-${{ runner.os }}-v1
+      - name: Cache clang-llvm
+        id: cache-clang-llvm
+        uses: actions/cache@v4.2.4
+        with:
+          path: |
+            clang-llvm
+          key: clang-llvm-${{ runner.os }}-v1
 
       - name: Download clang-llvm (if cache not found)
-        #if: steps.cache-clang-llvm.outputs.cache-hit != 'true'
-        if: false
+        if: steps.cache-clang-llvm.outputs.cache-hit != 'true'
         run: |
           mkdir -p clang-llvm
           if false;then
@@ -174,15 +173,24 @@ jobs:
               rmdir ${dir}
             fi
           else
-            aria2c -x 16 -s 16 -o clang-llvm.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r547379.tar.gz
-            tar -xzf clang-llvm.tar.gz -C clang-llvm
-            rm -rf clang-llvm.tar.gz
-            if [ "$(find clang-llvm -maxdepth 1 -printf %y)" = "dd" ]; then
-              cd clang-llvm
-              dir=$(find . -maxdepth 1 -type d | grep -Ev '\.$')
-              shopt -s dotglob nullglob
-              mv ${dir}/* .
-              rmdir ${dir}
+            wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+/mirror-goog-main-llvm-toolchain-source/README.md
+            url="https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/$(grep -Eo 'Android Linux Kernel.+for Android Mainline kernel.' README.md | grep -Eo 'clang-[^ ]+').tar.gz"
+            if curl --output /dev/null --silent --head --fail "$url" 2>/dev/null; then
+              echo "downloading $(echo $url | rev | cut -d'/' -f1 | rev) toolchain ..."
+              aria2c -x 16 -s 16 -o clang-llvm.tar.gz $url
+              tar -xzf clang-llvm.tar.gz -C clang-llvm
+              rm -rf clang-llvm.tar.gz
+              if [ "$(find clang-llvm -maxdepth 1 -printf %y)" = "dd" ]; then
+                cd clang-llvm
+                dir=$(find . -maxdepth 1 -type d | grep -Ev '\.$')
+                shopt -s dotglob nullglob
+                mv ${dir}/* .
+                rmdir ${dir}
+              fi
+            else
+              echo "Error: aosp clang toolchain download link was not extracted correctly !!! "
+              exit 56
+              false
             fi
           fi
           
@@ -290,33 +298,29 @@ jobs:
           sed -E -i 's|(^[[:space:]]+)(\$\(call if_changed,gzip\))|\1\$(srctree)/kernel/manipulating_conf_data.sh $(realpath kernel/config_data)\; \\\n\1\2|g' $CONFIG/common/kernel/Makefile
 
           # for clang-llvm
-          #if [ -d $GITHUB_WORKSPACE/clang-llvm ];then
-          cd $GITHUB_WORKSPACE/$CONFIG
-          #Remove old clang revisions and create a link to clang-llvm
-          newest_toolchain=$(basename $(find prebuilts/clang/host/linux-x86/ -type d -name 'clang-r*' 2>/dev/null | sort -r | head -n 1))
-          echo "newest toolchain: $newest_toolchain"
-          for dir in $(find prebuilts/clang/host/linux-x86/ -type d -name 'clang*' 2>/dev/null);do [ "$(basename $dir)" != "$newest_toolchain" ] && { echo "removing $dir ...";rm -rf $dir; };done
-          mv ./prebuilts/clang/host/linux-x86/${newest_toolchain} ./prebuilts/clang/host/linux-x86/clang-llvm
-          find . -name 'clang'
-          [ -e $GITHUB_WORKSPACE/$CONFIG/prebuilts/clang/host/linux-x86/clang-llvm/bin/clang ] && clang_bin="$GITHUB_WORKSPACE/$CONFIG/prebuilts/clang/host/linux-x86/clang-llvm/bin/clang"
-          [ -z $clang_bin ] && echo "clang not found" && false
-          #rm -rf prebuilts/clang/host/linux-x86/clang-*
-          cd prebuilts/clang/host/linux-x86/ && ln -s -T clang-llvm $newest_toolchain
+          if [ -d $GITHUB_WORKSPACE/clang-llvm ];then
+            cd $GITHUB_WORKSPACE/$CONFIG
+            #Remove old clang revisions and create a link to clang-llvm
+            [ -e $GITHUB_WORKSPACE/clang-llvm/bin/clang ] && clang_bin="$GITHUB_WORKSPACE/clang-llvm/bin/clang"
+            [ -z $clang_bin ] && echo "clang not found" && false
+            ls -l prebuilts/clang/host/linux-x86/clang*
+            rm -rf prebuilts/clang/host/linux-x86/clang-*
+            cd prebuilts/clang/host/linux-x86/ && ln -s -T $GITHUB_WORKSPACE/clang-llvm clang-$($clang_bin -dumpversion)
 
-          # Update build config constants
-          sed -i \
-            -e 's/^BRANCH=.*/BRANCH=android13-5.15/' \
-            -e 's/^CLANG_VERSION=.*/CLANG_VERSION='${newest_toolchain}'/' \
-            ${GITHUB_WORKSPACE}/$CONFIG/common/build.config.constants
+            # Update build config constants
+            sed -i \
+             -e 's/^BRANCH=.*/BRANCH=android13-5.15/' \
+             -e 's/^CLANG_VERSION=.*/CLANG_VERSION='$($clang_bin -dumpversion)'/' \
+             ${GITHUB_WORKSPACE}/$CONFIG/common/build.config.constants
 
-          # Remove defconfig check (if exists)
-          sed -i '/^POST_DEFCONFIG_CMDS="check_defconfig"/d' ${GITHUB_WORKSPACE}/$CONFIG/common/build.config.gki
+             # Remove defconfig check (if exists)
+             sed -i '/^POST_DEFCONFIG_CMDS="check_defconfig"/d' ${GITHUB_WORKSPACE}/$CONFIG/common/build.config.gki
 
-          ##this fix the error that present on clang 21,22 and so on.
-          #cp ${GITHUB_WORKSPACE}/kernel_patches/0001-treewide-clang-compilation-fixup.patch ${GITHUB_WORKSPACE}/$CONFIG/common
-          #cd ${GITHUB_WORKSPACE}/$CONFIG/common
-          #patch -p1 < 0001-treewide-clang-compilation-fixup.patch || true
-          #fi
+             ##this fix the error that present on clang 21,22 and so on.
+             #cp ${GITHUB_WORKSPACE}/kernel_patches/0001-treewide-clang-compilation-fixup.patch ${GITHUB_WORKSPACE}/$CONFIG/common
+             #cd ${GITHUB_WORKSPACE}/$CONFIG/common
+             #patch -p1 < 0001-treewide-clang-compilation-fixup.patch || true
+          fi
 
           curl https://android.googlesource.com/kernel/common/+/refs/heads/android13-5.15-lts/scripts/setlocalversion?format=TEXT | base64 -d > ${GITHUB_WORKSPACE}/$CONFIG/common/scripts/setlocalversion && chmod +x ${GITHUB_WORKSPACE}/$CONFIG/common/scripts/setlocalversion
           ## Apply Module Symbol Version Fix Patch(from wild+ GKI_KernelSU_SUSFS)(bootloop for me)
@@ -330,7 +334,7 @@ jobs:
 
           # abi_bypass_gki (not needed but ...)
           for file in $(find ${GITHUB_WORKSPACE}/$CONFIG/ -type f -name 'check_buildtime_symbol_protection.py' 2>/dev/null | grep '/abi/');do echo $file;sed -E -i '/f"  \{symbol\} required by \{undefined_symbol_consumer_lookup\[symbol\]\}"/ {N;N;N;N;N; s/([[:space:]]+)return 1/\1print( "\\nBUT WHO CARES?\\n")\1return 0/g}' $file ;done
-
+          
           cd ${GITHUB_WORKSPACE}/$CONFIG
           if [ ! -f "build/gettop.sh" ];then
             mkdir -p build
