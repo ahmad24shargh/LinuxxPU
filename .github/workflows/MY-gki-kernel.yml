@@ -2,6 +2,10 @@ name: MY GKI Kernel Build
 permissions:
   contents: write  # (for pushing tags)
   actions: write   # Allows triggering actions
+
+env:
+  GITHUB_TOKEN: ${{ secrets.PAT_NO_EXPIRE }}
+  
 on:
     
   workflow_call: # This allows this workflow to be called from another workflow
@@ -30,6 +34,9 @@ on:
       os_patch_level:
         required: true
         type: string
+      clang_toolchain:
+        required: true
+        type: string
       manager_supports:
         required: true
         type: string
@@ -49,6 +56,7 @@ jobs:
       hook_method: ${{ inputs.hook_method }}
       include_susfs: ${{ inputs.include_susfs }}
       BBG: ${{ inputs.BBG }}
+      clang_toolchain: ${{ inputs.clang_toolchain }}
       #permissive cause bootloop
       selinux_permissive: false
       GH_TOKEN: ${{ github.token }}
@@ -87,7 +95,7 @@ jobs:
       - name: delete toolchain and clang-llvm caches if older than a certain amount
         run: |
           repo="${{ github.repository_owner }}/${{ github.event.repository.name }}"
-          if false;then
+          if ${{ env.clang_toolchain == 'custom_clang/llvm' }} ;then
             clang22_latest_relase=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/ZyCromerZ/Clang/releases  | grep -Eo '"name":[^,]+' | head -n 1)
             llvm_latest_relase=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/llvm/llvm-project/releases  | grep -Eo '"name":[^,]+' | grep 'Linux-X64.tar.xz"' | head -n 1)
             [ -z "$clang22_latest_relase" ] && { echo "Failed to extract clang22 latest release";exit 1;false; }
@@ -111,13 +119,22 @@ jobs:
               echo "clang-llvm-${{ runner.os }}-v1 creation date: ${clang_llvm_cache_creation_time}"
               if [[ $latest_update_time > $clang_llvm_cache_creation_time ]];then
                 echo "removing old clang-llvm-${{ runner.os }}-v1 from cache ..."
-                gh cache delete clang-llvm-${{ runner.os }}-v1 --repo $repo
+                gh cache delete clang-custom-${{ runner.os }}-v1 --repo $repo
               fi
             else
-              echo "clang-llvm-${{ runner.os }}-v1 cache not found in ${repo}"
+              echo "clang-custom-${{ runner.os }}-v1 cache not found in ${repo}"
             fi
           else
-            # clang-llvm older than 30 days
+            clang_llvm_cache_creation_time=$(gh cache list --repo $repo -k clang-llvm-${{ runner.os }}-v1 --json  'createdAt' 2>/dev/null  | grep 'createdAt' | grep -Eo '[0-9]{4}-[0-9]{2}-[0-9]{2}') || true
+            # remove clang-official-${{ runner.os }}-v1 cache if newer version detected
+            current_clang_official_ver_cached=${{ vars.CLANG_OFFICIAL }}
+            wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+/mirror-goog-main-llvm-toolchain-source/README.md
+            url="https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/$(grep -Eo 'Android Linux Kernel.+for Android Mainline kernel.' README.md | grep -Eo 'clang-[^ ]+').tar.gz"
+            if curl --output /dev/null --silent --head --fail "$url" 2>/dev/null; then
+              online_clang_official_ver=$(echo $url | rev | cut -d'/' -f1 | rev)
+              if [ "${current_clang_official_ver_cached}" != "${online_clang_official_ver}" ];then
+              fi
+            fi
             if [ $(echo $(( ($(date +%s) - $(date --date=$(gh cache list --repo $repo -k clang-llvm-${{ runner.os }}-v1 --json  'createdAt' | grep 'createdAt' | cut -d'"' -f4) +%s) )/(60*60*24) ))) -gt 29 ];then
               echo "removing clang-llvm-${{ runner.os }}-v1 from cache ..."
               gh cache delete clang-llvm-${{ runner.os }}-v1 --repo $repo 2>/dev/null
