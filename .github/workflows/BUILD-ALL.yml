@@ -67,7 +67,7 @@ on:
         default: 'official'
         options:
           - 'official'
-          - 'custom clang/llvm 21-22'
+          - 'custom_clang/llvm'
       
       BBG:
         required: true
