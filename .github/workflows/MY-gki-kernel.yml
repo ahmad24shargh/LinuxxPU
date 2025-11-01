@@ -204,7 +204,7 @@ jobs:
               cd ..
             fi
           else
-            echo "clang-official selected. aborting ..."
+            echo "clang-official selected. ignoring ..."
           fi
 
       - name: Cache clang-official
@@ -236,7 +236,7 @@ jobs:
               cd ..
             fi
           else
-            echo "clang-custom selected. aborting ..."
+            echo "clang-custom selected. ignoring ..."
           fi
           
           
