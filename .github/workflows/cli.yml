@@ -77,7 +77,7 @@ jobs:
         run: |
           repo="${{ github.repository_owner }}/${{ github.event.repository.name }}"
           gh variable list -R $repo
-          gh variable set clang_official 'NOTHHHING' -R $repo
+          gh  -R $repo variable set CLANG_OFFICIAL --body 'NOTHHHING'
           gh variable list -R $repo
 
           
