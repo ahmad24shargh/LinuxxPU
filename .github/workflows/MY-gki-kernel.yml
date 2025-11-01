@@ -588,16 +588,14 @@ jobs:
             echo "Applying xx_hybridized patches(3 hooks) for backslashxx KSU..."
             cp ../../kernel_patches/xxksu/xx_hybridized.patch ./
             patch -p1 -F 3 < xx_hybridized.patch
-            cp ../../kernel_patches/xxksu/manual_lsm_security_hook.patch ./
-            patch -p1 -F 3 < manual_lsm_security_hook.patch
-            # test avc_spoof (on CONFIG_KSU_EXTRAS)
-            # with kprobe no need to this patch
-            #if [ ! -z $(grep -o 'CONFIG_KPROBES=n' ${defconfig} 2>/dev/null) ] && [ ! -z $(grep -o 'CONFIG_KSU_EXTRAS=y' ${defconfig} 2>/dev/null) ];then
-              ## The if body should never be executed because kprobe is always active.
-              #cp ../../kernel_patches/xxksu/avc_spoof.patch ./
-              #echo "applying avc_spoof.patch for KSU_EXTRAS ..."
-              #patch -p1 -F 3 < avc_spoof.patch
-            #fi
+            cp ../../kernel_patches/xxksu/manual_security_hooks_v* ./
+            if grep -Eq '^LSM_HANDLER_TYPE (lpu|ksu)_handle_prctl\(.+' ${GITHUB_WORKSPACE}/kernel/core_hook.c 2>/dev/null;then
+              echo "Applying manual_security_hooks_v1.5 patch ..."
+              patch -p1 -F 3 < manual_security_hooks_v1.5
+            else
+              echo "Applying manual_security_hooks_v1.6 patch ..."
+              patch -p1 -F 3 < manual_security_hooks_v1.6
+            fi
           elif [ "${{ inputs.ksu_fork }}" == "KSUN" -a "${{ env.kernel_variant }}" != "chickernel" ]; then
             echo "Applying scope_minimized_manual_hooks_v1. $( [ -f ${GITHUB_WORKSPACE}/USE_PERSHOOT_SUSFS.ME ] && echo -n "5.patch for pershoot fork of ksun" || echo -n "4.patch for ksun")..."
             cp ../../kernel_patches/next/scope_minimized_manual_hooks_* ./
@@ -685,7 +683,7 @@ jobs:
       - name: sys_reboot hook if needed (only xxKSU)
         if: ${{ env.ksu_fork == 'xxKSU' }}
         run: |
-          if grep -Erq $GITHUB_WORKSPACE/kernel -e '(ksu|lpu)_handle_sys_reboot' 2>/dev/null;then
+          if grep -Eq '^int (ksu|lpu)_handle_sys_reboot\(.+' $GITHUB_WORKSPACE/kernel/core_hook.c 2>/dev/null;then
             echo 'sys_rebbot hook function found in ksu kernel driver'
             echo "Patch the required kernel tree source code files (reboot.c) ... "
             sed -E -i -e 's/(.*SYSCALL_DEFINE4\(reboot, int.+)/extern int ksu_handle_sys_reboot(int magic1, int magic2, unsigned int cmd, void __user **arg)\;\n\1/g' -e 's/(.+We only trust the superuser with rebooting the system.+)/\tksu_handle_sys_reboot(magic1, magic2, cmd, \&arg)\;\n\1/g' $GITHUB_WORKSPACE/$CONFIG/common/kernel/reboot.c
