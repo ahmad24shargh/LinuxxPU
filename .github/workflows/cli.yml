@@ -1,7 +1,5 @@
 name: CI
-permissions:
-  contents: write  # (for pushing tags)
-  actions: write   # All
+permissions: write-all
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 concurrency:
