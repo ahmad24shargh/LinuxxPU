@@ -583,12 +583,12 @@ jobs:
               echo "Applying manual_security_hooks_v1.6 patch ..."
               patch -p1 -F 3 < manual_security_hooks_v1.6
             fi
-            #if grep -Eq '^int (ksu|lpu)_handle_sys_reboot\(.+' $GITHUB_WORKSPACE/kernel/core_hook.c 2>/dev/null;then
+            if grep -Eq '^int (ksu|lpu)_handle_sys_reboot\(.+' $GITHUB_WORKSPACE/kernel/core_hook.c 2>/dev/null;then
               ## xx NOTE: if kprobes work on your kernel, sys_reboot hook is not needed.
-              #echo 'sys_reboot hook function found in ksu kernel driver'
-              #echo "Patch common/kernel/reboot.c ... "
-              #sed -E -i -e 's/(.*SYSCALL_DEFINE4\(reboot, int.+)/extern int ksu_handle_sys_reboot(int magic1, int magic2, unsigned int cmd, void __user **arg)\;\n\1/g' -e 's/(.+We only trust the superuser with rebooting the system.+)/\tksu_handle_sys_reboot(magic1, magic2, cmd, \&arg)\;\n\1/g' $GITHUB_WORKSPACE/$CONFIG/common/kernel/reboot.c
-            #fi
+              echo 'sys_reboot hook function found in ksu kernel driver'
+              echo "Patch common/kernel/reboot.c ... "
+              sed -E -i -e 's/(.*SYSCALL_DEFINE4\(reboot, int.+)/extern int ksu_handle_sys_reboot(int magic1, int magic2, unsigned int cmd, void __user **arg)\;\n\1/g' -e 's/(.+We only trust the superuser with rebooting the system.+)/\tksu_handle_sys_reboot(magic1, magic2, cmd, \&arg)\;\n\1/g' $GITHUB_WORKSPACE/$CONFIG/common/kernel/reboot.c
+            fi
           elif [ "${{ inputs.ksu_fork }}" == "KSUN" -a "${{ env.kernel_variant }}" != "chickernel" ]; then
             echo "Applying scope_minimized_manual_hooks_v1. $( [ -f ${GITHUB_WORKSPACE}/USE_PERSHOOT_SUSFS.ME ] && echo -n "5.patch for pershoot fork of ksun" || echo -n "4.patch for ksun")..."
             cp ../../kernel_patches/next/scope_minimized_manual_hooks_* ./
@@ -653,8 +653,8 @@ jobs:
           #sed -i -e 's/CONSOLE_LOGLEVEL_DEFAULT/CONSOLE_LOGLEVEL_MIN/g' -e 's/MESSAGE_LOGLEVEL_DEFAULT/CONSOLE_LOGLEVEL_MIN/g' ./common/kernel/printk/printk.c
           
       - name: add map spoof from backslashxx
-        #if: ${{ env.ksu_fork == 'xxKSU' }}
-        if: false
+        if: ${{ env.ksu_fork == 'xxKSU' }}
+        #if: false
         shell: bash
         run: |
           cd "$CONFIG"
