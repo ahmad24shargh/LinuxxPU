@@ -192,7 +192,6 @@ jobs:
             aria2c -x 16 -s 16 -o clang-llvm.tar.$([ "${{ env.clang22_compiler }}" == "true" ] && echo "gz" || echo "xz") ${clang_custom_latest_url}
             tar -x$([ "${{ env.clang22_compiler }}" == "true" ] && echo "z" || echo "J")f clang-llvm.tar.$([ "${{ env.clang22_compiler }}" == "true" ] && echo "gz" || echo "xz") -C clang-custom
             rm -rf clang-llvm.tar.$([ "${{ env.clang22_compiler }}" == "true" ] && echo "gz" || echo "xz")
-            ln -s clang-custom clang-llvm
             if [ "$(find clang-custom -maxdepth 1 -printf %y)" = "dd" ]; then
               cd clang-custom
               dir=$(find . -maxdepth 1 -type d | grep -Ev '\.$')
@@ -224,7 +223,6 @@ jobs:
             aria2c -x 16 -s 16 -o clang-llvm.tar.gz ${url}
             tar -xzf clang-llvm.tar.gz -C clang-official
             rm -rf clang-llvm.tar.gz
-            ln -s clang-official clang-llvm
             if [ "$(find clang-official -maxdepth 1 -printf %y)" = "dd" ]; then
               cd clang-official
               dir=$(find . -maxdepth 1 -type d | grep -Ev '\.$')
@@ -295,6 +293,8 @@ jobs:
       
       - name: defconfig customization and various changes
         run: |
+          [ -d clang-official ] && ln -s clang-official clang-llvm
+          [ -d clang-custom ] && ln -s clang-custom clang-llvm
           for file in $(find $CONFIG/common/arch/arm64/configs -type f 2>/dev/null);do sed -E -i -e '/CONFIG_LOCALVERSION[^[:space:]]*=/d' -e '/[^[:space:]]+_LTO[^[:space:]]*=/d' -e '/CONFIG_WERROR=y/d' $file;done
           if [[ "${{ env.kernel_variant }}" == "common-android-mainline" ]];then
             defconfig="${GITHUB_WORKSPACE}/.defconfig"
