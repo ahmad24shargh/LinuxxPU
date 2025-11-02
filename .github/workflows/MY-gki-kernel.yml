@@ -653,8 +653,8 @@ jobs:
           #sed -i -e 's/CONSOLE_LOGLEVEL_DEFAULT/CONSOLE_LOGLEVEL_MIN/g' -e 's/MESSAGE_LOGLEVEL_DEFAULT/CONSOLE_LOGLEVEL_MIN/g' ./common/kernel/printk/printk.c
           
       - name: add map spoof from backslashxx
-        if: ${{ env.ksu_fork == 'xxKSU' }}
-        #if: false
+        #if: ${{ env.ksu_fork == 'xxKSU' }}
+        if: false
         shell: bash
         run: |
           cd "$CONFIG"
