@@ -59,7 +59,6 @@ jobs:
       clang_toolchain: ${{ inputs.clang_toolchain }}
       #permissive cause bootloop
       selinux_permissive: false
-      #GH_TOKEN: ${{ secrets.PAT_NO_EXPIRE }}
 
     steps:
       - name: Maximize build space
@@ -79,7 +78,6 @@ jobs:
         with:
           name: linuxxpu
           path: .
-          #github-token: '${{ env.GH_TOKEN }}'
 
       - name: Set CONFIG Environment Variable
         run: |
@@ -348,7 +346,7 @@ jobs:
             echo "Remove old clang revisions and create a link to clang-llvm ..."
             [ -e $GITHUB_WORKSPACE/clang-llvm/bin/clang ] && clang_bin="$GITHUB_WORKSPACE/clang-llvm/bin/clang"
             [ -z $clang_bin ] && echo "clang not found" && false
-            ls -l prebuilts/clang/host/linux-x86/clang*
+            find prebuilts/clang/host/linux-x86/ -maxdepth 1 -type d -name 'clang*'
             rm -rf prebuilts/clang/host/linux-x86/clang-*
             cd prebuilts/clang/host/linux-x86/ && ln -s -T $GITHUB_WORKSPACE/clang-llvm clang-$($clang_bin -dumpversion)
 
@@ -361,13 +359,9 @@ jobs:
             # Remove defconfig check (if exists)
             sed -i '/^POST_DEFCONFIG_CMDS="check_defconfig"/d' ${GITHUB_WORKSPACE}/$CONFIG/common/build.config.gki
 
-            ##this fix the error that present on clang 21,22 and so on.
-            #cp ${GITHUB_WORKSPACE}/kernel_patches/0001-treewide-clang-compilation-fixup.patch ${GITHUB_WORKSPACE}/$CONFIG/common
-            #cd ${GITHUB_WORKSPACE}/$CONFIG/common
-            #patch -p1 < 0001-treewide-clang-compilation-fixup.patch || true
-            echo "PATH=$(dirname $clang_bin):$PATH" >> $GITHUB_ENV
-          else
-            echo "PATH=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/bin:$PATH" >> $GITHUB_ENV
+            #echo "PATH=$(dirname $clang_bin):$PATH" >> $GITHUB_ENV
+          #else
+            #echo "PATH=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/bin:$PATH" >> $GITHUB_ENV
           fi
 
           curl https://android.googlesource.com/kernel/common/+/refs/heads/android13-5.15-lts/scripts/setlocalversion?format=TEXT | base64 -d > ${GITHUB_WORKSPACE}/$CONFIG/common/scripts/setlocalversion && chmod +x ${GITHUB_WORKSPACE}/$CONFIG/common/scripts/setlocalversion
@@ -388,9 +382,6 @@ jobs:
             mkdir -p build
             tar -xzf ${GITHUB_WORKSPACE}/.github/scripts/build.tar.gz -C build
           fi
-
-          echo '💡💡💡 debug output 💡💡💡'
-          find ${GITHUB_WORKSPACE}/ -type d -name 'sysroot'
 
           echo "defconfig=${defconfig}" >> $GITHUB_ENV
 
@@ -427,7 +418,6 @@ jobs:
           [ ! -d $DRIVER_DIR ] && exit 123
           cd "$DRIVER_DIR"
           cp -af "${GITHUB_WORKSPACE}/kernel" kernelsu
-          pwd && ls kernelsu
           ln -sf "${GITHUB_WORKSPACE}/kernel" "linuxxpu" && echo "[+] Symlink created."
           # Add entries in Makefile and Kconfig if not already existing
           grep -q "linuxxpu" "$DRIVER_MAKEFILE" || printf "\nobj-\$(CONFIG_LPU) += linuxxpu/\n" >> "$DRIVER_MAKEFILE" && echo "[+] Modified Makefile."
@@ -588,13 +578,15 @@ jobs:
             echo "Applying xx_hybridized patches(3 hooks) for backslashxx KSU..."
             cp ../../kernel_patches/xxksu/xx_hybridized.patch ./
             patch -p1 -F 3 < xx_hybridized.patch
-            cp ../../kernel_patches/xxksu/manual_security_hooks_v* ./
-            if grep -Eq '^LSM_HANDLER_TYPE (lpu|ksu)_handle_prctl\(.+' ${GITHUB_WORKSPACE}/kernel/core_hook.c 2>/dev/null;then
-              echo "Applying manual_security_hooks_v1.5 patch ..."
-              patch -p1 -F 3 < manual_security_hooks_v1.5
-            else
+            if grep -q 'CONFIG_KSU_LSM_SECURITY_HOOKS=n' ${defconfig};then
+              cp ../../kernel_patches/xxksu/manual_security_hooks_v1.6 ./
               echo "Applying manual_security_hooks_v1.6 patch ..."
               patch -p1 -F 3 < manual_security_hooks_v1.6
+            fi
+            if grep -Eq '^int (ksu|lpu)_handle_sys_reboot\(.+' $GITHUB_WORKSPACE/kernel/core_hook.c 2>/dev/null;then
+              echo 'sys_reboot hook function found in ksu kernel driver'
+              echo "Patch common/kernel/reboot.c ... "
+              sed -E -i -e 's/(.*SYSCALL_DEFINE4\(reboot, int.+)/extern int ksu_handle_sys_reboot(int magic1, int magic2, unsigned int cmd, void __user **arg)\;\n\1/g' -e 's/(.+We only trust the superuser with rebooting the system.+)/\tksu_handle_sys_reboot(magic1, magic2, cmd, \&arg)\;\n\1/g' $GITHUB_WORKSPACE/$CONFIG/common/kernel/reboot.c
             fi
           elif [ "${{ inputs.ksu_fork }}" == "KSUN" -a "${{ env.kernel_variant }}" != "chickernel" ]; then
             echo "Applying scope_minimized_manual_hooks_v1. $( [ -f ${GITHUB_WORKSPACE}/USE_PERSHOOT_SUSFS.ME ] && echo -n "5.patch for pershoot fork of ksun" || echo -n "4.patch for ksun")..."
@@ -664,30 +656,14 @@ jobs:
         #if: false
         shell: bash
         run: |
-          set -ex
           cd "$CONFIG"
-          #curl -s  https://github.com/backslashxx/map_spoof | grep -q '"message": "Not Found"'
-          #if [ $? -eq 0 ];then
           git clone https://github.com/ahmad24shargh/map_spoof
-          #else
-            #git clone https://github.com/backslashxx/map_spoof
-          #fi
           cd common
           cp -r "../map_spoof/map_spoof" drivers
           grep -q "map_spoof" drivers/Makefile || printf "\nobj-\$(CONFIG_MAP_SPOOF) += map_spoof/\n" >> drivers/Makefile && echo "[+] Modified Makefile for map_spoof."
           grep -q "source \"drivers/map_spoof/Kconfig\"" drivers/Kconfig || sed -i "/endmenu/i\source \"drivers/map_spoof/Kconfig\"" drivers/Kconfig && echo "[+] Modified Kconfig for map_spoof."
           echo "CONFIG_MAP_SPOOF=y" >> ${defconfig}  
           patch -p1 -F 3 < ../map_spoof/kernel.diff
-          set +ex
-
-      - name: sys_reboot hook if needed (only xxKSU)
-        if: ${{ env.ksu_fork == 'xxKSU' }}
-        run: |
-          if grep -Eq '^int (ksu|lpu)_handle_sys_reboot\(.+' $GITHUB_WORKSPACE/kernel/core_hook.c 2>/dev/null;then
-            echo 'sys_rebbot hook function found in ksu kernel driver'
-            echo "Patch the required kernel tree source code files (reboot.c) ... "
-            sed -E -i -e 's/(.*SYSCALL_DEFINE4\(reboot, int.+)/extern int ksu_handle_sys_reboot(int magic1, int magic2, unsigned int cmd, void __user **arg)\;\n\1/g' -e 's/(.+We only trust the superuser with rebooting the system.+)/\tksu_handle_sys_reboot(magic1, magic2, cmd, \&arg)\;\n\1/g' $GITHUB_WORKSPACE/$CONFIG/common/kernel/reboot.c
-          fi
           
       - name: Build kernel
         env:
