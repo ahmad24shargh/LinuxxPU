@@ -64,7 +64,7 @@ on:
         description: 'kernel: official from googlesource or latest custom from github?'
         required: true
         type: choice
-        default: 'official'
+        default: 'custom_clang/llvm'
         options:
           - 'official'
           - 'custom_clang/llvm'
