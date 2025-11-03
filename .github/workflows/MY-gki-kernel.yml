@@ -489,7 +489,7 @@ jobs:
           
           if [ ${{ env.ksu_fork }} == 'xxKSU' ];then
             echo "CONFIG_KSU_KPROBES_KSUD=y"  >> ${defconfig}
-            echo "CONFIG_KSU_EXTRAS=n" >> ${defconfig}
+            echo "CONFIG_KSU_EXTRAS=y" >> ${defconfig}
             echo "CONFIG_KSU_KRETPROBES_SUCOMPAT=n"  >> ${defconfig}
             # ⚠️ caution ⚠️
             echo "CONFIG_KSU_THRONE_TRACKER_ALWAYS_THREADED=y"  >> ${defconfig}
@@ -842,12 +842,12 @@ jobs:
             export BUILD_SCRIPT_DIR=$(dirname $(realpath build/build.sh))
             sed -E -i 's/(.+Checking the list of modules:.*)/  cp ${OUT_DIR}\/modules.order ${KERNEL_DIR}\/${MODULES_ORDER}\n\1/g' build/build.sh
 
-            #for ndk and arm-toolchain and clang-llvm(custom clang)
-            if [ -e $GITHUB_WORKSPACE/clang-llvm ];then
-              result=$(find $GITHUB_WORKSPACE/clang-llvm -type d -name 'sysroot' 2>/dev/null)
-              echo "result of find sysroot dirs: $([ -z "$result" ] && echo NOTHING || echo $result)"
-              [ -z "$result" ] && sed -E -i '/.*sysroot_flags\+=.+/d' build/_setup_env.sh
-            fi
+            ##for ndk and arm-toolchain and clang-llvm(custom clang)
+            #if [ -e $GITHUB_WORKSPACE/clang-llvm ];then
+              #result=$(find $GITHUB_WORKSPACE/clang-llvm -type d -name 'sysroot' 2>/dev/null)
+              #echo "result of find sysroot dirs: $([ -z "$result" ] && echo NOTHING || echo $result)"
+              #[ -z "$result" ] && sed -E -i '/.*sysroot_flags\+=.+/d' build/_setup_env.sh
+            #fi
 
             if [ ! -e ${GITHUB_WORKSPACE}/clang-llvm ];then
               sed -E -i 's|source .+_setup_env.sh.+|source "${ROOT_DIR}/build/_setup_env.sh";export PATH="${My_PATH}"|g' build/build.sh
