@@ -525,9 +525,9 @@ jobs:
           echo "CONFIG_NET_SCH_FQ=y" >> ${defconfig}
           sed -i '/CONFIG_TCP_CONG_BBR/d' ${defconfig}
           echo "CONFIG_TCP_CONG_BBR=y" >> ${defconfig}
-          #sed -i '/CONFIG_DEFAULT_TCP_CONG/d' ${defconfig}
-          #echo 'CONFIG_DEFAULT_TCP_CONG="BBR"' >> ${defconfig}
-          #echo 'CONFIG_DEFAULT_BBR=y' >> ${defconfig}
+          sed -i '/CONFIG_DEFAULT_TCP_CONG/d' ${defconfig}
+          echo 'CONFIG_DEFAULT_TCP_CONG="BBR"' >> ${defconfig}
+          echo 'CONFIG_DEFAULT_BBR=y' >> ${defconfig}
 
           # activate sample configs(kprobe & kretprobe modules)
           #echo 'CONFIG_SAMPLES=y' >> ${defconfig}
