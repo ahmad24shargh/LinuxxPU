@@ -68,7 +68,7 @@ jobs:
             # master branch : release.yml
             # staging branch : build-manager.yml 
             # update MY-lpud.yml
-            git clone -b master https://github.com/backslashxx/KernelSU KSU
+            git clone -b temp-prctl https://github.com/backslashxx/KernelSU KSU
             owner=backslashxx
             repo=KernelSU
             workflow='release.yml' 
