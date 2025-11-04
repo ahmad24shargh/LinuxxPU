@@ -94,23 +94,23 @@ jobs:
         run: |
           repo="${{ github.repository_owner }}/${{ github.event.repository.name }}"
           if ${{ env.clang_toolchain == 'custom_clang/llvm' }} ;then
-            clang22_latest_relase=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/ZyCromerZ/Clang/releases  | grep -Eo '"name":[^,]+' | head -n 1)
+            #clang22_latest_relase=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/ZyCromerZ/Clang/releases  | grep -Eo '"name":[^,]+' | head -n 1)
             llvm_latest_relase=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/llvm/llvm-project/releases  | grep -Eo '"name":[^,]+' | grep 'Linux-X64.tar.xz"' | head -n 1)
-            [ -z "$clang22_latest_relase" ] && { echo "Failed to extract clang22 latest release";exit 1;false; }
+            #[ -z "$clang22_latest_relase" ] && { echo "Failed to extract clang22 latest release";exit 1;false; }
             [ -z "$llvm_latest_relase" ] && { echo "Failed to extract llvm latest release";exit 1;false; }
-            clang22_latest_release_date=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/ZyCromerZ/Clang/releases |tr ',' '\n' | grep -E '("name":.*Clang.+.tar.gz"|"created_at":.+)' | sed -E -n '/"name":.+/{n;p}' | head -n 1 | grep -Eo '[0-9]{4}-[0-9]{2}-[0-9]{2}')
+            #clang22_latest_release_date=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/ZyCromerZ/Clang/releases |tr ',' '\n' | grep -E '("name":.*Clang.+.tar.gz"|"created_at":.+)' | sed -E -n '/"name":.+/{n;p}' | head -n 1 | grep -Eo '[0-9]{4}-[0-9]{2}-[0-9]{2}')
             llvm_latest_relase_date=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/llvm/llvm-project/releases |tr ',' '\n' | grep -E '("name":.+Linux-X64.tar.xz"|"created_at":.+)' | sed -E -n '/"name":.+/{n;p}' | head -n 1 | grep -Eo '[0-9]{4}-[0-9]{2}-[0-9]{2}')
-            [ -z "$clang22_latest_release_date" ] && { echo "Failed to extract clang22 latest release date";exit 1;false; }
+            #[ -z "$clang22_latest_release_date" ] && { echo "Failed to extract clang22 latest release date";exit 1;false; }
             [ -z "$llvm_latest_relase_date" ] && { echo "Failed to extract llvm latest release date";exit 1;false; }
-            if [[ $clang22_latest_release_date > $llvm_latest_relase_date ]];then
-              clang22_compiler=true
-              echo "clang22_compiler=true" >> $GITHUB_ENV
-              latest_update_time=$clang22_latest_release_date
-            else
+            #if [[ $clang22_latest_release_date > $llvm_latest_relase_date ]];then
+              #clang22_compiler=true
+              #echo "clang22_compiler=true" >> $GITHUB_ENV
+              #latest_update_time=$clang22_latest_release_date
+            #else
               llvm_compiler=true
               echo "llvm_compiler=true" >> $GITHUB_ENV
               latest_update_time=$llvm_latest_relase_date
-            fi
+            #fi
             echo "Latest release of $( [ "$clang22_compiler" == "true" ] && echo "clang-22" || echo "llvm"): ${latest_update_time}"
             clang_custom_cache_creation_time=$(gh cache list --repo $repo -k clang-custom-${{ runner.os }}-v1 --json  'createdAt' 2>/dev/null  | grep 'createdAt' | grep -Eo '[0-9]{4}-[0-9]{2}-[0-9]{2}') || true
             if [ -n "${clang_custom_cache_creation_time}" ];then
