@@ -594,9 +594,9 @@ jobs:
             cp ../../kernel_patches/next/scope_minimized_manual_hooks_* ./
             [ -f ${GITHUB_WORKSPACE}/USE_PERSHOOT_SUSFS.ME ] && patch -p1 -F 3 < scope_minimized_manual_hooks_v1.5.patch || patch -p1 -F 3 < scope_minimized_manual_hooks_v1.4.patch
           elif [ "${{ inputs.ksu_fork }}" == "SUKISU" -a "${{ env.kernel_variant }}" != "chickernel"  -a "${{ env.hook_method }}" == "manual" ]; then
-            echo "Applying manual hooks v1.5 for SukiSU Ultra..."
-            cp ../../kernel_patches/sukisu/scope_min_manual_hooks_v1.5.patch ./
-            patch -p1 -F 3 < scope_min_manual_hooks_v1.5.patch
+            echo "Applying manual hooks v1.6 for SukiSU Ultra..."
+            cp ../../kernel_patches/sukisu/scope_min_manual_hooks_v1.6.patch ./
+            patch -p1 -F 3 < scope_min_manual_hooks_v1.6.patch
           elif [ "${{ inputs.ksu_fork }}" == "SUKISU" -a "${{ env.kernel_variant }}" != "chickernel"  -a "${{ env.hook_method }}" == "tracepoint" ]; then
             echo "Applying tracepoint hooks v1.1 for SukiSU Ultra..."
             cp ../../kernel_patches/sukisu/sukisu_tracepoint_hooks_v1.1.patch ./
