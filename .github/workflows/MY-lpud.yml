@@ -10,10 +10,6 @@ on:
       ksu_fork:
         required: true
         type: string
-      os:
-        required: false
-        type: string
-        default: ubuntu-latest
       pack_lkm:
         required: false
         type: boolean
@@ -24,7 +20,7 @@ on:
         default: true
 jobs:
   build:
-    runs-on: ${{ inputs.os }}
+    runs-on: ubuntu-latest
     steps:
     - name: download linuxxpu with patched dir
       uses: actions/download-artifact@v5.0.0
@@ -104,7 +100,6 @@ jobs:
     - name: Setup Rust
       run: |
         rustup update stable
-        #if [ ${{ inputs.ksu_fork }} == KSUN  ];then rustup target add x86_64-apple-darwin;fi
         rustup target add aarch64-apple-darwin
 
     - name: Cache lpud_overlayfs
