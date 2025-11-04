@@ -41,11 +41,12 @@ jobs:
       
       - name: fetch upstream ... 
         run: |
+          touch BUILD_SETTINGS.ME
           if [ ${{ env.ksu_fork }} == 'KSUN' ];then
-            use_pershoot_susfs=true
-            use_wild_manager=false
+            echo 'USE_PERSHOOT_SUSFS=true' >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
+            echo 'USE_WILD_MANAGER=false' >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
             
-            if $use_wild_manager ;then
+            if grep 'USE_WILD_MANAGER=true' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME;then
               git clone --single-branch https://github.com/WildKernels/Wild_KSU KSU
               owner=WildKernels
               repo=Wild_KSU
@@ -87,9 +88,9 @@ jobs:
           #else
             #echo "The latest commit has a successful build."
           #fi
-          echo -n "${{ env.ksu_fork }}" | base64 > ${GITHUB_WORKSPACE}/LPU_FORK.ME
+          echo "KSU_FORK=$(echo -n "${{ env.ksu_fork }}" | base64)" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
           C_LAST_COMMIT=$(git log -n 1 --no-decorate | grep -E '^commit' | cut -d' ' -f2)
-          echo "${C_LAST_COMMIT}" | base64 > ${GITHUB_WORKSPACE}/LAST_COMMIT.ME
+          echo "C_LAST_COMMIT=$(echo "${C_LAST_COMMIT}" | base64)" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
           C_VERSION=$(echo "$(git log --oneline | wc -l) - $(git rev-list ${C_LAST_COMMIT}..HEAD --count)" | bc)
           C_TAG_NAME=$(for i in $(echo $(git describe --tags --always) | tr '-' '\n');do if [[ "$i" =~ "." || ${#i} < 4  ]];then echo  "$i";fi;done | tr '\n' '-' | sed 's/.$//' 2>/dev/null)
           if [ -z "${C_TAG_NAME}" ];then
@@ -98,7 +99,7 @@ jobs:
             C_TAG_NAME="${C_TAG_NAME}-${tag_ver}"
           fi
           
-          echo "${C_TAG_NAME}" | base64 > ${GITHUB_WORKSPACE}/TAG_NAME.ME
+          echo "C_TAG_NAME=$(echo "${C_TAG_NAME}" | base64)" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
           if grep -q 'ccflags-y += -DKSU_VERSION=' ./kernel/Makefile;then
             version_code=$(echo $(grep -Eo ' [^ ]+ \+ [^ ]+ \+ [^;]+' ./userspace/ksud/build.rs 2>/dev/null | tr -d ' ' | sed "s/version_code/${C_VERSION}/") | bc)
             hardcoded_ver=$(grep 'ccflags-y += -DKSU_VERSION=' ./kernel/Makefile | tr -d ' ' | cut -d'=' -f3)
@@ -113,7 +114,7 @@ jobs:
               fi
             fi
           fi
-          echo "${C_VERSION}" | base64 > ${GITHUB_WORKSPACE}/VERSION.ME
+          echo "C_VERSION=$(echo "${C_VERSION}" | base64)" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
           echo -e "C_TAG_NAME=${C_TAG_NAME}\nC_VERSION=${C_VERSION}\nC_LAST_COMMIT=${C_LAST_COMMIT}"
           for file in $(grep -R --exclude='.github' --exclude='.git' . -e 'let version_name' 2>/dev/null | cut -d':' -f 1 | sort | uniq);do sed -E -i 's/(let version_name = )version_name(\.trim.+)/\1"'${C_TAG_NAME}'"\2/g' $file;cat $file | grep  'let version_';done
           for file in $(grep -R --exclude='.github' --exclude='.git' . -e 'return getGitDescribe()' 2>/dev/null | cut -d':' -f 1 | sort | uniq);do sed -i 's/return getGitDescribe()/return "'${C_TAG_NAME}'"/g' $file;cat $file | grep  'return';done
@@ -130,11 +131,11 @@ jobs:
               mv SukiSU-Ultra/kernel .
               rm -rf SukiSU-Ultra
             elif [ ${{ env.ksu_fork }} == 'xxKSU' ];then
-              # xxksu & susfs !!! I haven't made it yet
-              wget https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/xxksu/susfs_backslashxx_ksu_patches.patch
-              patch -p1 --forward < susfs_backslashxx_ksu_patches.patch
+              echo "xxksu & susfs !!! I haven't made it yet . No need "
+              exit 0
+              false
             elif [ ${{ env.ksu_fork }} == 'KSUN'  ];then
-              if [ "${use_pershoot_susfs}" == "false" ];then
+              if grep 'USE_PERSHOOT_SUSFS=false' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME;then
                 #if $use_wild_manager;then
                   #patch_file="https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/Wild_KSUN-susfs-1.5.9.patch"
                 #else
@@ -147,7 +148,6 @@ jobs:
                 rm -rf kernel/
                 cp -a PERSHOOT/kernel .
                 rm -rf PERSHOOT
-                touch ${GITHUB_WORKSPACE}/USE_PERSHOOT_SUSFS.ME
               fi
               if [ -f ksun_susfs_latest.patch ];then
                 patch -p1 --forward < ksun_susfs_latest.patch
@@ -160,7 +160,7 @@ jobs:
           fi
           KSU_VERSION="$(expr $(echo "$(grep -E 'shell expr' KSU/kernel/Makefile 2>/dev/null | head -n 1 | grep -Eo '[0-9]*' | tr '\n' '+')$C_VERSION" | sed 's/\+/ + /g'))"
           echo $KSU_VERSION
-          [ ! -z "$KSU_VERSION" ] && sed -E -i -e 's/KSU_VERSION_FULL :=.+get_ksu_version_full.+/KSU_VERSION_FULL := "'"$C_TAG_NAME (${KSU_VERSION})"'"/g' -e 's/KS_VERSION := .+/KSU_VERSION := '$KSU_VERSION'/g' KSU/kernel/Makefile
+          [ ! -z "$KSU_VERSION" ] && { sed -E -i -e 's/KSU_VERSION_FULL :=.+get_ksu_version_full.+/KSU_VERSION_FULL := "'"$C_TAG_NAME (${KSU_VERSION})"'"/g' -e 's/KS_VERSION := .+/KSU_VERSION := '$KSU_VERSION'/g' KSU/kernel/Makefile;echo "KSU_VERSION=${KSU_VERSION}" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME; }
           cp -af KSU/* KSU/.* .
           rm -rf KSU
 
@@ -263,7 +263,7 @@ jobs:
           for file in $(grep -R ${repo_folder} -e 'wild.ksu' 2>/dev/null | cut -d':' -f1 | sort  | uniq);do sed -Ei 's|wild.ksu|linuxxpu|g' $file;done
           for file in $(grep -Ri ${repo_folder} -e 'wksu' 2>/dev/null | cut -d':' -f1 | sort  | uniq);do sed -i -e 's|wksu|lpu|g' -e 's|WKSU|LPU|g' $file;done
           for files in $(grep -R ${repo_folder} -e 'SukiSU.Ultra' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU.Ultra/LinuxxPU/g' $files;done
-          C_TAG_NAME=$(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME | base64 -d)
+          C_TAG_NAME=$(grep 'C_TAG_NAME=' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME | cut -d'=' -f2- | base64 -d)
           for files in $(grep -R ${repo_folder} -e 'SUKISU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei '/'${C_TAG_NAME}'/! s|SUKISU|LinuxxPU|g' $files;done
           for files in $(grep -R ${repo_folder} -e 'SukiSU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU/LinuxxPU/g' $files;done
           for files in $(grep -R ${repo_folder} -e 'sukisu' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei 's|sukisu|linuxxpu|g' $files;done
@@ -333,7 +333,6 @@ jobs:
           cp -af ${must_unchange_kernel_files}/.defconfig ${repo_folder}/
           [ -d "${patched_folder}/.github" ] &&  cp -af ${patched_folder}/.github/. ${repo_folder}/.github/
           [ -f "${repo_folder}/manager/app/src/main/cpp/lpu.c" ] && { echo 'debug cpp/lpu.c';sed -i -e 's/lpu_sys_file_open/zako_sys_file_open/g' -e 's/lpu_file_verify_esig/zako_file_verify_esig/g' -e 's/lpu_file_verrcidx2str/zako_file_verrcidx2str/g' ${repo_folder}/manager/app/src/main/cpp/lpu.c || true; } || true
-          #for item in ${repo_folder}/.git ${repo_folder}/.github ${repo_folder}/docs ${repo_folder}/Website;do [ -d $item ] && rm -rf $item;done
           
           
       - name: Delete Artifact
