@@ -8,10 +8,6 @@ on:
       ksu_fork:
         required: true
         type: string
-      os:
-        required: false
-        type: string
-        default: ubuntu-latest
 jobs:
   build-susfs:
     if: github.event.inputs.ksu_fork != 'xxKSU'
