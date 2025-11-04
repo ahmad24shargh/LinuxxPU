@@ -88,11 +88,13 @@ jobs:
           CONFIG="${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}"
 
           echo "CONFIG=$CONFIG" >> $GITHUB_ENV
+          echo "KERNEL_WORKSPACE=${GITHUB_WORKSPACE}/$CONFIG" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
           echo "CONFIG set to: $CONFIG"  
             
       - name: delete toolchain and clang-llvm caches if older than a certain amount
         run: |
           repo="${{ github.repository_owner }}/${{ github.event.repository.name }}"
+          echo "REPO=$repo" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
           if ${{ env.clang_toolchain == 'custom_clang/llvm' }} ;then
             #clang22_latest_relase=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/ZyCromerZ/Clang/releases  | grep -Eo '"name":[^,]+' | head -n 1)
             llvm_latest_relase=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/llvm/llvm-project/releases  | grep -Eo '"name":[^,]+' | grep 'Linux-X64.tar.xz"' | head -n 1)
@@ -104,10 +106,12 @@ jobs:
             [ -z "$llvm_latest_relase_date" ] && { echo "Failed to extract llvm latest release date";exit 1;false; }
             #if [[ $clang22_latest_release_date > $llvm_latest_relase_date ]];then
               #clang22_compiler=true
+              echo "Using clang22 published in $clang22_latest_release_date" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
               #echo "clang22_compiler=true" >> $GITHUB_ENV
               #latest_update_time=$clang22_latest_release_date
             #else
               llvm_compiler=true
+              echo "Using LLVM project published in $llvm_latest_relase_date" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
               echo "llvm_compiler=true" >> $GITHUB_ENV
               latest_update_time=$llvm_latest_relase_date
             #fi
@@ -117,6 +121,7 @@ jobs:
               echo "clang-custom-${{ runner.os }}-v1 creation date: ${clang_custom_cache_creation_time}"
               if [[ $latest_update_time > $clang_custom_cache_creation_time ]];then
                 echo "removing old clang-custom-${{ runner.os }}-v1 from cache ..."
+                echo "removing outdated clang-custom-${{ runner.os }}-v1 from cache in this build" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
                 gh cache delete clang-custom-${{ runner.os }}-v1 --repo $repo
               fi
             else
@@ -136,6 +141,7 @@ jobs:
                   echo "setting global CLANG_OFFICIAL var to: \"${online_clang_official_ver}\""
                   gh  -R $repo variable set CLANG_OFFICIAL --body "${online_clang_official_ver}"
                   echo "removing outdated clang-official-${{ runner.os }}-v1 from cache ..."
+                  echo "removing outdated clang-official-${{ runner.os }}-v1 from cache in this build" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
                   gh cache delete clang-official-${{ runner.os }}-v1 --repo $repo 2>/dev/null
                 fi
               else
@@ -143,6 +149,7 @@ jobs:
                 echo "setting global CLANG_OFFICIAL var to: \"${online_clang_official_ver}\""
                 gh  -R $repo variable set CLANG_OFFICIAL --body "${online_clang_official_ver}"
               fi
+              echo "CLANG_OFFICIAL=${{ vars.CLANG_OFFICIAL }}" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
             else
               echo "Error: aosp clang toolchain download link was not extracted correctly !!! "
               exit 56
@@ -153,6 +160,7 @@ jobs:
           # toolchain older than 30 days
           if [ $(echo $(( ($(date +%s) - $(date --date=$(gh cache list --repo $repo -k toolchain-${{ runner.os }}-v1 --json  'createdAt' | grep 'createdAt' | cut -d'"' -f4) +%s) )/(60*60*24) ))) -gt 29 ];then
             echo "removing toolchain-${{ runner.os }}-v1 from cache ..."
+            echo "removing toolchain-${{ runner.os }}-v1 from cache in this build" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
             gh cache delete toolchain-${{ runner.os }}-v1 --repo $repo 2>/dev/null
           fi
         
@@ -310,6 +318,7 @@ jobs:
               defconfig="$GITHUB_WORKSPACE/$CONFIG/common/arch/arm64/configs/gki_defconfig"
             fi
           fi
+          echo "DEFCONFIG=$defconfig" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
           sed -i '/LOCALVERSION/d' ${defconfig}
           echo 'CONFIG_LOCALVERSION=""' >> ${defconfig}
           echo 'CONFIG_LOCALVERSION_AUTO=y' >> ${defconfig}
@@ -376,12 +385,6 @@ jobs:
 
           # abi_bypass_gki (not needed but ...)
           for file in $(find ${GITHUB_WORKSPACE}/$CONFIG/ -type f -name 'check_buildtime_symbol_protection.py' 2>/dev/null | grep '/abi/');do echo $file;sed -E -i '/f"  \{symbol\} required by \{undefined_symbol_consumer_lookup\[symbol\]\}"/ {N;N;N;N;N; s/([[:space:]]+)return 1/\1print( "\\nBUT WHO CARES?\\n")\1return 0/g}' $file ;done
-          
-          cd ${GITHUB_WORKSPACE}/$CONFIG
-          if [ ! -f "build/gettop.sh" ];then
-            mkdir -p build
-            tar -xzf ${GITHUB_WORKSPACE}/.github/scripts/build.tar.gz -C build
-          fi
 
           echo "defconfig=${defconfig}" >> $GITHUB_ENV
 
@@ -491,7 +494,6 @@ jobs:
             echo "CONFIG_KSU_KPROBES_KSUD=y"  >> ${defconfig}
             echo "CONFIG_KSU_EXTRAS=y" >> ${defconfig}
             echo "CONFIG_KSU_KRETPROBES_SUCOMPAT=n"  >> ${defconfig}
-            # ⚠️ caution ⚠️
             echo "CONFIG_KSU_THRONE_TRACKER_ALWAYS_THREADED=y"  >> ${defconfig}
             # manual_lsm_security_hook.patch
             echo "CONFIG_KSU_LSM_SECURITY_HOOKS=n" >> ${defconfig}
@@ -528,6 +530,7 @@ jobs:
           sed -i '/CONFIG_DEFAULT_TCP_CONG/d' ${defconfig}
           echo 'CONFIG_DEFAULT_TCP_CONG="BBR"' >> ${defconfig}
           echo 'CONFIG_DEFAULT_BBR=y' >> ${defconfig}
+          echo "set BBR v1 as default tcp congestion" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
 
           # activate sample configs(kprobe & kretprobe modules)
           #echo 'CONFIG_SAMPLES=y' >> ${defconfig}
@@ -536,7 +539,9 @@ jobs:
 
           # Remove check_defconfig
           sed -i 's/check_defconfig//' ./common/build.config.gki
-          if [ ! -f build/build.sh ];then
+          
+          if [ ! -f build/gettop.sh ];then
+            echo "Decompressing build.tar.gz ..." >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
             tar -xzkf ${GITHUB_WORKSPACE}/.github/scripts/build.tar.gz -C build/
             for file in $(find build/ -type f -name '*.sh' 2>/dev/null);do sed -i 's|/\/build\/|build\/|g' $file;chmod +x $file;done
           fi
@@ -584,9 +589,9 @@ jobs:
               patch -p1 -F 3 < manual_security_hooks_v1.6
             fi
           elif [ "${{ inputs.ksu_fork }}" == "KSUN" -a "${{ env.kernel_variant }}" != "chickernel" ]; then
-            echo "Applying scope_minimized_manual_hooks_v1. $( [ -f ${GITHUB_WORKSPACE}/USE_PERSHOOT_SUSFS.ME ] && echo -n "5.patch for pershoot fork of ksun" || echo -n "4.patch for ksun")..."
+            echo "Applying scope_minimized_manual_hooks_v1. $( grep -q 'USE_PERSHOOT_SUSFS=true' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME && echo -n "6.patch for pershoot fork of ksun" || echo -n "4.patch for ksun")..."
             cp ../../kernel_patches/next/scope_minimized_manual_hooks_* ./
-            [ -f ${GITHUB_WORKSPACE}/USE_PERSHOOT_SUSFS.ME ] && patch -p1 -F 3 < scope_minimized_manual_hooks_v1.5.patch || patch -p1 -F 3 < scope_minimized_manual_hooks_v1.4.patch
+            grep -q 'USE_PERSHOOT_SUSFS=true' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME && patch -p1 -F 3 < scope_minimized_manual_hooks_v1.6.patch || patch -p1 -F 3 < scope_minimized_manual_hooks_v1.4.patch
           elif [ "${{ inputs.ksu_fork }}" == "SUKISU" -a "${{ env.kernel_variant }}" != "chickernel"  -a "${{ env.hook_method }}" == "manual" ]; then
             echo "Applying manual hooks v1.6 for SukiSU Ultra..."
             cp ../../kernel_patches/sukisu/scope_min_manual_hooks_v1.6.patch ./
@@ -767,7 +772,7 @@ jobs:
             for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'sukisu.ultra' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i 's|sukisu.ultra|linuxxpu|g' $files;done
             for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'SukiSU.Ultra' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU.Ultra/LinuxxPU/g' $files;done
             for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'SUKISU.ULTRA' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i 's|SUKISU.ULTRA|LINUXXPU|g' $files;done
-            C_TAG_NAME=$(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME | base64 -d)
+            C_TAG_NAME=$(grep 'C_TAG_NAME=' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME | cut -d'=' -f2- | base64 -d)
             for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'SUKISU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i '/'${C_TAG_NAME}'/! s|SUKISU|LINUXXPU|g' $files;done
             for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'sukisu' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i 's|sukisu|linuxxpu|g' $files;done
             for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'SukiSU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -E -i '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU/LinuxxPU/g' $files;done
@@ -857,6 +862,7 @@ jobs:
               mkdir -p ./out/$(echo ${CONFIG} | cut -d'-' -f1,2)/common && cp ${defconfig} ./out/$(echo ${CONFIG} | cut -d'-' -f1,2)/common/.config
             fi   
             [ -f ./common/kernel/manipulating_conf_data.sh ] && cat ./common/kernel/manipulating_conf_data.sh
+            echo "CC=${CC}" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
             if [ "${BUILD_CONFIG}" != "nothing" ];then
               #LTO=thin BUILD_CONFIG=${BUILD_CONFIG} SKIP_EXT_MODULES=1 SKIP_CP_KERNEL_HDR=1 SKIP_VENDOR_BOOT=1 SKIP_MRPROPER=1 SYSTEM_DLKM_RE_SIGN=0 BUILD_SYSTEM_DLKM=0 KMI_SYMBOL_LIST_STRICT_MODE=0 build/build.sh CC="${CC}" 
               LTO=thin BUILD_CONFIG=${BUILD_CONFIG} build/build.sh CC="${CC}"
@@ -892,6 +898,7 @@ jobs:
           else
             bootimage_dir=$(dirname $(find ./$CONFIG -type f -name 'Image' 2>/dev/null))
           fi
+          echo "bootimage_dir=${bootimage_dir}" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
           
           echo "Creating bootimgs folder and copying images..."
           for file in $(find ${bootimage_dir} -type f -name 'Image*' 2>/dev/null);do echo $file;cp $file ./bootimgs;cp $file ./;done
@@ -929,7 +936,7 @@ jobs:
             echo $file
             cd $(dirname $file)
             CC_VERSION_TEXT=$(grep 'CONFIG_CC_VERSION_TEXT=' $(basename $file) 2>/dev/null | cut -d'=' -f2-)
-            [ -n "${CC_VERSION_TEXT}" ] && echo "${CC_VERSION_TEXT}" > ${GITHUB_WORKSPACE}/CLANG_VER.ME
+            echo "CC_VERSION_TEXT=${CC_VERSION_TEXT}" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
             zip kernel_config.zip $(basename $file)
             mv kernel_config.zip $GITHUB_WORKSPACE/
             break
@@ -946,11 +953,9 @@ jobs:
       - name: Preparing linuxxpu for upload
         run: |
           mkdir -p linuxxpu
-          for dir in {kernel,manager,userspace,'.git','.github','TAG_NAME.ME','LPU_FORK.ME','LAST_COMMIT.ME','VERSION.ME','USE_PERSHOOT_SUSFS.ME','CLANG_VER.ME'};do
+          for dir in {kernel,manager,userspace,'.git','.github','BUILD_SETTINGS.ME'};do
             cp -a $dir linuxxpu || :
           done
-          #cp $GITHUB_WORKSPACE/$CONFIG/common/security/selinux/{selinuxfs.c,hooks.c,Makefile} linuxxpu
-          #ls linuxxpu/
           
       - name: Delete linuxxpu Artifact
         uses: GeekyEggo/delete-artifact@v5.1.0
