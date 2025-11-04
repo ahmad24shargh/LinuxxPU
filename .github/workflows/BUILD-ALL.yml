@@ -118,9 +118,9 @@ jobs:
     - name: Calculate and apply tag and version values
       id: gen_outs
       run: |
-        C_TAG_NAME=$(cat TAG_NAME.ME | base64 -d)
-        C_LAST_COMMIT=$(cat LAST_COMMIT.ME | base64 -d)
-        C_VERSION=$(cat VERSION.ME | base64 -d)
+        C_TAG_NAME=$(grep 'C_TAG_NAME=' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME | cut -d'=' -f2- | base64 -d)
+        C_LAST_COMMIT=$(grep 'C_LAST_COMMIT=' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME | cut -d'=' -f2- | base64 -d)
+        C_VERSION=$(grep 'C_VERSION=' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME | cut -d'=' -f2-  | base64 -d)
         determine_os_patch_level() { declare -n result="$1";case "${result}" in 167) result=2024-11;;170) result=2025-01;;178) result=2025-03;;180) result=2025-05;;185) result=2025-07;;189) result=2025-09;;*) result=lts;;esac; }
         C_KERNEL_SUBLEVEL=167
         C_OS_PATCH_LEVEL=167
@@ -192,7 +192,6 @@ jobs:
     uses: ./.github/workflows/MY-susfsd.yml
     with:
       target: ${{ matrix.target }}
-      os: ${{ matrix.os }}
       ksu_fork: ${{ matrix.ksu_fork }}
       
   build-lpud:
@@ -204,12 +203,10 @@ jobs:
       matrix:
         include:
           - target: aarch64-linux-android
-            os: ubuntu-latest
             ksu_fork: ${{ inputs.ksu_fork }}
     uses: ./.github/workflows/MY-lpud.yml
     with:
       target: ${{ matrix.target }}
-      os: ${{ matrix.os }}
       ksu_fork: ${{ matrix.ksu_fork }}
 
   build-manager:
@@ -391,9 +388,6 @@ jobs:
             REPO_NAME="KernelSU"
           fi
           TAG_NAME=${{ env.C_TAG_NAME }}
-          #if [ $(echo ${{ env.C_TAG_NAME }} | grep -qi 'wild';echo $?) != 0 ];then
-            #TAG_NAME=$(cat ${GITHUB_WORKSPACE}/TAG_NAME.ME | base64 -d | cut -d'-' -f1,2)
-          #fi
           REPO_URL="https://github.com/${REPO_OWNER}/${REPO_NAME}.git"
           REPO_URL2="${REPO_OWNER}/${REPO_NAME}"
           COMMIT_HASH=${{ env.C_LAST_COMMIT }}
@@ -442,7 +436,7 @@ jobs:
             echo "-> based on SUKISU ULTRA" >> $GITHUB_ENV
           elif [ "${{ env.ksu_fork }}" == "xxKSU" ];then 
             echo "-> based on backslashxx KSU" >> $GITHUB_ENV
-          elif [ -f ${GITHUB_WORKSPACE}/USE_PERSHOOT_SUSFS.ME ];then
+          elif grep 'USE_PERSHOOT_SUSFS=true' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME;then
             echo "-> based on KERNELSU NEXT(with pershoot fork driver)" >> $GITHUB_ENV
           elif [ "${{ env.ksu_fork }}" == "KSUN" ];then 
             echo "-> based on KERNELSU NEXT" >> $GITHUB_ENV
@@ -451,10 +445,10 @@ jobs:
           [ ${{ inputs.include_susfs }} == 'true'  ] && echo  "-> ${{ env.susfs_version}}" >> $GITHUB_ENV
           if [ "$HOOK_METHOD" == "tracepoint" -a "${{ env.ksu_fork }}" == "SUKISU" ];then
             echo "-> TracePoints Hooks for Better Hiding" >> $GITHUB_ENV
-          elif [ "${{ env.ksu_fork }}" == "KSUN" -a ! -f ${GITHUB_WORKSPACE}/USE_PERSHOOT_SUSFS.ME ];then
+          elif [ "${{ env.ksu_fork }}" == "KSUN" -a "$(grep -q 'USE_PERSHOOT_SUSFS=true' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME;echo $?)" == "0" ];then
             echo "-> Manual Hooks (scope-minimized v1.4) for Better Hiding" >> $GITHUB_ENV
           else
-            echo "-> Manual Hooks (scope-minimized v1.5) for Better Hiding" >> $GITHUB_ENV
+            echo "-> Manual Hooks (scope-minimized v1.6) for Better Hiding" >> $GITHUB_ENV
           fi
           if [ "${{ env.ksu_fork }}" == "SUKISU" ];then
             echo "-> Rename most libraries in the App lib dir for better hiding." >> $GITHUB_ENV
@@ -469,7 +463,7 @@ jobs:
           echo "-> CONFIG_TMPFS_XATTR Support [Mountify Support]" >> $GITHUB_ENV
           [ ${{ inputs.BBG }} == 'true'  ] && echo "-> Added Baseband Guard (BBG) support to prevent unauthorised writes to certain partitions" >> $GITHUB_ENV
           echo "-> BBRv1 and westwood Support" >> $GITHUB_ENV
-          [ -s "${GITHUB_WORKSPACE}/CLANG_VER.ME" ] && echo "-> Kernel built with: $(cat ${GITHUB_WORKSPACE}/CLANG_VER.ME)" >> $GITHUB_ENV
+          grep -Eq 'CC_VERSION_TEXT=.+' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME && echo "-> Kernel built with: $(grep 'CC_VERSION_TEXT=' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME | cut -d'=' -f2-)" >> $GITHUB_ENV
           echo >> $GITHUB_ENV
           echo -e 'Commit Hashes and Links:\nLinuxxPU-Dev: ['${LPU_REF}']('${LPU_URL}')' >> $GITHUB_ENV
           if [ ${{ inputs.include_susfs }} == 'true'  ];then
