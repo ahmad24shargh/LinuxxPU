@@ -386,6 +386,11 @@ jobs:
           # abi_bypass_gki (not needed but ...)
           for file in $(find ${GITHUB_WORKSPACE}/$CONFIG/ -type f -name 'check_buildtime_symbol_protection.py' 2>/dev/null | grep '/abi/');do echo $file;sed -E -i '/f"  \{symbol\} required by \{undefined_symbol_consumer_lookup\[symbol\]\}"/ {N;N;N;N;N; s/([[:space:]]+)return 1/\1print( "\\nBUT WHO CARES?\\n")\1return 0/g}' $file ;done
 
+          # add polly optimization support config
+          sed -E -i 's|(config HAVE_KERNEL_GZIP)|config POLLY_CLANG\n\tbool "Use Clang Polly optimizations"\n\tdefault y\n\thelp\n\tThis option enables Clang'\''s polyhedral loop optimizer known as\n\t  Polly. Polly is able to optimize various loops throughout the\n\t  kernel for cache locality. This requires a Clang toolchain\n\t  compiled with support for Polly. More information can be found\n\t  from Polly'\''s website:\n\t  \n\t  https://polly.llvm.org\n\n\1|g' ${GITHUB_WORKSPACE}/$CONFIG/common/init/Kconfig
+          sed -E -i 's/(^include \$\(srctree\)\/scripts\/Makefile\.clang$)/\1\nifdef CONFIG_POLLY_CLANG\nKBUILD_CFLAGS\t+= -mllvm -polly \\\n\t\t    -mllvm -polly-ast-use-context \\\n\t\t    -mllvm -polly-invariant-load-hoisting \\\n\t\t    -mllvm -polly-run-inliner \\\n\t\t    -mllvm -polly-vectorizer=stripmine\nifeq (\$(shell test \$(CONFIG_CLANG_VERSION) -gt 130000\; echo \$\$?),0)\nKBUILD_CFLAGS\t\+= -mllvm -polly-loopfusion-greedy=1 \\\n\t\t    -mllvm -polly-reschedule=1 \\\n\t\t    -mllvm -polly-postopts=1\nelse\nKBUILD_CFLAGS   \+= -mllvm -polly-opt-fusion=max\nendif\n# Polly may optimise loops with dead paths beyound what the linker\n# can understand. This may negate the effect of the linker'\''s DCE\n# so we tell Polly to perfom proven DCE on the loops it optimises\n# in order to preserve the overall effect of the linker'\''s DCE.\nifdef CONFIG_LD_DEAD_CODE_DATA_ELIMINATION\nKBUILD_CFLAGS  \+= -mllvm -polly-run-dce\nendif\nendif/g' $GITHUB_WORKSPACE/$CONFIG/common/Makefile
+          echo 'CONFIG_POLLY_CLANG=y' >> ${defconfig}
+          
           echo "defconfig=${defconfig}" >> $GITHUB_ENV
 
       - name: Add BBG (Baseband-guard)
