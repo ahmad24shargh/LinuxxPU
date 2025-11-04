@@ -547,7 +547,7 @@ jobs:
           
           if [ ! -f build/gettop.sh ];then
             echo "Decompressing build.tar.gz ..." >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
-            tar -xzkf ${GITHUB_WORKSPACE}/.github/scripts/build.tar.gz -C build/
+            tar -xzf ${GITHUB_WORKSPACE}/.github/scripts/build.tar.gz -C build/ --skip-old-files
             for file in $(find build/ -type f -name '*.sh' 2>/dev/null);do sed -i 's|/\/build\/|build\/|g' $file;chmod +x $file;done
           fi
 
