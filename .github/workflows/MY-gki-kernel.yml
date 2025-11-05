@@ -588,9 +588,9 @@ jobs:
             # ksu_hooks.patch: Only 2 hooks, with ultimatum patch
             # scope_minimized_manual_hooks_v1.6.patch: Traditional full hook
             # with kprobe only ultimatum patch or xx_hybridized-1.6.patch(Not both together)
-            echo "Applying scope_minimized_manual_hooks_v1.6 patches(6 hooks) for backslashxx KSU..."
-            cp ../../kernel_patches/xxksu/scope_minimized_manual_hooks_v1.6.patch ./
-            patch -p1 -F 3 < scope_minimized_manual_hooks_v1.6.patch
+            echo "Applying xx_hybridized-v1.5 patches(3 hooks) for backslashxx KSU..."
+            cp ../../kernel_patches/xxksu/xx_hybridized-v1.5.patch ./
+            patch -p1 -F 3 < xx_hybridized-v1.5.patch
             if grep -q 'CONFIG_KSU_LSM_SECURITY_HOOKS=n' ${defconfig};then
               cp ../../kernel_patches/xxksu/manual_security_hooks_v1.6 ./
               echo "Applying manual_security_hooks_v1.6 patch ..."
