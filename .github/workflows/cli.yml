@@ -1,0 +1,91 @@
+name: CI
+#permissions: write-all
+env:
+  GITHUB_TOKEN: ${{ secrets.PAT_NO_EXPIRE }}
+concurrency:
+      group: staging_environment
+      cancel-in-progress: true
+
+# Controls when the workflow will run
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    steps:
+      - name: exit
+        if: false
+        run: |
+          echo "I gave the exit command myself."
+          gh release delete "v1.0.7-45" --cleanup-tag -R "${{ github.repository_owner }}/${{ github.event.repository.name }}"
+          exit 0
+          false
+          
+      #- name: Checkout code
+        #uses: actions/checkout@v5.0.0
+        #with:
+          #fetch-depth: 0 # fetch full history
+          #filter: tree:0
+
+      - name: Test Codes
+      # Randomization of package ID and app label
+        if: false
+        run: |
+          sudo apt-get install wamerican uni2ascii
+          echo
+          echo
+          dic=$(mktemp)
+          subdict=$(mktemp)
+          uni2ascii -B /usr/share/dict/american-english > $dic
+          stat $dic
+          file $dic
+          #exit 0
+          rand=$(awk -v min=1 -v max="$(cat $dic | wc -l)" 'BEGIN{srand(); print int(min+rand()*(max-min+1))}')
+          echo .
+          app_label=$(awk "NR==${rand} {print}" $dic)
+          echo ..
+          while [[ ! "$app_label" =~ ^[[:alnum:]]*$ ]] && [[ "$app_label" =~ ^[[:digit:]]+$ ]];do app_label=(awk "NR==${rand_all} {print}" $dic);done
+          echo ...
+          sed -E -n '/^.{3}$/p' $dic > $subdict
+          echo ....
+          rand=$(awk -v min=1 -v max="$(cat $subdict | wc -l)" 'BEGIN{srand(); print int(min+rand()*(max-min+1))}')
+          echo .....
+          p_id_1=$(awk "NR==${rand} {print}" $subdict)
+          echo ......
+          while [[ ! "$p_id_1" =~ ^[[:alnum:]]*$ ]] && [[ "$p_id_1" =~ ^[[:digit:]]+$ ]];do p_id_1=$(awk "NR==${rand} {print}" $subdict);done
+          sed -E -n '/^.{5}$/p' $dic > $subdict
+          rand=$(awk -v min=1 -v max="$(cat $subdict | wc -l)"  'BEGIN{srand(); print int(min+rand()*(max-min+1))}')
+          p_id_2=$(awk "NR==${rand} {print}" $subdict)
+          while [[ ! "$p_id_2" =~ ^[[:alnum:]]*$ ]] && [[ "$p_id_2" =~ ^[[:digit:]]+$ ]];do p_id_2=$(awk "NR==${rand} {print}" $subdict);done
+          sed -E -n '/^.{7}$/p' $dic > $subdict
+          rand=$(awk -v min=1 -v max="$(cat $subdict | wc -l)" 'BEGIN{srand(); print int(min+rand()*(max-min+1))}')
+          p_id_3=$(awk "NR==${rand} {print}" $subdict)
+          while [[ ! "$p_id_3" =~ ^[[:alnum:]]*$ ]] && [[ "$p_id_3" =~ ^[[:digit:]]+$ ]];do p_id_3=$(awk "NR==${rand} {print}" $subdict);done
+          echo "app label: $app_label"
+          echo "package id part 1: $p_id_1"
+          echo "package id part 2: $p_id_2"
+          echo "package id part 3: $p_id_3"
+          echo "${p_id_1}.${p_id_2}.${p_id_3}"
+
+      - name: Test Codes 2
+        if: true
+        run: |
+          repo="${{ github.repository_owner }}/${{ github.event.repository.name }}"
+          echo ${{ vars.CLANG_OFFICIAL }}
+          
+          export
+          echo "____________"
+          printenv
+
+          
+
+          
+
+
+
+          
