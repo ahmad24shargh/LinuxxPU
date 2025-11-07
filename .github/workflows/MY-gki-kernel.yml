@@ -548,8 +548,11 @@ jobs:
           echo "CONFIG_KALLSYMS=y" >> ${defconfig}
           echo "CONFIG_KALLSYMS_ALL=y" >> ${defconfig}
           # o3 optimization
-          #sed -i '/CC_OPTIMIZE_FOR_PERFORMANCE/d' ${defconfig}
-          #echo "CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE_O3=y" >> ${defconfig}
+          if grep 'CONFIG_POLLY_CLANG=y' ${defconfig};then
+            echo "CONFIG_POLLY_CLANG=y found in configs, enabling O3 optimization ..." >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
+            sed -i '/CC_OPTIMIZE_FOR_PERFORMANCE/d' ${defconfig}
+            echo "CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE_O3=y" >> ${defconfig}
+          fi
           
 
           # Add BBR & network Configs
@@ -919,12 +922,8 @@ jobs:
             [ -f ./common/kernel/manipulating_conf_data.sh ] && cat ./common/kernel/manipulating_conf_data.sh
             echo "CC=$(which clang)" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
             export KBUILD_VERBOSE=1
-            if [ "${BUILD_CONFIG}" != "nothing" ];then
-              #LTO=thin BUILD_CONFIG=${BUILD_CONFIG} SKIP_EXT_MODULES=1 SKIP_CP_KERNEL_HDR=1 SKIP_VENDOR_BOOT=1 SKIP_MRPROPER=1 SYSTEM_DLKM_RE_SIGN=0 BUILD_SYSTEM_DLKM=0 KMI_SYMBOL_LIST_STRICT_MODE=0 build/build.sh CC="${CC}" 
-              BUILD_CONFIG=${BUILD_CONFIG} build/build.sh CC="${CC}" 
-            else
-              KMI_SYMBOL_LIST_STRICT_MODE=0 build/build.sh CC="${CC}" 
-            fi
+            #LTO=thin BUILD_CONFIG=${BUILD_CONFIG} SKIP_EXT_MODULES=1 SKIP_CP_KERNEL_HDR=1 SKIP_VENDOR_BOOT=1 SKIP_MRPROPER=1 SYSTEM_DLKM_RE_SIGN=0 BUILD_SYSTEM_DLKM=0 KMI_SYMBOL_LIST_STRICT_MODE=0 build/build.sh CC="${CC}" 
+            BUILD_CONFIG=${BUILD_CONFIG} build/build.sh CC="${CC}"
           fi
 
       - name: Patch Image File A12 & A13
