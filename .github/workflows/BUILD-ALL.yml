@@ -2,9 +2,6 @@ name: BUILD ALL
 permissions: write-all
 env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #for sukisu only
-  # manual or tracepoint, a,
-  HOOK_METHOD: 'manual'
   
 concurrency:
       group: staging_environment
@@ -165,7 +162,6 @@ jobs:
         include:
           - sub_level: ${{needs.calc_tag_version.outputs.C_KERNEL_SUBLEVEL}}
             os_patch_level: ${{needs.calc_tag_version.outputs.C_OS_PATCH_LEVEL}}
-            hook_method: ${{needs.calc_tag_version.outputs.hook_method}}
             ksu_fork: ${{ inputs.ksu_fork }}
     uses: ./.github/workflows/MY-gki-kernel.yml
     secrets: inherit
@@ -178,7 +174,6 @@ jobs:
       kernel_version: "5.15"
       sub_level: ${{ matrix.sub_level }}
       ksu_fork: ${{ inputs.ksu_fork }}
-      hook_method: ${{ matrix.hook_method }}
       os_patch_level: ${{ matrix.os_patch_level }}
       manager_supports: "${{ inputs.additional_ksu_support }}"
       
