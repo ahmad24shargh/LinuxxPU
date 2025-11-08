@@ -19,20 +19,7 @@ jobs:
       with:
         name: linuxxpu
         path: .
-   
-    - name: Build susfsd
-      if: github.event.inputs.ksu_fork == 'KSUN'
-      working-directory: ./userspace/susfsd
-      run: |
-        $ANDROID_NDK/ndk-build
       
-    - name: Upload a Build Artifact
-      if: github.event.inputs.ksu_fork == 'KSUN'
-      uses: actions/upload-artifact@v4.6.2
-      with:
-        name: susfsd-aarch64-linux-android
-        path: ./userspace/susfsd/libs
-
     - name: Build susfs
       if: github.event.inputs.ksu_fork == 'SUKISU'
       working-directory: ./userspace/susfs
