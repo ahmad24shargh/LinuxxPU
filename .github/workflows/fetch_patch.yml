@@ -42,24 +42,7 @@ jobs:
       - name: fetch upstream ... 
         run: |
           touch BUILD_SETTINGS.ME
-          if [ ${{ env.ksu_fork }} == 'KSUN' ];then
-            echo 'USE_PERSHOOT_SUSFS=true' >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
-            echo 'USE_WILD_MANAGER=false' >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
-            
-            if grep 'USE_WILD_MANAGER=true' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME;then
-              git clone --single-branch https://github.com/WildKernels/Wild_KSU KSU
-              owner=WildKernels
-              repo=Wild_KSU
-              workflow=build-manager-ci.yml
-              tag_ver='Wild'
-            else
-              git clone --single-branch https://github.com/KernelSU-Next/KernelSU-Next KSU
-              owner=KernelSU-Next
-              repo=KernelSU-Next
-              workflow=build-manager-ci.yml
-              tag_ver='KSUN'
-            fi
-          elif [ ${{ env.ksu_fork }} == 'SUKISU' ];then
+          if [ ${{ env.ksu_fork }} == 'SUKISU' ];then
             git clone --single-branch https://github.com/ShirkNeko/SukiSU-Ultra KSU
             owner=SukiSU-Ultra
             repo=SukiSU-Ultra
@@ -143,24 +126,6 @@ jobs:
               echo "xxksu & susfs !!! I haven't made it yet . No need "
               exit 0
               false
-            elif [ ${{ env.ksu_fork }} == 'KSUN'  ];then
-              if grep 'USE_PERSHOOT_SUSFS=false' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME;then
-                #if $use_wild_manager;then
-                  #patch_file="https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/Wild_KSUN-susfs-1.5.9.patch"
-                #else
-                  patch_file="https://raw.githubusercontent.com/ahmad24shargh/kernel_patches/refs/heads/main/next/KSUN-SUSFS-1.5.12.patch"
-                #fi
-                wget ${patch_file}
-                cp $(echo ${patch_file} | rev | cut -d '/' -f1 | rev) ./ksun_susfs_latest.patch
-              else
-                git clone --depth 1 -b next-susfs https://github.com/pershoot/KernelSU-Next PERSHOOT
-                rm -rf kernel/
-                cp -a PERSHOOT/kernel .
-                rm -rf PERSHOOT
-              fi
-              if [ -f ksun_susfs_latest.patch ];then
-                patch -p1 --forward < ksun_susfs_latest.patch
-              fi
             else
               exit 78
               false
@@ -213,11 +178,6 @@ jobs:
           
           for file in $(find ${repo_folder}/manager/app/src/main/jniLibs -name 'libmagiskboot.so' 2>/dev/null);do mv -f $file $(dirname $file)/liblpuboot.so;done
           for file in $(grep -R ${repo_folder}/manager  -e 'libmagiskboot.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libmagiskboot.so|liblpuboot.so|g' $file;done
-          if [ ${{ env.ksu_fork }} == 'KSUN' ];then
-            echo 'find and replace libsusfsd.so in source code ...'
-            [ -z $(grep -R ${repo_folder}  -e 'libsusfsd.so' 2>/dev/null | base64 | head -n 1) ] && { echo "libsusfsd.so string not found";false; }
-            for file in $(grep -R ${repo_folder}  -e 'libsusfsd.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libsusfsd.so|libsuslpufsd.so|g' $file;done
-          fi
           if [ ${{ env.ksu_fork }} == 'SUKISU' ];then
             for dir in $(find ${repo_folder}/ -type d -name 'zako' | grep -E '/com/sukisu/zako$');do mv $dir $(dirname $dir)/linuxxpu ;done
             for file in $(find ${repo_folder}/manager/app/src/main/jniLibs -name 'libzakosign.so' 2>/dev/null);do mv -f $file $(dirname $file)/liblpuxsign.so;done
@@ -238,7 +198,6 @@ jobs:
           sed -E -i -e 's|^([[:space:]]+)(UpdateCard\(\))|\1//\2|g' -e 's|^([[:space:]]+)(Unofficial\(\))|\1//\2|g' -e 's|^([[:space:]]+)(DonateCard\(\))|\1//\2|g' -e 's|^([[:space:]]+)(LearnMoreCard\(\))|\1//\2|g' -e 's|^([[:space:]]+)(IssueReportCard\(\))|\1//\2|g' -e 's|^([[:space:]]+)(ContributionCard\(\))|\1//\2|g' $(find . -name 'Home.kt')
           for file in $(find ./userspace -type f -name 'Application.mk' 2>/dev/null);do sed -E -i 's/APP_ABI \:= .+/APP_ABI := arm64-v8a/g' $file;done
           sed -E -i -e 's|abiFilters\(.+|abiFilters("arm64-v8a")|g' -e 's|abiFilters \+\= listOf\(.+|// abiFilters += listOf("arm64-v8a")|g' ./manager/build.gradle.kts
-          for file in $(grep -R "${repo_folder}" -e 'com.rifsxd.ksunext' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -E -i 's|(com.)rifsxd(.)ksunext|\1ahmad\2linuxxpu|g' $file;done
           for file in $(grep -R "${repo_folder}" -e 'me.weishu.kernelsu' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -E -i 's|me(.)weishu(.)kernelsu|com\1ahmad\2linuxxpu|g' $file;done
           for file in $(grep -R "${repo_folder}" -e 'com.twj.wksu' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -E -i 's|(com.)twj(.)wksu|\1ahmad\2linuxxpu|g' $file;done
           for file in $(grep -R "${repo_folder}" -e 'com.sukisu.ultra' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -E -i 's|(com.)sukisu(.)ultra|\1ahmad\2linuxxpu|g' $file;done
