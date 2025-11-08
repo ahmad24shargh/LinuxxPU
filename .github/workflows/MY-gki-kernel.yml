@@ -16,9 +16,6 @@ on:
       ksu_fork:
         required: true
         type: string
-      hook_method:
-        required: true
-        type: string   
       include_susfs:
         required: true
         type: boolean
@@ -53,7 +50,6 @@ jobs:
     env:
       kernel_variant: ${{ inputs.kernel_variant }}
       ksu_fork: ${{ inputs.ksu_fork }}
-      hook_method: ${{ inputs.hook_method }}
       include_susfs: ${{ inputs.include_susfs }}
       BBG: ${{ inputs.BBG }}
       clang_toolchain: ${{ inputs.clang_toolchain }}
@@ -630,16 +626,11 @@ jobs:
             echo "Applying scope_minimized_manual_hooks_v1. $( grep -q 'USE_PERSHOOT_SUSFS=true' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME && echo -n "6.patch for pershoot fork of ksun" || echo -n "4.patch for ksun")..."
             cp ../../kernel_patches/next/scope_minimized_manual_hooks_* ./
             grep -q 'USE_PERSHOOT_SUSFS=true' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME && { echo "NEW_HOOK=scope_minimized_manual_hooks_v1.6" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME;patch -p1 -F 3 < scope_minimized_manual_hooks_v1.6.patch; } || { echo "NEW_HOOK=scope_minimized_manual_hooks_v1.4" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME;patch -p1 -F 3 < scope_minimized_manual_hooks_v1.4.patch; }
-          elif [ "${{ inputs.ksu_fork }}" == "SUKISU" -a "${{ env.kernel_variant }}" != "chickernel"  -a "${{ env.hook_method }}" == "manual" ]; then
+          elif [ "${{ inputs.ksu_fork }}" == "SUKISU" -a "${{ env.kernel_variant }}" != "chickernel"; then
             echo "Applying manual hooks v1.6 for SukiSU Ultra..."
             echo "NEW_HOOK=scope_min_manual_hooks_v1.6" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
             cp ../../kernel_patches/sukisu/scope_min_manual_hooks_v1.6.patch ./
             patch -p1 -F 3 < scope_min_manual_hooks_v1.6.patch
-          elif [ "${{ inputs.ksu_fork }}" == "SUKISU" -a "${{ env.kernel_variant }}" != "chickernel"  -a "${{ env.hook_method }}" == "tracepoint" ]; then
-            echo "Applying tracepoint hooks v1.1 for SukiSU Ultra..."
-            echo "NEW_HOOK=sukisu_tracepoint_hooks_v1.1" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
-            cp ../../kernel_patches/sukisu/sukisu_tracepoint_hooks_v1.1.patch ./
-            patch -p1 -F 3 < sukisu_tracepoint_hooks_v1.1.patch
           fi
 
       - name: Add SUSFS Configuration Settings
