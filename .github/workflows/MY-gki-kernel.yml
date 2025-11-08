@@ -846,12 +846,12 @@ jobs:
          
           export TARGET=aarch64-linux-android
           #[ ${{ env.ksu_fork }} == 'xxKSU' ] && export KCFLAGS="${KCFLAGS} -Wno-error=return-mismatch"
-          export CC="clang"
+          export CC="clang --target=${TARGET}${API} ${My_Args}"
           #echo "CONFIG_STACKPROTECTOR=n" >> ${defconfig}
           #echo "CONFIG_STACKPROTECTOR_STRONG=n" >> ${defconfig}
-          sed -E -i 's|(^include.+/Makefile\.clang$)|KBUILD_CFLAGS += --target='"${TARGET}${API} ${My_Args}"'\n\1|g' $GITHUB_WORKSPACE/$CONFIG/common/Makefile
-          mkdir -p $GITHUB_WORKSPACE/linuxxpu
-          cp -f $GITHUB_WORKSPACE/$CONFIG/common/Makefile $GITHUB_WORKSPACE/linuxxpu/_Makefile
+          sed -E -i 's|^if .+= GNU .+= assembler.+|if true\;then|g' $GITHUB_WORKSPACE/$CONFIG/common/scripts/as-version.sh
+          #mkdir -p $GITHUB_WORKSPACE/linuxxpu
+          #cp -f $GITHUB_WORKSPACE/$CONFIG/common/Makefile $GITHUB_WORKSPACE/linuxxpu/_Makefile
           
           BUILD_CONFIG='common/build.config.gki.aarch64'
 
