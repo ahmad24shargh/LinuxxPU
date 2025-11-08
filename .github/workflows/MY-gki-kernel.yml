@@ -439,10 +439,8 @@ jobs:
         run: |
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG"
-          [ ${{ env.ksu_fork }} == 'KSUN' ]  && echo "Adding KernelSU Next..."
           [ ${{ env.ksu_fork }} == 'SUKISU' ] && echo "Adding SukiSU Ultra..."
           [ ${{ env.ksu_fork }} == 'xxKSU' ] && echo "Adding backslashxx KSU..."
-          #if [ ${{ env.ksu_fork }} == 'KSUN' -o ${{ env.include_susfs }} == 'false'  ];then
           GKI_ROOT=$(pwd)
           test -d "$GKI_ROOT/common/drivers" &&  DRIVER_DIR="$GKI_ROOT/common/drivers" ||  DRIVER_DIR="$GKI_ROOT/drivers"
           DRIVER_MAKEFILE=$DRIVER_DIR/Makefile
@@ -457,7 +455,6 @@ jobs:
           echo '[+] Done.'
           #fi
           cd "${GITHUB_WORKSPACE}/$CONFIG"
-          ln -s ${GITHUB_WORKSPACE} ./KernelSU-Next
           ln -s ${GITHUB_WORKSPACE} ./kernelsu
           for files in $(grep -R ../kernel_patches -e 'ksud' 2>/dev/null | grep -v 'https' | grep -v 'rustix::' | cut -d':' -f1 | sort | uniq);do sed -i 's|ksud|lpud|g' $files;done
           for files in $(grep -R ../kernel_patches -e 'ksu' 2>/dev/null | grep -v 'https' | grep -v 'rustix::' | cut -d':' -f1 | sort | uniq);do sed -i 's|ksu|lpu|g' $files;done
@@ -490,7 +487,6 @@ jobs:
           cp $GITHUB_WORKSPACE/susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch ./common/
           cp $GITHUB_WORKSPACE/susfs4ksu/kernel_patches/fs/* ./common/fs/
           cp $GITHUB_WORKSPACE/susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
-          [ ${{ env.ksu_fork }} == 'KSUN' ]  && echo "Applying SUSFS patches for KernelSU-Next..."
           [ ${{ env.ksu_fork }} == 'SUKISU' ] && echo "Applying SUSFS patches for SukiSU Ultra..."
           [ ${{ env.ksu_fork }} == 'xxKSU' ] && echo "Applying SUSFS patches for backslashxx KSU..."
           # Change to common directory and apply common SUSFS patch
@@ -616,10 +612,6 @@ jobs:
               echo "Applying manual_security_hooks_v1.6 patch ..."
               patch -p1 -F 3 < manual_security_hooks_v1.6
             fi
-          elif [ "${{ inputs.ksu_fork }}" == "KSUN" -a "${{ env.kernel_variant }}" != "chickernel" ]; then
-            echo "Applying scope_minimized_manual_hooks_v1. $( grep -q 'USE_PERSHOOT_SUSFS=true' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME && echo -n "6.patch for pershoot fork of ksun" || echo -n "4.patch for ksun")..."
-            cp ../../kernel_patches/next/scope_minimized_manual_hooks_* ./
-            grep -q 'USE_PERSHOOT_SUSFS=true' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME && { echo "NEW_HOOK=scope_minimized_manual_hooks_v1.6" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME;patch -p1 -F 3 < scope_minimized_manual_hooks_v1.6.patch; } || { echo "NEW_HOOK=scope_minimized_manual_hooks_v1.4" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME;patch -p1 -F 3 < scope_minimized_manual_hooks_v1.4.patch; }
           elif [ "${{ inputs.ksu_fork }}" == "SUKISU" -a "${{ env.kernel_variant }}" != "chickernel"; then
             echo "Applying manual hooks v1.6 for SukiSU Ultra..."
             echo "NEW_HOOK=scope_min_manual_hooks_v1.6" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
