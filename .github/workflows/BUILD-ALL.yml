@@ -26,7 +26,6 @@ on:
         default: 'xxKSU'
         required: true
         options:
-          - KSUN
           - xxKSU
           - SUKISU
       kernel_variant:
@@ -258,12 +257,6 @@ jobs:
           name: susfsd-aarch64-linux-android
           path: .
 
-      - name: Copy susfsd to app jniLibs
-        if: github.event.inputs.ksu_fork == 'KSUN'
-        run: |
-          mkdir -p app/src/main/jniLibs/arm64-v8a
-          cp -f ../arm64-v8a/susfsd ../manager/app/src/main/jniLibs/arm64-v8a/libsuslpufsd.so
-
       - name: Download arm64 susfsd
         if: github.event.inputs.ksu_fork == 'SUKISU'
         uses: actions/download-artifact@v5.0.0
@@ -289,30 +282,6 @@ jobs:
         run: |
           cp -f ../aarch64-linux-android/release/lpud ../manager/app/src/main/jniLibs/arm64-v8a/liblpud.so
           
-      - name: Download arm64 lpud_overlayfs
-        if: github.event.inputs.ksu_fork == 'KSUN'
-        uses: actions/download-artifact@v5.0.0
-        with:
-          name: lpud_overlayfs-aarch64-linux-android
-          path: lpud_overlayfs
-
-      - name: Copy lpud_overlayfs to app jniLibs
-        if: github.event.inputs.ksu_fork == 'KSUN'
-        run: |
-          cp -f ../lpud_overlayfs/aarch64-linux-android/release/lpud ../manager/app/src/main/jniLibs/arm64-v8a/liblpud_overlayfs.so
-
-      - name: Download arm64 lpud_magic
-        if: github.event.inputs.ksu_fork == 'KSUN'
-        uses: actions/download-artifact@v5.0.0
-        with:
-          name: lpud_magic-aarch64-linux-android
-          path: lpud_magic
-
-      - name: Copy lpud_magic to app jniLibs
-        if: github.event.inputs.ksu_fork == 'KSUN'
-        run: |
-          cp -f ../lpud_magic/aarch64-linux-android/release/lpud ../manager/app/src/main/jniLibs/arm64-v8a/liblpud_magic.so
-
       - name: Build with Gradle
         run: |
           {
@@ -379,10 +348,6 @@ jobs:
             LPU_BRANCH="main"
             REPO_OWNER="SukiSU-Ultra"
             REPO_NAME="SukiSU-Ultra"
-          elif [ "${{ env.ksu_fork }}" == "KSUN" ];then 
-            LPU_BRANCH="next"
-            REPO_OWNER="KernelSU-Next"
-            REPO_NAME="KernelSU-Next"
           elif [ "${{ env.ksu_fork }}" == "xxKSU" ];then 
             LPU_BRANCH="master"
             REPO_OWNER="backslashxx"
@@ -437,10 +402,6 @@ jobs:
             echo "-> based on SUKISU ULTRA" >> $GITHUB_ENV
           elif [ "${{ env.ksu_fork }}" == "xxKSU" ];then 
             echo "-> based on backslashxx KSU" >> $GITHUB_ENV
-          elif grep 'USE_PERSHOOT_SUSFS=true' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME;then
-            echo "-> based on KERNELSU NEXT(with pershoot fork driver)" >> $GITHUB_ENV
-          elif [ "${{ env.ksu_fork }}" == "KSUN" ];then 
-            echo "-> based on KERNELSU NEXT" >> $GITHUB_ENV
           fi
           echo '-> LinuxxPU DEV('${k_var}')' >> $GITHUB_ENV
           [ ${{ inputs.include_susfs }} == 'true'  ] && echo  "-> ${{ env.susfs_version}}" >> $GITHUB_ENV
@@ -471,9 +432,7 @@ jobs:
           [[ "${{ env.kernel_variant }}" == "common-android-mainline" ]] &&  RELEASE_NAME="GKI Kernel "
           [[ "${{ env.kernel_variant }}" == "chickernel" ]] &&  RELEASE_NAME="ChicKernel "
           [[ "${{ env.kernel_variant }}" == *"topnotchfreaks"* ]] && RELEASE_NAME="TopNotchFreaks($(echo ${{ env.topnotchfreaks_codelinaro_branch }} | cut -d'-' -f2-) source) Kernel "
-          if [ "${{ env.ksu_fork }}" == "KSUN" ];then
-            RELEASE_NAME="${RELEASE_NAME}With LinuxxPU DEV(KSUN based)"
-          elif [ "${{ env.ksu_fork }}" == "SUKISU" ];then
+          if [ "${{ env.ksu_fork }}" == "SUKISU" ];then
             RELEASE_NAME="${RELEASE_NAME}With LinuxxPU DEV(SukiSU based)"
           elif [ "${{ env.ksu_fork }}" == "xxKSU" ];then
             RELEASE_NAME="${RELEASE_NAME}With LinuxxPU DEV(xxKSU based)"
@@ -507,13 +466,6 @@ jobs:
             [ -e ./downloaded-artifacts/susfs-aarch64-linux-android/arm64-v8a/susfs-aarch64-linux-android ] && zip ./downloaded-artifacts/susfs-aarch64-linux-android/arm64-v8a/susfs-aarch64-linux-android.zip ./downloaded-artifacts/susfs-aarch64-linux-android/arm64-v8a/susfs-aarch64-linux-android || true
             [ -e ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud ] && mv ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud  ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud-aarch64-linux-android || true
             [ -e ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud-aarch64-linux-android ] && zip ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud-aarch64-linux-android.zip ./downloaded-artifacts/lpud-aarch64-linux-android/aarch64-linux-android/release/lpud-aarch64-linux-android || true
-          elif  [ "${{ env.ksu_fork }}" == "KSUN" ];then
-            [ -e ./downloaded-artifacts/lpud_overlayfs-aarch64-linux-android/aarch64-linux-android/release/lpud ] && zip ./downloaded-artifacts/lpud_overlayfs-aarch64-linux-android/aarch64-linux-android/release/lpud_overlayfs-aarch64-linux-android.zip ./downloaded-artifacts/lpud_overlayfs-aarch64-linux-android/aarch64-linux-android/release/lpud || true
-            [ -e ./downloaded-artifacts/lpud_magic-aarch64-linux-android/aarch64-linux-android/release/lpud ] && zip ./downloaded-artifacts/lpud_magic-aarch64-linux-android/aarch64-linux-android/release/lpud_magic-aarch64-linux-android.zip ./downloaded-artifacts/lpud_magic-aarch64-linux-android/aarch64-linux-android/release/lpud || true
-            [ -e ./downloaded-artifacts/lpud_overlayfs-aarch64-linux-android/aarch64-linux-android/release/lpud.d ] && rm -rf ./downloaded-artifacts/lpud_overlayfs-aarch64-linux-android/aarch64-linux-android/release/lpud.d
-            [ -e ./downloaded-artifacts/susfsd-aarch64-linux-android/arm64-v8a/susfsd ] && zip ./downloaded-artifacts/susfsd-aarch64-linux-android/arm64-v8a/susfsd-arm64-v8a.zip ./downloaded-artifacts/susfsd-aarch64-linux-android/arm64-v8a/susfsd || true
-            [ -e ./downloaded-artifacts/susfsd-aarch64-linux-android/armeabi-v7a/susfsd ] && zip ./downloaded-artifacts/susfsd-aarch64-linux-android/armeabi-v7a/susfsd-armeabi-v7a.zip ./downloaded-artifacts/susfsd-aarch64-linux-android/armeabi-v7a/susfsd || true
-            [ -e ./downloaded-artifacts/susfsd-aarch64-linux-android/x86_64/susfsd ] && zip ./downloaded-artifacts/susfsd-aarch64-linux-android/x86_64/susfsd-x86_64.zip ./downloaded-artifacts/susfsd-aarch64-linux-android/x86_64/susfsd || true
           fi
           [ -e ./downloaded-artifacts/aarch64-linux-android/release/lpuinit ] && zip ./downloaded-artifacts/lpuinit-aarch64-linux-android/arm64-v8a/lpuinit-aarch64-linux-android.zip ./downloaded-artifacts/aarch64-linux-android/release/lpuinit || true
           for file in $(find ./downloaded-artifacts -name \*.zip -o -name \*.apk -o -name \*.img -o -name \*.tar.gz -name \*.tgz -name \*.gz);do [ "$(basename $file)" != "build.tar.gz" ] && cp $file ./releases/ ;done
