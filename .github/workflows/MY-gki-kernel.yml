@@ -864,7 +864,7 @@ jobs:
           export CC="clang"
           #echo "CONFIG_STACKPROTECTOR=n" >> ${defconfig}
           #echo "CONFIG_STACKPROTECTOR_STRONG=n" >> ${defconfig}
-          sed -E -i 's|^USERINCLUDE|KBUILD_CFLAGS += --target='"${TARGET}${API} ${My_Args}"'\nUSERINCLUDE|g' $GITHUB_WORKSPACE/$CONFIG/common/Makefile
+          sed -E -i 's|(^include.+/Makefile\.clang$)|KBUILD_CFLAGS += --target='"${TARGET}${API} ${My_Args}"'\n\1|g' $GITHUB_WORKSPACE/$CONFIG/common/Makefile
           mkdir -p $GITHUB_WORKSPACE/linuxxpu
           cp -f $GITHUB_WORKSPACE/$CONFIG/common/Makefile $GITHUB_WORKSPACE/linuxxpu/_Makefile
           
