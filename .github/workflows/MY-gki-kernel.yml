@@ -511,14 +511,7 @@ jobs:
           
           # for sukisu only - Setting it to y caused a bootloop (2025-10-07)
           echo "CONFIG_KSU_MANUAL_SU=n" >> ${defconfig}
-          
-          if [ ${{ env.ksu_fork }} == 'SUKISU' -a "${{ env.hook_method }}" == "tracepoint" ];then
-            echo "CONFIG_TRACEPOINTS=y" >> ${defconfig}
-            echo "CONFIG_KSU_TRACEPOINT_HOOK=y" >> ${defconfig}
-          else
-            [ ${{ env.ksu_fork }} != 'xxKSU' ] && echo "CONFIG_KSU_MANUAL_HOOK=y" >> ${defconfig}
-          fi
-          
+        
           if [ ${{ env.ksu_fork }} == 'xxKSU' ];then
             echo "CONFIG_KSU_KPROBES_KSUD=y"  >> ${defconfig}
             echo "CONFIG_KSU_EXTRAS=n" >> ${defconfig}
@@ -527,6 +520,7 @@ jobs:
             # manual_lsm_security_hook.patch
             echo "CONFIG_KSU_LSM_SECURITY_HOOKS=n" >> ${defconfig}
           else
+            echo "CONFIG_KSU_MANUAL_HOOK=y" >> ${defconfig}
             echo "CONFIG_KSU_KPROBES_HOOK=n"  >> ${defconfig}
             echo "CONFIG_KSU_LSM_SECURITY_HOOKS=y" >> ${defconfig}
           fi
