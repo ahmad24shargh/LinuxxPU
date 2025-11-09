@@ -684,17 +684,17 @@ jobs:
             echo "backslashxx took the lkm_template repo offline again ??!?!?"
           fi
           #create avc_spoof lkm module for further use
-          if git ls-remote https://github.com/backslashxx/selinux_avc_spoof_lkm &>/dev/null;then
-            cd $GITHUB_WORKSPACE/$CONFIG
-            git clone https://github.com/backslashxx/selinux_avc_spoof_lkm avc_spoof
-            cd common
-            cp -r ../avc_spoof/avc_spoof drivers
-            grep -q "avc_spoof" drivers/Makefile || printf "\nobj-\$(CONFIG_SELINUX_AVC_SPOOF) += avc_spoof/\n" >> drivers/Makefile && echo "[+] Modified Makefile for avc_spoof."
-            grep -q "source \"drivers/avc_spoof/Kconfig\"" drivers/Kconfig || sed -i "/endmenu/i\source \"drivers/avc_spoof/Kconfig\"" drivers/Kconfig && echo "[+] Modified Kconfig for avc_spoof."
-            echo "CONFIG_SELINUX_AVC_SPOOF=m" >> ${defconfig}  
-          else
-            echo "backslashxx took the selinux_avc_spoof_lkm repo offline again ??!?!?"
-          fi
+          #if git ls-remote https://github.com/backslashxx/selinux_avc_spoof_lkm &>/dev/null;then
+            #cd $GITHUB_WORKSPACE/$CONFIG
+            #git clone https://github.com/backslashxx/selinux_avc_spoof_lkm avc_spoof
+            #cd common
+            #cp -r ../avc_spoof/avc_spoof drivers
+            #grep -q "avc_spoof" drivers/Makefile || printf "\nobj-\$(CONFIG_SELINUX_AVC_SPOOF) += avc_spoof/\n" >> drivers/Makefile && echo "[+] Modified Makefile for avc_spoof."
+            #grep -q "source \"drivers/avc_spoof/Kconfig\"" drivers/Kconfig || sed -i "/endmenu/i\source \"drivers/avc_spoof/Kconfig\"" drivers/Kconfig && echo "[+] Modified Kconfig for avc_spoof."
+            #echo "CONFIG_SELINUX_AVC_SPOOF=m" >> ${defconfig}  
+          #else
+            #echo "backslashxx took the selinux_avc_spoof_lkm repo offline again ??!?!?"
+          #fi
           
       - name: adding avc_spoof feature from xx (xxKSU)
         if: ${{ env.ksu_fork  == 'xxKSU' }}
@@ -703,9 +703,9 @@ jobs:
           cd $CONFIG/common
           echo "adding/changing required config to defconfig ..."
           grep -q 'CONFIG_KSU_EXTRAS=' ${defconfig} && sed -i 's/CONFIG_KSU_EXTRAS=n/CONFIG_KSU_EXTRAS=y/g' ${defconfig} || echo 'CONFIG_KSU_EXTRAS=y' >> ${defconfig}
-          echo "applying avc_spoof patch ..."
-          cp ../../kernel_patches/xxksu/avc_spoof.patch ./
-          patch -p1 -F 3 < avc_spoof.patch
+          #echo "applying avc_spoof patch ..."
+          #cp ../../kernel_patches/xxksu/avc_spoof.patch ./
+          #patch -p1 -F 3 < avc_spoof.patch
           
           
       - name: Build kernel
