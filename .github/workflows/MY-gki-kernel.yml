@@ -703,9 +703,10 @@ jobs:
           cd $CONFIG/common
           echo "adding/changing required config to defconfig ..."
           grep -q 'CONFIG_KSU_EXTRAS=' ${defconfig} && sed -i 's/CONFIG_KSU_EXTRAS=n/CONFIG_KSU_EXTRAS=y/g' ${defconfig} || echo 'CONFIG_KSU_EXTRAS=y' >> ${defconfig}
-          #echo "applying avc_spoof patch ..."
-          #cp ../../kernel_patches/xxksu/avc_spoof.patch ./
-          #patch -p1 -F 3 < avc_spoof.patch
+          # Even with kprobe in my kernel, avc.c needs to be patched to make avc_spoof work.
+          echo "applying avc_spoof patch ..."
+          cp ../../kernel_patches/xxksu/avc_spoof.patch ./
+          patch -p1 -F 3 < avc_spoof.patch
           
           
       - name: Build kernel
