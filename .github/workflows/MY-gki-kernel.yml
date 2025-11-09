@@ -653,7 +653,7 @@ jobs:
           fi
 
       - name: Adding log reduction and debug reduction configurations
-        #if: false
+        if: false
         run: |
           cd "$CONFIG"
           #if grep -Eq '^CONFIG_CMDLINE=.+' ${defconfig};then cmdline_str=$(echo "CONFIG_CMDLINE=\"$(grep -E '^CONFIG_CMDLINE=.+' ${defconfig} | cut -d '"' -f2) audit=0 printk.devkmsg=off\"");else cmdline_str='CONFIG_CMDLINE="audit=0 printk.devkmsg=off"';fi
@@ -683,6 +683,18 @@ jobs:
           else
             echo "backslashxx took the repo offline again ??!?!?"
           fi
+          
+      - name: adding avc_spoof feature from xx (xxKSU)
+        if: ${{ env.ksu_fork  == 'xxKSU' }}
+        #if: false
+        run: |
+          cd $CONFIG/common
+          echo "adding/changing required config to defconfig ..."
+          grep -q 'CONFIG_KSU_EXTRAS=' ${defconfig} && sed -i 's/CONFIG_KSU_EXTRAS=n/CONFIG_KSU_EXTRAS=y/g' ${defconfig} || echo 'CONFIG_KSU_EXTRAS=y' >> ${defconfig}
+          echo "applying avc_spoof patch ..."
+          cp ../../kernel_patches/avc_spoof.patch ./
+          patch -p1 -F 3 < avc_spoof.patch
+          
           
       - name: Build kernel
         env:
@@ -828,14 +840,14 @@ jobs:
             export LIBRARY_PATH=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/lib64
             export CPATH=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/include
           fi
-          export API=$(echo ${{ inputs.android_version }} | sed 's/android1/3/g')
-          My_Args='-mcpu=cortex-a53+crypto+crc -mtune=cortex-a73 -march=armv8-a+crypto+crc -funroll-loops'
           #export KBUILD_BUILD_TIMESTAMP=$(date -u -d "3 month ago")
           export KBUILD_BUILD_TIMESTAMP='Wed Oct  8 15:53:46 UTC 2025'
           export KBUILD_BUILD_USER='ahmad'
           export KBUILD_BUILD_HOST='Forozan'
           sed -E -i -e 's|LC_ALL=C|LC_ALL=C;KBUILD_BUILD_TIMESTAMP="'"${KBUILD_BUILD_TIMESTAMP}"'";KBUILD_BUILD_USER="'"${KBUILD_BUILD_USER}"'";KBUILD_BUILD_HOST="'"${KBUILD_BUILD_HOST}"'";|g' -e 's|LINUX_COMPILE_BY=.+|LINUX_COMPILE_BY="'${KBUILD_BUILD_USER}'"|g' -e 's|LINUX_COMPILE_HOST=.+|LINUX_COMPILE_HOST="'${KBUILD_BUILD_HOST}'"|g' ./common/scripts/mkcompile_h
-         
+
+          export API=$(echo ${{ inputs.android_version }} | sed 's/android1/3/g')
+          My_Args='-mcpu=cortex-a53+crypto+crc -mtune=cortex-a73 -march=armv8-a+crypto+crc -funroll-loops'
           export TARGET=aarch64-linux-android
           #[ ${{ env.ksu_fork }} == 'xxKSU' ] && export KCFLAGS="${KCFLAGS} -Wno-error=return-mismatch"
           export CC="clang --target=${TARGET}${API} ${My_Args}"
