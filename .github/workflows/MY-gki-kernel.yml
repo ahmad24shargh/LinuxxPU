@@ -668,12 +668,12 @@ jobs:
           #echo "CONFIG_MESSAGE_LOGLEVEL_DEFAULT=1" >> ${defconfig}
           #sed -i -e 's/CONSOLE_LOGLEVEL_DEFAULT/CONSOLE_LOGLEVEL_MIN/g' -e 's/MESSAGE_LOGLEVEL_DEFAULT/CONSOLE_LOGLEVEL_MIN/g' ./common/kernel/printk/printk.c
 
-      - name: adding lkm-template module from xx
+      - name: adding lkm-template module(and avc_spoof module) from xx
         if: ${{ env.ksu_fork  == 'xxKSU' }}
         #if: false
         run: |
           if git ls-remote https://github.com/backslashxx/lkm_template &>/dev/null;then
-            cd $CONFIG
+            cd $GITHUB_WORKSPACE/$CONFIG
             git clone https://github.com/backslashxx/lkm_template 
             cd common
             cp -r ../lkm_template/lkm_template drivers
@@ -681,7 +681,19 @@ jobs:
             grep -q "source \"drivers/lkm_template/Kconfig\"" drivers/Kconfig || sed -i "/endmenu/i\source \"drivers/lkm_template/Kconfig\"" drivers/Kconfig && echo "[+] Modified Kconfig for lkm_template."
             echo "CONFIG_LKM_TEMPLATE=m" >> ${defconfig}  
           else
-            echo "backslashxx took the repo offline again ??!?!?"
+            echo "backslashxx took the lkm_template repo offline again ??!?!?"
+          fi
+          #create avc_spoof lkm module for further use
+          if git ls-remote https://github.com/backslashxx/selinux_avc_spoof_lkm &>/dev/null;then
+            cd $GITHUB_WORKSPACE/$CONFIG
+            git clone https://github.com/backslashxx/selinux_avc_spoof_lkm avc_spoof
+            cd common
+            cp -r ../avc_spoof/avc_spoof drivers
+            grep -q "avc_spoof" drivers/Makefile || printf "\nobj-\$(CONFIG_SELINUX_AVC_SPOOF) += avc_spoof/\n" >> drivers/Makefile && echo "[+] Modified Makefile for avc_spoof."
+            grep -q "source \"drivers/avc_spoof/Kconfig\"" drivers/Kconfig || sed -i "/endmenu/i\source \"drivers/avc_spoof/Kconfig\"" drivers/Kconfig && echo "[+] Modified Kconfig for avc_spoof."
+            echo "CONFIG_SELINUX_AVC_SPOOF=m" >> ${defconfig}  
+          else
+            echo "backslashxx took the selinux_avc_spoof_lkm repo offline again ??!?!?"
           fi
           
       - name: adding avc_spoof feature from xx (xxKSU)
@@ -692,7 +704,7 @@ jobs:
           echo "adding/changing required config to defconfig ..."
           grep -q 'CONFIG_KSU_EXTRAS=' ${defconfig} && sed -i 's/CONFIG_KSU_EXTRAS=n/CONFIG_KSU_EXTRAS=y/g' ${defconfig} || echo 'CONFIG_KSU_EXTRAS=y' >> ${defconfig}
           echo "applying avc_spoof patch ..."
-          cp ../../kernel_patches/avc_spoof.patch ./
+          cp ../../kernel_patches/xxksu/avc_spoof.patch ./
           patch -p1 -F 3 < avc_spoof.patch
           
           
