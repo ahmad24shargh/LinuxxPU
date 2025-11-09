@@ -102,7 +102,6 @@ jobs:
       C_KERNEL_SUBLEVEL: ${{ steps.gen_outs.outputs.C_KERNEL_SUBLEVEL }}
       C_OS_PATCH_LEVEL: ${{ steps.gen_outs.outputs.C_OS_PATCH_LEVEL }}
       topnotchfreaks_codelinaro_branch: ${{ steps.gen_outs.outputs.topnotchfreaks_codelinaro_branch }}
-      hook_method: ${{ steps.gen_outs.outputs.hook_method }}
     steps:
     - name: download linuxxpu with patched dir
       uses: actions/download-artifact@v5.0.0
@@ -149,7 +148,7 @@ jobs:
         echo "topnotchfreaks_codelinaro_branch=topnotchfreaks-${topnotchfreaks_codelinaro_branch}" >> $GITHUB_OUTPUT
         determine_os_patch_level "C_OS_PATCH_LEVEL"
         echo -e "C_BRANCH_NAME=${C_BRANCH_NAME}\nC_VERSION_CODE=${C_VERSION_CODE}"
-        echo -e "C_TAG_NAME=${C_TAG_NAME}\nC_LAST_COMMIT=${C_LAST_COMMIT}\nC_VERSION=${C_VERSION}\nC_KERNEL_SUBLEVEL=${C_KERNEL_SUBLEVEL}\nC_OS_PATCH_LEVEL=${C_OS_PATCH_LEVEL}\nhook_method=$HOOK_METHOD" | tee -a $GITHUB_OUTPUT
+        echo -e "C_TAG_NAME=${C_TAG_NAME}\nC_LAST_COMMIT=${C_LAST_COMMIT}\nC_VERSION=${C_VERSION}\nC_KERNEL_SUBLEVEL=${C_KERNEL_SUBLEVEL}\nC_OS_PATCH_LEVEL=${C_OS_PATCH_LEVEL}" | tee -a $GITHUB_OUTPUT
         
         
   build-kernel:
