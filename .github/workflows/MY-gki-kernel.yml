@@ -861,11 +861,11 @@ jobs:
           sed -E -i -e 's|LC_ALL=C|LC_ALL=C;KBUILD_BUILD_TIMESTAMP="'"${KBUILD_BUILD_TIMESTAMP}"'";KBUILD_BUILD_USER="'"${KBUILD_BUILD_USER}"'";KBUILD_BUILD_HOST="'"${KBUILD_BUILD_HOST}"'";|g' -e 's|LINUX_COMPILE_BY=.+|LINUX_COMPILE_BY="'${KBUILD_BUILD_USER}'"|g' -e 's|LINUX_COMPILE_HOST=.+|LINUX_COMPILE_HOST="'${KBUILD_BUILD_HOST}'"|g' ./common/scripts/mkcompile_h
 
           export API=$(echo ${{ inputs.android_version }} | sed 's/android1/3/g')
-          My_Args=' -mcpu=cortex-a53+crypto+crc -mtune=cortex-a73 -march=armv8-a+crypto+crc -funroll-loops '
+          My_Args=' -mcpu=cortex-a53+crypto+crc -mtune=cortex-a73 -funroll-loops -Wno-error=macro-redefined '
           export TARGET=aarch64-linux-android
           #[ ${{ env.ksu_fork }} == 'xxKSU' ] && export KCFLAGS="${KCFLAGS} -Wno-error=return-mismatch"
           #export CC="clang --target=${TARGET}${API} ${My_Args}"
-          export CC="clang"
+          export CC=clang
           #echo "CONFIG_STACKPROTECTOR=n" >> ${defconfig}
           #echo "CONFIG_STACKPROTECTOR_STRONG=n" >> ${defconfig}
           #sed -E -i 's|^if .+= GNU .+= assembler.+|if true\;then|g' $GITHUB_WORKSPACE/$CONFIG/common/scripts/as-version.sh
