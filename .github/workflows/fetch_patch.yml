@@ -294,10 +294,10 @@ jobs:
           for files in $(grep -R ${repo_folder} -e 'ksu' 2>/dev/null | grep -v 'https' | grep -v 'rustix::' | cut -d':' -f1 | sort | uniq);do sed -i '/rustix::/ n; /override var name\: String/! s/ksu/lpu/g' $files;done
           sed -E -i 's|(addJavascriptInterface.+)\"lpu\"|\1"ksu"|g' ${repo_folder}/manager/app/src/main/java/com/ahmad/linuxxpu/ui/webui/WebUIActivity.kt
           
-          # to reduce processing overhead ofthe avc_spoof feature
+          # to reduce processing overhead of the avc_spoof feature
           if [ ${{ env.ksu_fork }} == 'xxKSU' ];then
             echo "Replace '#ifdef CONFIG_KPROBES' with '#if 0' in kernel/extras.c ...'
-            [ -f ${repo_folder}/‎kernel/extras.c‎ ] && sed -i 's/#ifdef CONFIG_KPROBES/#if 0/g' ${repo_folder}/‎kernel/extras.c
+            sed -i 's/#ifdef CONFIG_KPROBES/#if 0/g' ${repo_folder}/‎kernel/extras.c
             grep '#if 0' ${repo_folder}/‎kernel/extras.c
           fi
           
