@@ -79,11 +79,9 @@ jobs:
           #repo="${{ github.repository_owner }}/${{ github.event.repository.name }}"
           #echo ${{ vars.CLANG_OFFICIAL }}
           git clone -b master https://github.com/backslashxx/KernelSU .
-          ls -l
-          ls -lr kernel/
-          echo "\${{ github.workspace }} : ${{ github.workspace }}"
-          echo "\${{ env.GITHUB_WORKSPACE }} : ${{ env.GITHUB_WORKSPACE }}"
-          echo "\${GITHUB_WORKSPACE} : ${GITHUB_WORKSPACE}"
+          echo "\$\{\{ github.workspace \}\} : ${{ github.workspace }}"
+          echo "\$\{\{ env.GITHUB_WORKSPACE \}\} : ${{ env.GITHUB_WORKSPACE }}"
+          echo "\$\{GITHUB_WORKSPACE\} : ${GITHUB_WORKSPACE}"
           sed -i 's/#ifdef CONFIG_KPROBES/#if 0/g' ${GITHUB_WORKSPACE}/kernel/extras.c
           echo .......
           sed -i 's/#ifdef CONFIG_KPROBES/#if 0/g' ${{ github.workspace }}/kernel/extras.c
