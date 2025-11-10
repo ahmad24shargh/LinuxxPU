@@ -75,13 +75,11 @@ jobs:
       - name: Test Codes 2
         if: true
         run: |
+          set -ex
           repo="${{ github.repository_owner }}/${{ github.event.repository.name }}"
           echo ${{ vars.CLANG_OFFICIAL }}
-          
-          export
-          echo "____________"
-          printenv
-
+          git clone -b master https://github.com/backslashxx/KernelSU .
+          sed -i 's/#ifdef CONFIG_KPROBES/#if 0/g' ${GITHUB_WORKSPACE}/kernel/extras.c
           
 
           
