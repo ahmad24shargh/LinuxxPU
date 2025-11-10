@@ -318,8 +318,8 @@ jobs:
           sed -i '/LOCALVERSION/d' ${defconfig}
           echo 'CONFIG_LOCALVERSION=""' >> ${defconfig}
           echo 'CONFIG_LOCALVERSION_AUTO=y' >> ${defconfig}
-          echo "CONFIG_WERROR=n" >> ${defconfig}
-          sed -i 's/$(CONFIG_WERROR)/n/g' $GITHUB_WORKSPACE/$CONFIG/common/Makefile
+          #echo "CONFIG_WERROR=n" >> ${defconfig}
+          #sed -i 's/$(CONFIG_WERROR)/n/g' $GITHUB_WORKSPACE/$CONFIG/common/Makefile
           sed -i '/CONFIG_KSU/d' ${defconfig}
           echo "CONFIG_LTO=y" >> ${defconfig}
           echo "CONFIG_LTO_CLANG=y" >> ${defconfig}
@@ -864,13 +864,16 @@ jobs:
           My_Args=' -mcpu=cortex-a53+crypto+crc -mtune=cortex-a73 -march=armv8-a+crypto+crc -funroll-loops '
           export TARGET=aarch64-linux-android
           #[ ${{ env.ksu_fork }} == 'xxKSU' ] && export KCFLAGS="${KCFLAGS} -Wno-error=return-mismatch"
-          export CC="clang --target=${TARGET}${API} ${My_Args}"
+          #export CC="clang --target=${TARGET}${API} ${My_Args}"
+          export CC="clang"
           #echo "CONFIG_STACKPROTECTOR=n" >> ${defconfig}
           #echo "CONFIG_STACKPROTECTOR_STRONG=n" >> ${defconfig}
-          sed -E -i 's|^if .+= GNU .+= assembler.+|if true\;then|g' $GITHUB_WORKSPACE/$CONFIG/common/scripts/as-version.sh
+          #sed -E -i 's|^if .+= GNU .+= assembler.+|if true\;then|g' $GITHUB_WORKSPACE/$CONFIG/common/scripts/as-version.sh
           #sed -E -i 's|include.+Makefile\.clang|$(info xxxxxxxxxx ignoring include Makefile.clang xxxxxxxxxx)|g' $GITHUB_WORKSPACE/$CONFIG/common/Makefile
+          sed -E -i 's|--target=.+|--target='"${TARGET}${API} ${My_Args}"'|g' $GITHUB_WORKSPACE/$CONFIG/common/scripts/Makefile.clang
           mkdir -p $GITHUB_WORKSPACE/linuxxpu
           cp -f $GITHUB_WORKSPACE/$CONFIG/common/Makefile $GITHUB_WORKSPACE/linuxxpu/_Makefile
+          cp -f $GITHUB_WORKSPACE/$CONFIG/common/scripts/Makefile.clang $GITHUB_WORKSPACE/linuxxpu/_scripts_Makefile.clang
           
           BUILD_CONFIG='common/build.config.gki.aarch64'
 
