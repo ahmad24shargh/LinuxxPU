@@ -305,7 +305,7 @@ jobs:
           if [ ${{ env.ksu_fork }} == 'xxKSU' ];then
             [ -f "${GITHUB_WORKSPACE}/kernel/extras.c" ] && echo "file exist in ${GITHUB_WORKSPACE}/kernel/extras.c" || echo "${GITHUB_WORKSPACE}/kernel/extras.c NOT EXIST !!!"
             echo "Replace '#ifdef CONFIG_KPROBES' with '#if 0' in kernel/extras.c ..."
-            sed -i 's/#ifdef CONFIG_KPROBES/#if 0/g' $(find ${GITHUB_WORKSPACE}/kernel -type f -name 'extras.c')
+            sed -i 's/#ifdef CONFIG_KPROBES/#if 0/g' ${GITHUB_WORKSPACE}/kernel/extras.c
             grep '#if 0' $(find ${GITHUB_WORKSPACE}/kernel -type f -name 'extras.c')
           fi
           false
