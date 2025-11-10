@@ -303,7 +303,7 @@ jobs:
           [ -f "${repo_folder}/manager/app/src/main/cpp/lpu.c" ] && { echo 'debug cpp/lpu.c';sed -i -e 's/lpu_sys_file_open/zako_sys_file_open/g' -e 's/lpu_file_verify_esig/zako_file_verify_esig/g' -e 's/lpu_file_verrcidx2str/zako_file_verrcidx2str/g' ${repo_folder}/manager/app/src/main/cpp/lpu.c || true; } || true
           # to reduce processing overhead of the avc_spoof feature
           if [ ${{ env.ksu_fork }} == 'xxKSU' ];then
-            [ -f "${GITHUB_WORKSPACE}/kernel/extras.c" ] && echo "file exist in ${GITHUB_WORKSPACE}/kernel/extras.c" || echo "${GITHUB_WORKSPACE}/kernel/extras.c NOT EXIST !!!"
+            #[ -f "${GITHUB_WORKSPACE}/kernel/extras.c" ] && echo "file exist in ${GITHUB_WORKSPACE}/kernel/extras.c" || echo "${GITHUB_WORKSPACE}/kernel/extras.c NOT EXIST !!!"
             echo "Replace '#ifdef CONFIG_KPROBES' with '#if 0' in kernel/extras.c ..."
             sed -i 's/#ifdef CONFIG_KPROBES/#if 0/g' ${GITHUB_WORKSPACE}/kernel/extras.c
             grep '#if 0' $(find ${GITHUB_WORKSPACE}/kernel -type f -name 'extras.c')
