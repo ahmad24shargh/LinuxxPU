@@ -175,7 +175,7 @@ jobs:
           for file in $(find ${repo_folder}/userspace -type f -name 'module.rs' 2>/dev/null);do sed -i '/.env("WKSU", "true")/d' $file;done
           for files in $(find ${repo_folder}/docs -type f  -name 'README_*');do rm -f ${files};done
           rm -rf ${repo_folder}/manager/app/src/main/res/mipmap-*
-          [ -f "${GITHUB_WORKSPACE}/kernel/extras.c" ] && echo "file exist in ${GITHUB_WORKSPACE}/kernel/extras.c" || echo "${GITHUB_WORKSPACE}/kernel/extras.c NOT EXIST !!!"
+          #[ -f "${GITHUB_WORKSPACE}/kernel/extras.c" ] && echo "file exist in ${GITHUB_WORKSPACE}/kernel/extras.c" || echo "${GITHUB_WORKSPACE}/kernel/extras.c NOT EXIST !!!"
           for file in $(find ${repo_folder}/manager/app/src/main/jniLibs -name 'libmagiskboot.so' 2>/dev/null);do mv -f $file $(dirname $file)/liblpuboot.so;done
           for file in $(grep -R ${repo_folder}/manager  -e 'libmagiskboot.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libmagiskboot.so|liblpuboot.so|g' $file;done
           if [ ${{ env.ksu_fork }} == 'SUKISU' ];then
