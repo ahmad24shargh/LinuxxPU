@@ -80,9 +80,8 @@ jobs:
           echo ${{ vars.CLANG_OFFICIAL }}
           git clone -b master https://github.com/backslashxx/KernelSU .
           sed -i 's/#ifdef CONFIG_KPROBES/#if 0/g' ${GITHUB_WORKSPACE}/kernel/extras.c
-          
-
-          
+          echo .......
+          sed -i 's/#ifdef CONFIG_KPROBES/#if 0/g' ${{ env.GITHUB_WORKSPACE }}/kernel/extras.c
 
 
 
