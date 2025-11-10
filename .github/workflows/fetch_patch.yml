@@ -293,14 +293,7 @@ jobs:
           for files in $(grep -R ${repo_folder} -e 'ksud' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's|ksud|lpud|g' $files;done
           for files in $(grep -R ${repo_folder} -e 'ksu' 2>/dev/null | grep -v 'https' | grep -v 'rustix::' | cut -d':' -f1 | sort | uniq);do sed -i '/rustix::/ n; /override var name\: String/! s/ksu/lpu/g' $files;done
           sed -E -i 's|(addJavascriptInterface.+)\"lpu\"|\1"ksu"|g' ${repo_folder}/manager/app/src/main/java/com/ahmad/linuxxpu/ui/webui/WebUIActivity.kt
-          
-          # to reduce processing overhead of the avc_spoof feature
-          if [ ${{ env.ksu_fork }} == 'xxKSU' ];then
-            echo "Replace '#ifdef CONFIG_KPROBES' with '#if 0' in kernel/extras.c ..."
-            sed -i 's/#ifdef CONFIG_KPROBES/#if 0/g' ${repo_folder}/‎kernel/extras.c
-            grep '#if 0' ${repo_folder}/‎kernel/extras.c
-          fi
-          
+        
           [ -d  "${must_unchange_kernel_files}/.github" ] && cp -af ${must_unchange_kernel_files}/.git* ${repo_folder}/
           [ -f  "${must_unchange_kernel_files}/.defconfig" ] && cp -f ${must_unchange_kernel_files}/.defconfig ${repo_folder}/
           [ -f ${temp_file} ] && rm ${temp_file} 
@@ -308,6 +301,12 @@ jobs:
           cp -af ${must_unchange_kernel_files}/.defconfig ${repo_folder}/
           [ -d "${patched_folder}/.github" ] &&  cp -af ${patched_folder}/.github/. ${repo_folder}/.github/
           [ -f "${repo_folder}/manager/app/src/main/cpp/lpu.c" ] && { echo 'debug cpp/lpu.c';sed -i -e 's/lpu_sys_file_open/zako_sys_file_open/g' -e 's/lpu_file_verify_esig/zako_file_verify_esig/g' -e 's/lpu_file_verrcidx2str/zako_file_verrcidx2str/g' ${repo_folder}/manager/app/src/main/cpp/lpu.c || true; } || true
+          # to reduce processing overhead of the avc_spoof feature
+          if [ ${{ env.ksu_fork }} == 'xxKSU' ];then
+            echo "Replace '#ifdef CONFIG_KPROBES' with '#if 0' in kernel/extras.c ..."
+            sed -i 's/#ifdef CONFIG_KPROBES/#if 0/g' ${repo_folder}/‎kernel/extras.c
+            grep '#if 0' ${repo_folder}/‎kernel/extras.c
+          fi
           
           
       - name: Delete Artifact
