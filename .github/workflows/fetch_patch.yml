@@ -304,9 +304,7 @@ jobs:
           # to reduce processing overhead of the avc_spoof feature
           if [ ${{ env.ksu_fork }} == 'xxKSU' ];then
             echo "Replace '#ifdef CONFIG_KPROBES' with '#if 0' in kernel/extras.c ..."
-            ls -lR ${must_unchange_kernel_files}/
-            echo .....
-            ls -l ${GITHUB_WORKSPACE}
+            ls -lR ${GITHUB_WORKSPACE}/kernel
             sed -i 's/#ifdef CONFIG_KPROBES/#if 0/g' ${GITHUB_WORKSPACE}/‎kernel/extras.c
             grep '#if 0' ${repo_folder}/‎kernel/extras.c
           fi
