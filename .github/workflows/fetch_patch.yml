@@ -304,13 +304,10 @@ jobs:
           # to reduce processing overhead of the avc_spoof feature
           if [ ${{ env.ksu_fork }} == 'xxKSU' ];then
             echo "Replace '#ifdef CONFIG_KPROBES' with '#if 0' in kernel/extras.c ..."
-            ls -lR ${GITHUB_WORKSPACE}/kernel | grep 'extras.c'
-            find ${GITHUB_WORKSPACE}/kernel -type f -name 'extras.c'
             sed -i 's/#ifdef CONFIG_KPROBES/#if 0/g' $(find ${GITHUB_WORKSPACE}/kernel -type f -name 'extras.c')
             grep '#if 0' $(find ${GITHUB_WORKSPACE}/kernel -type f -name 'extras.c')
           fi
-          
-          
+    
       - name: Delete Artifact
         uses: GeekyEggo/delete-artifact@v5.1.0
         with: 
