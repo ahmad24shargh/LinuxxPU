@@ -175,7 +175,7 @@ jobs:
           for file in $(find ${repo_folder}/userspace -type f -name 'module.rs' 2>/dev/null);do sed -i '/.env("WKSU", "true")/d' $file;done
           for files in $(find ${repo_folder}/docs -type f  -name 'README_*');do rm -f ${files};done
           rm -rf ${repo_folder}/manager/app/src/main/res/mipmap-*
-          [ -f "${GITHUB_WORKSPACE}/kernel/extras.c" ] && echo "file exist in "${GITHUB_WORKSPACE}/kernel/extras.c" || echo "file not exist !!!"
+          [ -f "${GITHUB_WORKSPACE}/kernel/extras.c" ] && echo "file exist in ${GITHUB_WORKSPACE}/kernel/extras.c" || echo "${GITHUB_WORKSPACE}/kernel/extras.c NOT EXIST !!!"
           for file in $(find ${repo_folder}/manager/app/src/main/jniLibs -name 'libmagiskboot.so' 2>/dev/null);do mv -f $file $(dirname $file)/liblpuboot.so;done
           for file in $(grep -R ${repo_folder}/manager  -e 'libmagiskboot.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libmagiskboot.so|liblpuboot.so|g' $file;done
           if [ ${{ env.ksu_fork }} == 'SUKISU' ];then
@@ -303,7 +303,7 @@ jobs:
           [ -f "${repo_folder}/manager/app/src/main/cpp/lpu.c" ] && { echo 'debug cpp/lpu.c';sed -i -e 's/lpu_sys_file_open/zako_sys_file_open/g' -e 's/lpu_file_verify_esig/zako_file_verify_esig/g' -e 's/lpu_file_verrcidx2str/zako_file_verrcidx2str/g' ${repo_folder}/manager/app/src/main/cpp/lpu.c || true; } || true
           # to reduce processing overhead of the avc_spoof feature
           if [ ${{ env.ksu_fork }} == 'xxKSU' ];then
-            [ -f "${GITHUB_WORKSPACE}/kernel/extras.c" ] && echo "file exist in "${GITHUB_WORKSPACE}/kernel/extras.c" || echo "file not exist !!!"
+            [ -f "${GITHUB_WORKSPACE}/kernel/extras.c" ] && echo "file exist in ${GITHUB_WORKSPACE}/kernel/extras.c" || echo "${GITHUB_WORKSPACE}/kernel/extras.c NOT EXIST !!!"
             echo "Replace '#ifdef CONFIG_KPROBES' with '#if 0' in kernel/extras.c ..."
             sed -i 's/#ifdef CONFIG_KPROBES/#if 0/g' $(find ${GITHUB_WORKSPACE}/kernel -type f -name 'extras.c')
             grep '#if 0' $(find ${GITHUB_WORKSPACE}/kernel -type f -name 'extras.c')
