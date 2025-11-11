@@ -884,8 +884,8 @@ jobs:
           sed -E -i 's|^if .+= GNU .+= assembler.+|if true\;then|g' $GITHUB_WORKSPACE/$CONFIG/common/scripts/as-version.sh
           sed -E -i 's|^(changed_common_files=.*)|\1,scripts/as-version.sh|g' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
           #sed -E -i 's|include.+Makefile\.clang|$(info xxxxxxxxxx ignoring include Makefile.clang xxxxxxxxxx)|g' $GITHUB_WORKSPACE/$CONFIG/common/Makefile
-          sed -E -i 's|--target=.+|--target='"${TARGET}${API}"'|g' $GITHUB_WORKSPACE/$CONFIG/common/scripts/Makefile.clang
-          sed -E -i 's|^(changed_common_files=.*)|\1,scripts/Makefile.clang|g' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
+          #sed -E -i 's|--target=.+|--target='"${TARGET}${API}"'|g' $GITHUB_WORKSPACE/$CONFIG/common/scripts/Makefile.clang
+          #sed -E -i 's|^(changed_common_files=.*)|\1,scripts/Makefile.clang|g' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
           
           BUILD_CONFIG='common/build.config.gki.aarch64'
 
