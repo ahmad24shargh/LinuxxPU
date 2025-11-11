@@ -878,8 +878,7 @@ jobs:
           My_Args=' -mcpu=cortex-a53+crypto+crc -mtune=cortex-a73 -funroll-loops '
           export TARGET=aarch64-linux-android
           #[ ${{ env.ksu_fork }} == 'xxKSU' ] && export KCFLAGS="${KCFLAGS} -Wno-error=return-mismatch"
-          #export CC="clang --target=${TARGET}${API} ${My_Args}"
-          export CC="clang ${My_Args}"
+          export CC="clang --target=${TARGET}${API} ${My_Args}"
           #echo "CONFIG_STACKPROTECTOR=n" >> ${defconfig}
           #echo "CONFIG_STACKPROTECTOR_STRONG=n" >> ${defconfig}
           sed -E -i 's|^if .+= GNU .+= assembler.+|if true\;then|g' $GITHUB_WORKSPACE/$CONFIG/common/scripts/as-version.sh
