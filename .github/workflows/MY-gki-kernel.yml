@@ -918,13 +918,13 @@ jobs:
             sed -E -i 's|^(changed_common_files=.*)|\1,scripts/setlocalversion|g' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
             export BUILD_SCRIPT_DIR=$(dirname $(realpath build/build.sh))
             sed -E -i 's/(.+Checking the list of modules:.*)/  cp ${OUT_DIR}\/modules.order ${KERNEL_DIR}\/${MODULES_ORDER}\n\1/g' build/build.sh
-            sed -E -i 's|^(changed_common_files=.*)|\1,build/build.sh|g' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
+            mkdir -p common/build && cp build/build.sh common/build && sed -E -i 's|^(changed_common_files=.*)|\1,build/build.sh|g' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
 
             ##for ndk and arm-toolchain and clang-llvm(custom clang)
             #if [ -e $GITHUB_WORKSPACE/clang-llvm ];then
               #result=$(find $GITHUB_WORKSPACE/clang-llvm -type d -name 'sysroot' 2>/dev/null)
               #echo "result of find sysroot dirs: $([ -z "$result" ] && echo NOTHING || echo $result)"
-              #[ -z "$result" ] && { sed -E -i '/.*sysroot_flags\+=.+/d' build/_setup_env.sh;sed -E -i 's|^(changed_common_files=.*)|\1,build/_setup_env.sh|g' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME; }
+              #[ -z "$result" ] && { sed -E -i '/.*sysroot_flags\+=.+/d' build/_setup_env.sh;mkdir -p common/build && cp build/_setup_env.sh common/build && sed -E -i 's|^(changed_common_files=.*)|\1,build/_setup_env.sh|g' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME; }
             #fi
 
             if [ ! -e ${GITHUB_WORKSPACE}/clang-llvm ];then
@@ -1008,20 +1008,6 @@ jobs:
           else
             rmdir kernel_modules
           fi
-          for file in $(find $CONFIG -type f -name "config_data" 2>/dev/null | grep '/out/');do
-            echo $file
-            cd $(dirname $file)
-            CC_VERSION_TEXT=$(grep 'CONFIG_CC_VERSION_TEXT=' $(basename $file) 2>/dev/null | cut -d'=' -f2-)
-            echo "CC_VERSION_TEXT=${CC_VERSION_TEXT}" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
-            zip kernel_config.zip $(basename $file)
-            mv kernel_config.zip $GITHUB_WORKSPACE/
-            break
-          done
-          mkdir -p $GITHUB_WORKSPACE/linuxxpu
-          for file in $(find $GITHUB_WORKSPACE/$CONFIG -type f -name "Module.symvers" -o -name "abi_symbollist.raw" 2>/dev/null | grep '/out/');do
-            echo $file
-            cp $file $GITHUB_WORKSPACE/linuxxpu
-          done
           
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4.6.2
@@ -1037,7 +1023,21 @@ jobs:
           for dir in {kernel,manager,userspace,'.git','.github','BUILD_SETTINGS.ME'};do
             cp -a $dir linuxxpu || :
           done
-          sed -E -i 's|^(changed_common_files=.*)|\1,build/build.sh|g' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
+          for file in $(find $CONFIG -type f -name "config_data" 2>/dev/null | grep '/out/');do
+            echo $file
+            pushd $(dirname $file)
+            CC_VERSION_TEXT=$(grep 'CONFIG_CC_VERSION_TEXT=' $(basename $file) 2>/dev/null | cut -d'=' -f2-)
+            echo "CC_VERSION_TEXT=${CC_VERSION_TEXT}" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
+            zip kernel_config.zip $(basename $file)
+            mv kernel_config.zip $GITHUB_WORKSPACE/
+            popd
+            break
+          done
+          mkdir -p $GITHUB_WORKSPACE/linuxxpu
+          for file in $(find $GITHUB_WORKSPACE/$CONFIG -type f -name "Module.symvers" -o -name "abi_symbollist.raw" 2>/dev/null | grep '/out/');do
+            echo $file
+            cp $file $GITHUB_WORKSPACE/linuxxpu
+          done
           for file in $(grep 'changed_common_files=' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME | cut -d'=' -f2 | tr ',' '\n');do
             if [ -f ${GITHUB_WORKSPACE}/$CONFIG/common/$file ];then
               temp="_$(echo $file | tr '/' '_')"
