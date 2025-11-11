@@ -688,6 +688,7 @@ jobs:
           if git ls-remote https://github.com/backslashxx/lkm_template &>/dev/null;then
             cd $GITHUB_WORKSPACE/$CONFIG
             git clone https://github.com/backslashxx/lkm_template 
+            sed -E -i 's/(void __user \*user_ptr) = .+/\1\;user_ptr = (void __user *)*arg\;/g' lkm_template/lkm_template/lkm_template.c
             cd common
             cp -r ../lkm_template/lkm_template drivers
             grep -q "lkm_template" drivers/Makefile || printf "\nobj-\$(CONFIG_LKM_TEMPLATE) += lkm_template/\n" >> drivers/Makefile && echo "[+] Modified Makefile for lkm_template."
