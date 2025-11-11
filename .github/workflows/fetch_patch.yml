@@ -43,7 +43,7 @@ jobs:
         run: |
           touch BUILD_SETTINGS.ME
           if [ ${{ env.ksu_fork }} == 'SUKISU' ];then
-            git clone --single-branch https://github.com/ShirkNeko/SukiSU-Ultra KSU
+            git clone --depth 1 -b main https://github.com/ShirkNeko/SukiSU-Ultra KSU
             owner=SukiSU-Ultra
             repo=SukiSU-Ultra
             workflow='build-manager.yml'
