@@ -77,6 +77,7 @@ jobs:
 
       - name: Set CONFIG Environment Variable
         run: |
+          grep -q 'changed_common_files=' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME || echo 'changed_common_files=' >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
           sudo apt purge man-db
           sudo rm -rf /var/lib/man-db/auto-update
           sudo apt update -qq
@@ -318,8 +319,14 @@ jobs:
           sed -i '/LOCALVERSION/d' ${defconfig}
           echo 'CONFIG_LOCALVERSION=""' >> ${defconfig}
           echo 'CONFIG_LOCALVERSION_AUTO=y' >> ${defconfig}
-          echo "CONFIG_WERROR=n" >> ${defconfig}
-          sed -i 's/$(CONFIG_WERROR)/n/g' $GITHUB_WORKSPACE/$CONFIG/common/Makefile
+          
+          #echo "CONFIG_WERROR=n" >> ${defconfig}
+          #sed -i 's/$(CONFIG_WERROR)/n/g' $GITHUB_WORKSPACE/$CONFIG/common/Makefile
+          sed -E -i 's/(^#define MIN.+$)/#ifndef MIN\n\1\n#endif/g' $GITHUB_WORKSPACE/$CONFIG/common/kernel/power/process.c
+          sed -E -i 's|^(changed_common_files=.*)|\1,kernel/power/process.c|g' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
+          sed -E -i 's/^([[:space:]]*struct sys_reg_desc clidr)/\1 = {0}/g' $GITHUB_WORKSPACE/$CONFIG/common/arch/arm64/kvm/sys_regs.c
+          sed -E -i 's|^(changed_common_files=.*)|\1,arch/arm64/kvm/sys_regs.c|g' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
+          
           sed -i '/CONFIG_KSU/d' ${defconfig}
           echo "CONFIG_LTO=y" >> ${defconfig}
           echo "CONFIG_LTO_CLANG=y" >> ${defconfig}
@@ -333,6 +340,7 @@ jobs:
           #echo "CONFIG_FORTIFY_SOURCE=y" >> ${defconfig}
           #Make sure to unspoof KCONFIG_FILE in common/kernel/Makefile
           sed -E -i 's|\$\(obj\)/config_data:.+|\$(obj)/config_data: \$(KCONFIG_CONFIG) FORCE|g' $GITHUB_WORKSPACE/$CONFIG/common/kernel/Makefile
+          sed -E -i 's|^(changed_common_files=.*)|\1,kernel/Makefile|g' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
           pushd $CONFIG/common/kernel/
           echo '#!/bin/bash' > manipulating_conf_data.sh
           echo 'SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"' >> manipulating_conf_data.sh
@@ -361,6 +369,7 @@ jobs:
              -e 's/^BRANCH=.*/BRANCH=android13-5.15/' \
              -e 's/^CLANG_VERSION=.*/CLANG_VERSION='$($clang_bin -dumpversion)'/' \
              ${GITHUB_WORKSPACE}/$CONFIG/common/build.config.constants
+            sed -E -i 's|^(changed_common_files=.*)|\1,build.config.constants|g' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
 
             # Remove defconfig check (if exists)
             sed -i '/^POST_DEFCONFIG_CMDS="check_defconfig"/d' ${GITHUB_WORKSPACE}/$CONFIG/common/build.config.gki
@@ -379,6 +388,7 @@ jobs:
 
           # strip debug always
           sed -E -i 's/^([[:space:]]*)LDFLAGS_MODULE  =[[:space:]]*$/\1LDFLAGS_MODULE = --strip-debug/g' $(find ${GITHUB_WORKSPACE}/$CONFIG/common/ -maxdepth 1 -type f -name 'Makefile')
+          sed -E -i 's|^(changed_common_files=.*)|\1,Makefile|g' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
 
           # abi_bypass_gki (not needed but ...)
           for file in $(find ${GITHUB_WORKSPACE}/$CONFIG/ -type f -name 'check_buildtime_symbol_protection.py' 2>/dev/null | grep '/abi/');do echo $file;sed -E -i '/f"  \{symbol\} required by \{undefined_symbol_consumer_lookup\[symbol\]\}"/ {N;N;N;N;N; s/([[:space:]]+)return 1/\1print( "\\nBUT WHO CARES?\\n")\1return 0/g}' $file ;done
@@ -407,6 +417,7 @@ jobs:
             echo "Proceeding with full Polly optimization..."
             # add polly optimization support config
             sed -E -i 's|(config HAVE_KERNEL_GZIP)|config POLLY_CLANG\n\tbool "Use Clang Polly optimizations"\n\tdefault y\n\thelp\n\tThis option enables Clang'\''s polyhedral loop optimizer known as\n\t  Polly. Polly is able to optimize various loops throughout the\n\t  kernel for cache locality. This requires a Clang toolchain\n\t  compiled with support for Polly. More information can be found\n\t  from Polly'\''s website:\n\t  \n\t  https://polly.llvm.org\n\n\1|g' ${GITHUB_WORKSPACE}/$CONFIG/common/init/Kconfig
+            sed -E -i 's|^(changed_common_files=.*)|\1,init/Kconfig|g' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
             sed -E -i 's/(^include \$\(srctree\)\/scripts\/Makefile\.clang$)/\1\n$(info xxxxx clang compiler found xxxxx)\nifdef CONFIG_POLLY_CLANG\nKBUILD_CFLAGS\t+= -mllvm -polly \\\n\t\t    -mllvm -polly-ast-use-context \\\n\t\t    -mllvm -polly-invariant-load-hoisting \\\n\t\t    -mllvm -polly-run-inliner \\\n\t\t    -mllvm -polly-vectorizer=stripmine\nifeq (\$(shell test \$(CONFIG_CLANG_VERSION) -gt 130000\; echo \$\$?),0)\nKBUILD_CFLAGS\t\+= -mllvm -polly-loopfusion-greedy=1 \\\n\t\t    -mllvm -polly-reschedule=1 \\\n\t\t    -mllvm -polly-postopts=1\nelse\nKBUILD_CFLAGS   \+= -mllvm -polly-opt-fusion=max\nendif\n# Polly may optimise loops with dead paths beyound what the linker\n# can understand. This may negate the effect of the linker'\''s DCE\n# so we tell Polly to perfom proven DCE on the loops it optimises\n# in order to preserve the overall effect of the linker'\''s DCE.\nifdef CONFIG_LD_DEAD_CODE_DATA_ELIMINATION\nKBUILD_CFLAGS  \+= -mllvm -polly-run-dce\nendif\nendif/g' $GITHUB_WORKSPACE/$CONFIG/common/Makefile
             echo 'CONFIG_POLLY_CLANG=y' >> ${defconfig}
             mkdir -p ${GITHUB_WORKSPACE}/linuxxpu
@@ -435,6 +446,7 @@ jobs:
           # Enable Baseband Protection for Boot/init_boot Partitions
           #echo "CONFIG_BBG_BLOCK_BOOT=y" >> ${defconfig}
           sed -i '/^config LSM$/,/^help$/{ /^[[:space:]]*default/ { /baseband_guard/! s/lockdown/lockdown,baseband_guard/ } }' common/security/Kconfig
+          sed -E -i 's|^(changed_common_files=.*)|\1,security/Kconfig|g' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
 
       - name: Add KernelSU
         run: |
@@ -840,7 +852,7 @@ jobs:
             for files in $(grep -R ${GITHUB_WORKSPACE}/kernel -e 'ksu' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do echo $files;sed -i 's|ksu|lpu|g' $files;done
             mkdir -p  ${GITHUB_WORKSPACE}/linuxxpu
             files=('/fs/Makefile' '/fs/Kconfig' '/fs/dcache.c' '/fs/devpts/inode.c' '/fs/exec.c' '/fs/namei.c' '/fs/namespace.c' '/fs/notify/fdinfo.c' '/fs/open.c' '/fs/overlayfs/inode.c' '/fs/overlayfs/readdir.c' '/fs/overlayfs/super.c' '/fs/proc/bootconfig.c' '/fs/proc/fd.c' '/fs/proc/task_mmu.c' '/fs/proc_namespace.c' '/fs/readdir.c' '/fs/stat.c' '/fs/statfs.c' '/include/linux/mount.h' '/include/linux/sched.h' '/kernel/kallsyms.c' '/kernel/sys.c' '/drivers/input/input.c' '/drivers/tty/pty.c' '/fs/read_write.c' '/drivers/Makefile' '/drivers/Kconfig' '/include/linux/sus_su.h' '/include/linux/susfs_def.h' '/include/linux/susfs.h' '/fs/sus_su.c' '/fs/susfs.c' '/security/selinux/avc.c' '/security/security.c' '/kernel/reboot.c' '/fs/proc/base.c')
-            for each in "${files[@]}";do if [ -f "./common${each}" ];then sed -E -i -e 's|KSU|LPU|g' -e 's|KERNEL_SU|LINUXXPU|g' -e  '/REPO_(OWNER|NAME)( :)?=/! s/KernelSU/LinuxxPU/g' -e '/ksuid/! s/ksu/lpu/g' -e '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU-Ultra/LINUXXPU/g' -e 's|sukisu|linuxxpu|g' -e '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU Ultra/LINUXXPU/g' -e 's|SUKISU|LINUXXPU|g'  -e '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU/LinuxxPU/g' -e 's|kernelsu|linuxxpu|g' ./common${each};cp ./common${each} ${GITHUB_WORKSPACE}/linuxxpu/$(echo ${each} | tr '/' '_');fi;done
+            for each in "${files[@]}";do if [ -f "./common${each}" ];then sed -E -i -e 's|KSU|LPU|g' -e 's|KERNEL_SU|LINUXXPU|g' -e  '/REPO_(OWNER|NAME)( :)?=/! s/KernelSU/LinuxxPU/g' -e '/ksuid/! s/ksu/lpu/g' -e '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU-Ultra/LINUXXPU/g' -e 's|sukisu|linuxxpu|g' -e '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU Ultra/LINUXXPU/g' -e 's|SUKISU|LINUXXPU|g'  -e '/REPO_(OWNER|NAME)( :)?=/! s/SukiSU/LinuxxPU/g' -e 's|kernelsu|linuxxpu|g' ./common${each};grep -Eq "changed_common_files.+${each:1}" ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME || sed -E -i 's|^(changed_common_files=.*)|\1,'${each:1}'|g' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME ;fi;done
             set -e
           else
             exit 1
@@ -859,6 +871,8 @@ jobs:
           export KBUILD_BUILD_USER='ahmad'
           export KBUILD_BUILD_HOST='Forozan'
           sed -E -i -e 's|LC_ALL=C|LC_ALL=C;KBUILD_BUILD_TIMESTAMP="'"${KBUILD_BUILD_TIMESTAMP}"'";KBUILD_BUILD_USER="'"${KBUILD_BUILD_USER}"'";KBUILD_BUILD_HOST="'"${KBUILD_BUILD_HOST}"'";|g' -e 's|LINUX_COMPILE_BY=.+|LINUX_COMPILE_BY="'${KBUILD_BUILD_USER}'"|g' -e 's|LINUX_COMPILE_HOST=.+|LINUX_COMPILE_HOST="'${KBUILD_BUILD_HOST}'"|g' ./common/scripts/mkcompile_h
+          sed -E -i 's|^(changed_common_files=.*)|\1,scripts/mkcompile_h|g' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
+          
 
           export API=$(echo ${{ inputs.android_version }} | sed 's/android1/3/g')
           My_Args=' -mcpu=cortex-a53+crypto+crc -mtune=cortex-a73 -funroll-loops '
@@ -869,11 +883,10 @@ jobs:
           #echo "CONFIG_STACKPROTECTOR=n" >> ${defconfig}
           #echo "CONFIG_STACKPROTECTOR_STRONG=n" >> ${defconfig}
           sed -E -i 's|^if .+= GNU .+= assembler.+|if true\;then|g' $GITHUB_WORKSPACE/$CONFIG/common/scripts/as-version.sh
+          sed -E -i 's|^(changed_common_files=.*)|\1,scripts/as-version.sh|g' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
           #sed -E -i 's|include.+Makefile\.clang|$(info xxxxxxxxxx ignoring include Makefile.clang xxxxxxxxxx)|g' $GITHUB_WORKSPACE/$CONFIG/common/Makefile
           sed -E -i 's|--target=.+|--target='"${TARGET}${API}"'|g' $GITHUB_WORKSPACE/$CONFIG/common/scripts/Makefile.clang
-          mkdir -p $GITHUB_WORKSPACE/linuxxpu
-          cp -f $GITHUB_WORKSPACE/$CONFIG/common/Makefile $GITHUB_WORKSPACE/linuxxpu/_Makefile
-          cp -f $GITHUB_WORKSPACE/$CONFIG/common/scripts/Makefile.clang $GITHUB_WORKSPACE/linuxxpu/_scripts_Makefile.clang
+          sed -E -i 's|^(changed_common_files=.*)|\1,scripts/Makefile.clang|g' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
           
           BUILD_CONFIG='common/build.config.gki.aarch64'
 
@@ -903,14 +916,16 @@ jobs:
           echo "Building the kernel..."
           if [ -f "build/build.sh" ]; then
             sed -i 's/-dirty//' ./common/scripts/setlocalversion
+            sed -E -i 's|^(changed_common_files=.*)|\1,scripts/setlocalversion|g' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
             export BUILD_SCRIPT_DIR=$(dirname $(realpath build/build.sh))
             sed -E -i 's/(.+Checking the list of modules:.*)/  cp ${OUT_DIR}\/modules.order ${KERNEL_DIR}\/${MODULES_ORDER}\n\1/g' build/build.sh
+            sed -E -i 's|^(changed_common_files=.*)|\1,build/build.sh|g' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
 
             ##for ndk and arm-toolchain and clang-llvm(custom clang)
             #if [ -e $GITHUB_WORKSPACE/clang-llvm ];then
               #result=$(find $GITHUB_WORKSPACE/clang-llvm -type d -name 'sysroot' 2>/dev/null)
               #echo "result of find sysroot dirs: $([ -z "$result" ] && echo NOTHING || echo $result)"
-              #[ -z "$result" ] && sed -E -i '/.*sysroot_flags\+=.+/d' build/_setup_env.sh
+              #[ -z "$result" ] && { sed -E -i '/.*sysroot_flags\+=.+/d' build/_setup_env.sh;sed -E -i 's|^(changed_common_files=.*)|\1,build/_setup_env.sh|g' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME; }
             #fi
 
             if [ ! -e ${GITHUB_WORKSPACE}/clang-llvm ];then
@@ -1022,6 +1037,15 @@ jobs:
           mkdir -p linuxxpu
           for dir in {kernel,manager,userspace,'.git','.github','BUILD_SETTINGS.ME'};do
             cp -a $dir linuxxpu || :
+          done
+          sed -E -i 's|^(changed_common_files=.*)|\1,build/build.sh|g' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
+          for file in $(grep 'changed_common_files=' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME | cut -d'=' -f2 | tr ',' '\n');do
+            if [ -f ${GITHUB_WORKSPACE}/$CONFIG/common/$file ];then
+              temp="_$(echo $file | tr '/' '_')"
+              [ ! -f linuxxpu/$temp ] && cp ${GITHUB_WORKSPACE}/$CONFIG/common/$file linuxxpu/$temp
+            else
+              echo "⚠️⚠️⚠️ ${GITHUB_WORKSPACE}/$CONFIG/common/$file not found !!!"
+            fi
           done
           
       - name: Delete linuxxpu Artifact
