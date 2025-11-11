@@ -1025,18 +1025,17 @@ jobs:
           done
           for file in $(find $CONFIG -type f -name "config_data" 2>/dev/null | grep '/out/');do
             echo $file
-            pushd $(dirname $file)
+            cd $(dirname $file)
             CC_VERSION_TEXT=$(grep 'CONFIG_CC_VERSION_TEXT=' $(basename $file) 2>/dev/null | cut -d'=' -f2-)
             echo "CC_VERSION_TEXT=${CC_VERSION_TEXT}" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
             zip kernel_config.zip $(basename $file)
             mv kernel_config.zip $GITHUB_WORKSPACE/
-            popd
+            cd $GITHUB_WORKSPACE
             break
           done
-          mkdir -p $GITHUB_WORKSPACE/linuxxpu
           for file in $(find $GITHUB_WORKSPACE/$CONFIG -type f -name "Module.symvers" -o -name "abi_symbollist.raw" 2>/dev/null | grep '/out/');do
             echo $file
-            cp $file $GITHUB_WORKSPACE/linuxxpu
+            cp $file linuxxpu
           done
           for file in $(grep 'changed_common_files=' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME | cut -d'=' -f2 | tr ',' '\n');do
             if [ -f ${GITHUB_WORKSPACE}/$CONFIG/common/$file ];then
