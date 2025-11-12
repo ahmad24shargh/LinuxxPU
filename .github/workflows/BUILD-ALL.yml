@@ -174,6 +174,7 @@ jobs:
       ksu_fork: ${{ inputs.ksu_fork }}
       os_patch_level: ${{ matrix.os_patch_level }}
       manager_supports: "${{ inputs.additional_ksu_support }}"
+      build_type: ${{ inputs.build_type }}
       
   build-susfsd:
     if: github.event.inputs.ksu_fork != 'xxKSU'  && ( github.event.inputs.build_type == 'build_all' ||  github.event.inputs.build_type == 'only_manager' )
