@@ -31,6 +31,9 @@ on:
       os_patch_level:
         required: true
         type: string
+      build_type:
+        required: true
+        type: string
       clang_toolchain:
         required: true
         type: string
@@ -1021,6 +1024,9 @@ jobs:
       - name: Preparing linuxxpu for upload
         run: |
           mkdir -p linuxxpu
+          if [ "${{ inputs.build_type }}" == "only_kernel" ];then
+            for item in $(cat BUILD_SETTINGS.ME | grep '=');do name_param=$(echo $item | cut -d'=' -f1);value_param=$(echo $item | cut -d'=' -f2-);echo $value_param | grep -Eq '^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$' && sed -E -i 's/'"$name_param"'=.+/'"$name_param"'='$(echo $value_param | base64 -d)'/g'  BUILD_SETTINGS.ME;done
+          fi
           for dir in {kernel,manager,userspace,'.git','.github','BUILD_SETTINGS.ME'};do
             cp -a $dir linuxxpu || :
           done
