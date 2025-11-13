@@ -946,7 +946,7 @@ jobs:
             fi   
             [ -f ./common/kernel/manipulating_conf_data.sh ] && cat ./common/kernel/manipulating_conf_data.sh
             echo "CC=$(which clang)" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
-            export KBUILD_VERBOSE=1
+            #export KBUILD_VERBOSE=1
             #LTO=thin BUILD_CONFIG=${BUILD_CONFIG} SKIP_EXT_MODULES=1 SKIP_CP_KERNEL_HDR=1 SKIP_VENDOR_BOOT=1 SKIP_MRPROPER=1 SYSTEM_DLKM_RE_SIGN=0 BUILD_SYSTEM_DLKM=0 KMI_SYMBOL_LIST_STRICT_MODE=0 build/build.sh CC="${CC}" 
             BUILD_CONFIG=${BUILD_CONFIG} build/build.sh CC="${CC}"
           fi
