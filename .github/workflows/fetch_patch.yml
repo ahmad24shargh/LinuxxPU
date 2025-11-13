@@ -43,7 +43,7 @@ jobs:
         run: |
           touch BUILD_SETTINGS.ME
           if [ ${{ env.ksu_fork }} == 'SUKISU' ];then
-            git clone --depth 1 -b main https://github.com/ShirkNeko/SukiSU-Ultra KSU
+            git clone -b main https://github.com/ShirkNeko/SukiSU-Ultra KSU
             owner=SukiSU-Ultra
             repo=SukiSU-Ultra
             workflow='build-manager.yml'
@@ -53,7 +53,7 @@ jobs:
             # staging branch : build-manager.yml 
             # update MY-lpud.yml
             # temp-prctl
-            git clone  --depth 1 --single-branch https://github.com/backslashxx/KernelSU KSU
+            git clone  --single-branch https://github.com/backslashxx/KernelSU KSU
             owner=backslashxx
             repo=KernelSU
             workflow='release.yml' 
