@@ -684,7 +684,7 @@ jobs:
           #echo "CONFIG_MESSAGE_LOGLEVEL_DEFAULT=1" >> ${defconfig}
           #sed -i -e 's/CONSOLE_LOGLEVEL_DEFAULT/CONSOLE_LOGLEVEL_MIN/g' -e 's/MESSAGE_LOGLEVEL_DEFAULT/CONSOLE_LOGLEVEL_MIN/g' ./common/kernel/printk/printk.c
 
-      - name: adding lkm-template module(and avc_spoof module) from xx
+      - name: adding lkm-template module from xx
         if: ${{ env.ksu_fork  == 'xxKSU' }}
         #if: false
         run: |
