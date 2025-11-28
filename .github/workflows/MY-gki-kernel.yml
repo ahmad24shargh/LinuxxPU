@@ -871,7 +871,7 @@ jobs:
             export CPATH=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/include
           fi
           #export KBUILD_BUILD_TIMESTAMP=$(date -u -d "3 month ago")
-          export KBUILD_BUILD_TIMESTAMP='Wed Oct  8 15:53:46 UTC 2025'
+          export KBUILD_BUILD_TIMESTAMP='Thu Nov  6 12:37:43 UTC 2025'
           export KBUILD_BUILD_USER='ahmad'
           export KBUILD_BUILD_HOST='Forozan'
           sed -E -i -e 's|LC_ALL=C|LC_ALL=C;KBUILD_BUILD_TIMESTAMP="'"${KBUILD_BUILD_TIMESTAMP}"'";KBUILD_BUILD_USER="'"${KBUILD_BUILD_USER}"'";KBUILD_BUILD_HOST="'"${KBUILD_BUILD_HOST}"'";|g' -e 's|LINUX_COMPILE_BY=.+|LINUX_COMPILE_BY="'${KBUILD_BUILD_USER}'"|g' -e 's|LINUX_COMPILE_HOST=.+|LINUX_COMPILE_HOST="'${KBUILD_BUILD_HOST}'"|g' ./common/scripts/mkcompile_h
