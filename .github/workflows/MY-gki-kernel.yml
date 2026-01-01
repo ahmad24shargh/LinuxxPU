@@ -618,15 +618,15 @@ jobs:
             # ksu_hooks.patch: Only 2 hooks, with ultimatum patch
             # scope_minimized_manual_hooks_v1.6.patch: Traditional full hook
             # with kprobe only ultimatum patch or xx_hybridized-1.6.patch(Not both together)
-            echo "Applying xx_hybridized-1.5 patches(3 hooks) for backslashxx KSU..."
-            echo "NEW_HOOK=xx_hybridized-1.5" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
-            cp ../../kernel_patches/xxksu/xx_hybridized-1.5.patch ./
-            patch -p1 -F 3 < xx_hybridized-1.5.patch
+            echo "Applying xx_hybridized-1.7 patches(3 hooks) for backslashxx KSU..."
+            echo "NEW_HOOK=xx_hybridized-1.7" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
+            cp ../../kernel_patches/xxksu/xx_hybridized-1.7.patch ./
+            patch -p1 -F 3 < xx_hybridized-1.7.patch
             if grep -q 'CONFIG_KSU_LSM_SECURITY_HOOKS=n' ${defconfig};then
-              echo "manual_security_hooks_v1.6 applied" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
-              cp ../../kernel_patches/xxksu/manual_security_hooks_v1.6 ./
-              echo "Applying manual_security_hooks_v1.6 patch ..."
-              patch -p1 -F 3 < manual_security_hooks_v1.6
+              echo "manual_security_hooks_v1.8 applied" >> ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
+              cp ../../kernel_patches/xxksu/manual_security_hooks_v1.8 ./
+              echo "Applying manual_security_hooks_v1.8 patch ..."
+              patch -p1 -F 3 < manual_security_hooks_v1.8
             fi
           elif [ "${{ inputs.ksu_fork }}" == "SUKISU" -a "${{ env.kernel_variant }}" != "chickernel"; then
             echo "Applying manual hooks v1.6 for SukiSU Ultra..."
