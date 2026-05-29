@@ -330,7 +330,7 @@ jobs:
           github-token: '${{ env.GH_TOKEN }}'
           
       - name: Import GPG key
-        uses: crazy-max/ghaction-import-gpg
+        uses: crazy-max/ghaction-import-gpg@master
         with:
           git_config_global: true
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
