@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: download linuxxpu with patched dir
-      uses: actions/download-artifact@v5.0.0
+      uses: actions/download-artifact
       with:
         name: linuxxpu
         path: .
@@ -36,7 +36,7 @@ jobs:
 
     - name: Cache lpud
       if: ${{ inputs.ksu_fork == 'SUKISU' }} || ${{ inputs.ksu_fork == 'xxKSU' }}
-      uses: Swatinem/rust-cache@v2
+      uses: Swatinem/rust-cache
       with:
         workspaces: userspace/lpud
         cache-targets: false
@@ -51,7 +51,7 @@ jobs:
 
     - name: Upload ksud artifact
       if: ${{ inputs.ksu_fork == 'SUKISU' }} || ${{ inputs.ksu_fork == 'xxKSU' }}
-      uses: actions/upload-artifact@v4.6.2
+      uses: actions/upload-artifact
       with:
         name: lpud-${{ inputs.target }}
         path: userspace/lpud/target/**/release/lpud*
