@@ -27,7 +27,7 @@ jobs:
           false
           
       #- name: Checkout code
-        #uses: uses: actions/checkout@main
+        #uses: actions/checkout@main
         #with:
           #fetch-depth: 0 # fetch full history
           #filter: tree:0
