@@ -104,7 +104,7 @@ jobs:
       topnotchfreaks_codelinaro_branch: ${{ steps.gen_outs.outputs.topnotchfreaks_codelinaro_branch }}
     steps:
     - name: download linuxxpu with patched dir
-      uses: actions/download-artifact
+      uses: actions/download-artifact@main
       with:
         name: linuxxpu
         path: .
@@ -220,7 +220,7 @@ jobs:
         
     steps:
       - name: download linuxxpu with patched dir
-        uses: actions/download-artifact
+        uses: actions/download-artifact@main
         with:
           name: linuxxpu
           path: .
@@ -239,27 +239,27 @@ jobs:
           fi
 
       - name: Setup Java
-        uses: actions/setup-java
+        uses: actions/setup-java@main
         with:
           distribution: temurin
           java-version: 21
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle
+        uses: gradle/actions/setup-gradle@main
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android
+        uses: android-actions/setup-android@main
 
       - name: Download arm64 susfsd
         if: github.event.inputs.ksu_fork == 'KSUN'
-        uses: actions/download-artifact
+        uses: actions/download-artifact@main
         with:
           name: susfsd-aarch64-linux-android
           path: .
 
       - name: Download arm64 susfsd
         if: github.event.inputs.ksu_fork == 'SUKISU'
-        uses: actions/download-artifact
+        uses: actions/download-artifact@main
         with:
           name: susfs-aarch64-linux-android
           path: .
@@ -272,7 +272,7 @@ jobs:
           
       - name: Download arm64 lpud
         if: github.event.inputs.ksu_fork == 'SUKISU' || github.event.inputs.ksu_fork == 'xxKSU'
-        uses: actions/download-artifact
+        uses: actions/download-artifact@main
         with:
           name: lpud-aarch64-linux-android
           path: .
@@ -295,7 +295,7 @@ jobs:
           ./gradlew clean assembleRelease
 
       - name: Upload Build Artifact
-        uses: actions/upload-artifact
+        uses: actions/upload-artifact@main
         with:
           name: Manager
           path: manager/app/build/outputs/apk/release/*.apk
@@ -323,7 +323,7 @@ jobs:
       
     steps:
       - name: download linuxxpu with patched dir
-        uses: actions/download-artifact
+        uses: actions/download-artifact@main
         with:
           name: linuxxpu
           path: .
@@ -441,7 +441,7 @@ jobs:
           echo "RELEASE_NAME=${RELEASE_NAME}" >> $GITHUB_ENV
           
       - name: Download Artifacts
-        uses: actions/download-artifact
+        uses: actions/download-artifact@main
         with:
           path: ./downloaded-artifacts    
 

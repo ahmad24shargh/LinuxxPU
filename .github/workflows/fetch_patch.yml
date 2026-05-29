@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5.0.0
+        uses: uses: actions/checkout@main
         with:
           fetch-depth: 0
           token: ${{ env.GH_TOKEN }}
@@ -139,7 +139,7 @@ jobs:
           rm -rf KSU
 
       - name: upload linuxxpu with patched dir
-        uses: actions/upload-artifact
+        uses: actions/upload-artifact@main
         with:
          name: linuxxpu
          path: .
@@ -153,7 +153,7 @@ jobs:
     needs: fetch_upstream
     steps:
       - name: download linuxxpu with patched dir
-        uses: actions/download-artifact
+        uses: actions/download-artifact@main
         with:
           name: linuxxpu
           path: .
@@ -317,7 +317,7 @@ jobs:
           failOnError: false
         
       - name: upload linuxxpu with patched dir
-        uses: actions/upload-artifact
+        uses: actions/upload-artifact@main
         with:
           name: linuxxpu
           path: .

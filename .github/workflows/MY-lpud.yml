@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: download linuxxpu with patched dir
-      uses: actions/download-artifact
+      uses: actions/download-artifact@main
       with:
         name: linuxxpu
         path: .
@@ -51,7 +51,7 @@ jobs:
 
     - name: Upload ksud artifact
       if: ${{ inputs.ksu_fork == 'SUKISU' }} || ${{ inputs.ksu_fork == 'xxKSU' }}
-      uses: actions/upload-artifact
+      uses: actions/upload-artifact@main
       with:
         name: lpud-${{ inputs.target }}
         path: userspace/lpud/target/**/release/lpud*

@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: download linuxxpu with patched dir
-      uses: actions/download-artifact
+      uses: actions/download-artifact@main
       with:
         name: linuxxpu
         path: .
@@ -28,7 +28,7 @@ jobs:
 
     - name: Upload a Build Artifact
       if: github.event.inputs.ksu_fork == 'SUKISU'
-      uses: actions/upload-artifact
+      uses: actions/upload-artifact@main
       with:
         name: susfs-aarch64-linux-android
         path: ./userspace/susfs/libs

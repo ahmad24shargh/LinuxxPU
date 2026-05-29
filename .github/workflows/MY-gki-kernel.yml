@@ -73,7 +73,7 @@ jobs:
           remove-docker-images: "true"
             
       - name: download linuxxpu with patched dir
-        uses: actions/download-artifact
+        uses: actions/download-artifact@main
         with:
           name: linuxxpu
           path: .
@@ -166,7 +166,7 @@ jobs:
         
       - name: Cache toolchain
         id: cache-toolchain
-        uses: actions/cache
+        uses: actions/cache@main
         with:
           path: |
             kernel-build-tools
@@ -184,7 +184,7 @@ jobs:
       - name: Cache clang-custom
         if: ${{ env.clang_toolchain == 'custom_clang/llvm' }}
         id: cache-clang-custom
-        uses: actions/cache
+        uses: actions/cache@main
         with:
           path: |
             clang-custom
@@ -215,7 +215,7 @@ jobs:
       - name: Cache clang-official
         if: ${{ env.clang_toolchain == 'official' }}
         id: cache-clang-official
-        uses: actions/cache
+        uses: actions/cache@main
         with:
           path: |
             clang-official
@@ -998,7 +998,7 @@ jobs:
           fi
           
       - name: Upload Build Artifacts
-        uses: actions/upload-artifact
+        uses: actions/upload-artifact@main
         with:
           name: kernel-${{ env.CONFIG }}
           path: |
@@ -1044,7 +1044,7 @@ jobs:
           failOnError: false
           
       - name: Upload the linuxxpu with the latest changes
-        uses: actions/upload-artifact
+        uses: actions/upload-artifact@main
         with:
           name: linuxxpu
           path: linuxxpu
