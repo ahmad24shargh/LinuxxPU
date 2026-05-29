@@ -54,4 +54,4 @@ jobs:
       uses: actions/upload-artifact@main
       with:
         name: lpud-${{ inputs.target }}
-        path: userspace/lpud/target/**/release/lpud*
+        path: target/${{ inputs.target }}/release/lpud*
