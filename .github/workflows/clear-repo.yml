@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: uses: actions/checkout@main
+        uses: actions/checkout@main
 
       #- name: Install GitHub CLI
       #  run: |
