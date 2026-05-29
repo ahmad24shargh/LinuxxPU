@@ -1038,7 +1038,7 @@ jobs:
           done
           
       - name: Delete linuxxpu Artifact
-        uses: GeekyEggo/delete-artifact
+        uses: GeekyEggo/delete-artifact@main
         with: 
           name: linuxxpu
           failOnError: false
