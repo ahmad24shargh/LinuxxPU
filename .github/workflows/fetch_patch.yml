@@ -139,7 +139,7 @@ jobs:
           rm -rf KSU
 
       - name: upload linuxxpu with patched dir
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact
         with:
          name: linuxxpu
          path: .
@@ -153,7 +153,7 @@ jobs:
     needs: fetch_upstream
     steps:
       - name: download linuxxpu with patched dir
-        uses: actions/download-artifact@v5.0.0
+        uses: actions/download-artifact
         with:
           name: linuxxpu
           path: .
@@ -311,13 +311,13 @@ jobs:
           #fi
     
       - name: Delete Artifact
-        uses: GeekyEggo/delete-artifact@v5.1.0
+        uses: GeekyEggo/delete-artifact
         with: 
           name: linuxxpu
           failOnError: false
         
       - name: upload linuxxpu with patched dir
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact
         with:
           name: linuxxpu
           path: .
