@@ -104,7 +104,7 @@ jobs:
       topnotchfreaks_codelinaro_branch: ${{ steps.gen_outs.outputs.topnotchfreaks_codelinaro_branch }}
     steps:
     - name: download linuxxpu with patched dir
-      uses: actions/download-artifact@v5.0.0
+      uses: actions/download-artifact
       with:
         name: linuxxpu
         path: .
@@ -220,7 +220,7 @@ jobs:
         
     steps:
       - name: download linuxxpu with patched dir
-        uses: actions/download-artifact@v5.0.0
+        uses: actions/download-artifact
         with:
           name: linuxxpu
           path: .
@@ -239,27 +239,27 @@ jobs:
           fi
 
       - name: Setup Java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java
         with:
           distribution: temurin
           java-version: 21
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android
 
       - name: Download arm64 susfsd
         if: github.event.inputs.ksu_fork == 'KSUN'
-        uses: actions/download-artifact@v5.0.0
+        uses: actions/download-artifact
         with:
           name: susfsd-aarch64-linux-android
           path: .
 
       - name: Download arm64 susfsd
         if: github.event.inputs.ksu_fork == 'SUKISU'
-        uses: actions/download-artifact@v5.0.0
+        uses: actions/download-artifact
         with:
           name: susfs-aarch64-linux-android
           path: .
@@ -272,7 +272,7 @@ jobs:
           
       - name: Download arm64 lpud
         if: github.event.inputs.ksu_fork == 'SUKISU' || github.event.inputs.ksu_fork == 'xxKSU'
-        uses: actions/download-artifact@v5.0.0
+        uses: actions/download-artifact
         with:
           name: lpud-aarch64-linux-android
           path: .
@@ -295,7 +295,7 @@ jobs:
           ./gradlew clean assembleRelease
 
       - name: Upload Build Artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact
         with:
           name: Manager
           path: manager/app/build/outputs/apk/release/*.apk
@@ -323,14 +323,14 @@ jobs:
       
     steps:
       - name: download linuxxpu with patched dir
-        uses: actions/download-artifact@v5.0.0
+        uses: actions/download-artifact
         with:
           name: linuxxpu
           path: .
           github-token: '${{ env.GH_TOKEN }}'
           
       - name: Import GPG key
-        uses: crazy-max/ghaction-import-gpg@v6.3.0
+        uses: crazy-max/ghaction-import-gpg
         with:
           git_config_global: true
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
@@ -441,7 +441,7 @@ jobs:
           echo "RELEASE_NAME=${RELEASE_NAME}" >> $GITHUB_ENV
           
       - name: Download Artifacts
-        uses: actions/download-artifact@v5.0.0
+        uses: actions/download-artifact
         with:
           path: ./downloaded-artifacts    
 
@@ -485,7 +485,7 @@ jobs:
           
       - name: release
         if: ${{ env.build_type == 'build_all' }}
-        uses: softprops/action-gh-release@v2.2.1
+        uses: softprops/action-gh-release
         with:
           token: ${{ env.GH_TOKEN }}
           name: ${{ env.RELEASE_NAME }}
