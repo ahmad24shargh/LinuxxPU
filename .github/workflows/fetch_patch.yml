@@ -246,7 +246,7 @@ jobs:
           for files in $(grep -R ${repo_folder} -e 'ksunext' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's|ksunext|linuxxpu|g' $files;done
           for files in $(grep -R ${repo_folder} -e 'KERNELSU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's|KERNELSU|LINUXXPU|g' $files;done
           for files in $(grep -R ${repo_folder} -e 'KernelSU' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -Ei '/REPO_(OWNER|NAME)( :)?=/! s/KernelSU/LinuxxPU/g' $files;done
-          for files in $(grep -R ${repo_folder} -e 'kernelsu' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's|kernelsu|linuxxpu|g' $files;done
+          for files in $(grep -R ${repo_folder} -e 'kernelsu' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i '/mui./! s|kernelsu|linuxxpu|g' $files;done
           for files in $(grep -R ${repo_folder} -e 'KSURC' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's/KSURC/LPURC/g' $files;done
           for files in $(find ${repo_folder} -type f -name '*Ksu*' 2>/dev/null );do mv $files $(echo $files | sed 's|Ksu|Lpu|g' );done
           for files in $(grep -R ${repo_folder} -e 'Ksu' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -i '/.KsuNext/! s/Ksu/Lpu/g' $files;done
