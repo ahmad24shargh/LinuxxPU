@@ -793,27 +793,27 @@ jobs:
               #for (( i=0; i<$SUPPORTED_MANAGER_COUNT; i++ )); do echo "${managers_size[$i]}:${managers_hash[$i]}" ; done
               
               # Cleaning up the "is manager apk" function in apk_sign.c to apply my own patch
-              line_num_1=$(grep -En 'return \(check_v2_signature\(.+' ${GITHUB_WORKSPACE}/kernel/apk_sign.c 2>/dev/null | tail -1 | cut -d ':' -f1)
-              line_num_2=$(grep -En '^[[:space:]]+\);$' ${GITHUB_WORKSPACE}/kernel/apk_sign.c 2>/dev/null | tail -1 | cut -d ':' -f1)
+              line_num_1=$(grep -En 'return \(check_v2_signature\(.+' ${GITHUB_WORKSPACE}/kernel/manager/apk_sign.c 2>/dev/null | tail -1 | cut -d ':' -f1)
+              line_num_2=$(grep -En '^[[:space:]]+\);$' ${GITHUB_WORKSPACE}/kernel/manager/apk_sign.c 2>/dev/null | tail -1 | cut -d ':' -f1)
               if [ ! -z ${line_num_2} ];then
-                [ ${line_num_2} -gt ${line_num_1} ] && sed -i ''${line_num_2}'d' ${GITHUB_WORKSPACE}/kernel/apk_sign.c
+                [ ${line_num_2} -gt ${line_num_1} ] && sed -i ''${line_num_2}'d' ${GITHUB_WORKSPACE}/kernel/manager/apk_sign.c
               fi
-              sed -E -i '/^[[:space:]]+[\|]{2} check_v2_signature\(.+/d' ${GITHUB_WORKSPACE}/kernel/apk_sign.c
+              sed -E -i '/^[[:space:]]+[\|]{2} check_v2_signature\(.+/d' ${GITHUB_WORKSPACE}/kernel/manager/apk_sign.c
               #
               
-              grep -Eq 'apk_sign_keys\[\] =.+' ${GITHUB_WORKSPACE}/kernel/apk_sign.c
+              grep -Eq 'apk_sign_keys\[\] =.+' ${GITHUB_WORKSPACE}/kernel/manager/apk_sign.c
               if [ $? -eq 0 ];then
-                temp_str="$(grep -E '.+apk_sign_keys\[\] = .*' ${GITHUB_WORKSPACE}/kernel/apk_sign.c 2>/dev/null)\n"
+                temp_str="$(grep -E '.+apk_sign_keys\[\] = .*' ${GITHUB_WORKSPACE}/kernel/manager/apk_sign.c 2>/dev/null)\n"
                 for (( i=0; i<$SUPPORTED_MANAGER_COUNT; i++ )); do 
                   temp_str="${temp_str}\t\{${managers_size[$i]}, \"${managers_hash[$i]}\"\},\n"
                 done
-                sed -E -i -e '/.*\{(EXPECTED|MANAGER)_SIZE.*\,.*(EXPECTED|MANAGER)_HASH.*\}.+/d' -e '/.*\{(expected|manager)_size.*\,.*(expected|manager)_hash.*\}.+/d' ${GITHUB_WORKSPACE}/kernel/apk_sign.c
-                sed -E -i 's/(.+apk_sign_keys\[\] \=.*)/'"${temp_str}"'/g' ${GITHUB_WORKSPACE}/kernel/apk_sign.c
+                sed -E -i -e '/.*\{(EXPECTED|MANAGER)_SIZE.*\,.*(EXPECTED|MANAGER)_HASH.*\}.+/d' -e '/.*\{(expected|manager)_size.*\,.*(expected|manager)_hash.*\}.+/d' ${GITHUB_WORKSPACE}/kernel/manager/apk_sign.c
+                sed -E -i 's/(.+apk_sign_keys\[\] \=.*)/'"${temp_str}"'/g' ${GITHUB_WORKSPACE}/kernel/manager/apk_sign.c
                 for file in $(grep -R {GITHUB_WORKSPACE}/kernel -e 'define MAX_MANAGERS' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -E -i 's|#define MAX_MANAGERS.+|#define MAX_MANAGERS '$SUPPORTED_MANAGER_COUNT'|g' $file;cat $file;done
               else
-                sed -E -i -e 's|(bool .*)(is_manager_apk\(char \*.+\))|\n#define SUPPORTED_MANAGER_COUNT '${SUPPORTED_MANAGER_COUNT}'\nunsigned MANAGER_SIZE\[SUPPORTED_MANAGER_COUNT\]=\{'$(echo "${managers_size[*]}" | tr ' ' ', ')'\}\;\nconst char *MANAGER_HASH\[SUPPORTED_MANAGER_COUNT\]=\{'$(echo $(for i in "${managers_hash[@]}" ; do printf '"%s" ' "$i";done) | tr ' ' ', ')'\}\;\n\n\1is_manager_apk(char *path)|g' -e 's|return [^[:space:]]?check_v2_signature\(.+|int i\;\n        bool result = false\;\n\n        for \(i = 0\; i \< SUPPORTED_MANAGER_COUNT\; i++\)\n        \{\n           result = check_v2_signature\(path, MANAGER_SIZE[i], MANAGER_HASH[i]\)\;\n           if (result\)  \{ return result\;\}\n        \}\n     return result\;\n|g' ${GITHUB_WORKSPACE}/kernel/apk_sign.c
+                sed -E -i -e 's|(bool .*)(is_manager_apk\(char \*.+\))|\n#define SUPPORTED_MANAGER_COUNT '${SUPPORTED_MANAGER_COUNT}'\nunsigned MANAGER_SIZE\[SUPPORTED_MANAGER_COUNT\]=\{'$(echo "${managers_size[*]}" | tr ' ' ', ')'\}\;\nconst char *MANAGER_HASH\[SUPPORTED_MANAGER_COUNT\]=\{'$(echo $(for i in "${managers_hash[@]}" ; do printf '"%s" ' "$i";done) | tr ' ' ', ')'\}\;\n\n\1is_manager_apk(char *path)|g' -e 's|return [^[:space:]]?check_v2_signature\(.+|int i\;\n        bool result = false\;\n\n        for \(i = 0\; i \< SUPPORTED_MANAGER_COUNT\; i++\)\n        \{\n           result = check_v2_signature\(path, MANAGER_SIZE[i], MANAGER_HASH[i]\)\;\n           if (result\)  \{ return result\;\}\n        \}\n     return result\;\n|g' ${GITHUB_WORKSPACE}/kernel/manager/apk_sign.c
               fi
-              cat ${GITHUB_WORKSPACE}/kernel/apk_sign.c
+              cat ${GITHUB_WORKSPACE}/kernel/manager/apk_sign.c
             fi
             sed  -i 's/_KSU_/_LPU_/g' ${defconfig}
             sed  -i 's/CONFIG_KSU/CONFIG_LPU/g' ${defconfig}
