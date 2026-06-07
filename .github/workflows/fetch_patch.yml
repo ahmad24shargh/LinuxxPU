@@ -93,12 +93,12 @@ jobs:
             exit 120
             false
           fi
-          if grep -q 'ccflags-y += -DKSU_VERSION=' ./kernel/Makefile;then
-            hardcoded_ver=$(grep 'ccflags-y += -DKSU_VERSION=' ./kernel/Makefile | tr -d ' ' | cut -d'=' -f3)
+          if grep -q '+= -DKSU_VERSION=' ./kernel/Makefile;then
+            hardcoded_ver=$(grep '+= -DKSU_VERSION=' ./kernel/Makefile | tr -d ' ' | cut -d'=' -f3)
             echo "hardcoded version in Makefile: ${hardcoded_ver}"
             if [[ ${version_code} > ${hardcoded_ver} ]];then
               echo "Changing the hardcoded KSU_VERSION in the Makefile to ${version_code} ..."
-              sed -E -i 's/(ccflags-y \+= -DKSU_VERSION=)(.+)/\1'${version_code}'/' ./kernel/Makefile
+              sed -E -i 's/( \+= -DKSU_VERSION=)(.+)/\1'${version_code}'/' ./kernel/Makefile
             else
               C_VERSION=$(echo "${C_VERSION} + (${hardcoded_ver} - ${version_code})" | bc)
               version_code=$(echo $(grep -Eo ' [^ ]+ (\+|-) [^ ]+ (\+|-) [^;]+' ./userspace/ksud/build.rs 2>/dev/null | tr -d ' ' | sed "s/version_code/${C_VERSION}/") | bc)
