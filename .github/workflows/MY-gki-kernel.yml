@@ -710,21 +710,26 @@ jobs:
             #echo "backslashxx took the selinux_avc_spoof_lkm repo offline again ??!?!?"
           #fi
           
-      - name: DroidSpaces-OSS Patches  
+      - name: add DroidSpaces-OSS Patch & configs
         working-directory: ${{ github.workspace }}
         run: |
           # Download Droidspaces-OSS Patches
           git clone --depth=1 https://github.com/ravindu644/Droidspaces-OSS.git
 
           # Apply the SYSVIPC kABI fix
-          cd ${{ github.workspace }}/kernel/common
+          cd $CONFIG/common
           cp ${{ github.workspace }}/Droidspaces-OSS/Documentation/resources/kernel-patches/GKI/below-kernel-6.12/001.GKI-below-6.12-fix_sysvipc_kabi_6_7_8.patch ./
           patch -p1 < 001.GKI-below-6.12-fix_sysvipc_kabi_6_7_8.patch
 
           # Enable Kernel Configs
           for conf in CONFIG_PID_NS CONFIG_SYSVIPC CONFIG_POSIX_MQUEUE CONFIG_IPC_NS CONFIG_DEVTMPFS CONFIG_BINFMT_MISC CONFIG_BINFMT_SCRIPT CONFIG_BINFMT_ELF;do sed -Ei '/'$conf'( |=)/d' ${defconfig};echo "$conf=y" >> ${defconfig};done
 
-
+      - name: add Mirage (nomountfs) vfs support
+        working-directory: ${{ github.workspace }}
+        run: |
+          cd $CONFIG/common
+          curl -LSs "https://raw.githubusercontent.com/maxsteeel/Mirage/master/setup.sh" | bash -
+          
       
       - name: Build kernel
         env:
