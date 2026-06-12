@@ -730,7 +730,7 @@ jobs:
           cd $CONFIG/common
           curl -LSs "https://raw.githubusercontent.com/maxsteeel/Mirage/master/setup.sh" | sed -e 's/setup_nomountfs/setup_mirage/g' -e 's/+= mirage  \/\\n/+= mirage\/\\n/g' | bash -
           cd Mirage/src
-          for file in $(grep -R . -e nomount_ 2>/dev/null | cut -d ':' -f 1 | sort | uniq):do sed -i 's/nomount_/mirage_/g' $file;done
+          for file in $(grep -R . -e nomount_ 2>/dev/null | cut -d ':' -f 1 | sort | uniq);do sed -i 's/nomount_/mirage_/g' $file;done
           echo "CONFIG_MIRAGE=y" >> ${defconfig}
       
       - name: Build kernel
