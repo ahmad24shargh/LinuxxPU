@@ -729,6 +729,7 @@ jobs:
         run: |
           cd $CONFIG/common
           curl -LSs "https://raw.githubusercontent.com/maxsteeel/Mirage/master/setup.sh" | sed 's/setup_nomountfs/setup_mirage/g' | bash -
+          echo "CONFIG_MIRAGE=y" >> ${defconfig}
       
       - name: Build kernel
         env:
