@@ -728,8 +728,7 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           cd $CONFIG/common
-          curl -LSs "https://raw.githubusercontent.com/maxsteeel/Mirage/master/setup.sh" | bash -
-          
+          curl -LSs "https://raw.githubusercontent.com/maxsteeel/Mirage/master/setup.sh" | sed 's/setup_nomountfs/setup_mirage/g' | bash -
       
       - name: Build kernel
         env:
