@@ -732,6 +732,8 @@ jobs:
           cd Mirage/src
           for file in $(grep -Ri . -e nomount_ 2>/dev/null | cut -d ':' -f 1 | sort | uniq);do sed -i -e 's/nomount_/mirage_/g' -e 's/NOMOUNT_/MIRAGE_/g' $file;done
           echo "CONFIG_MIRAGE=y" >> ${defconfig}
+          echo "CONFIG_MIRAGE_KERNEL_UMOUNT=y" >> ${defconfig}
+          
       
       - name: Build kernel
         env:
