@@ -324,7 +324,6 @@ jobs:
           echo 'CONFIG_LOCALVERSION_AUTO=y' >> ${defconfig}
           
           sed -i '/WERROR/d' ${defconfig} && echo "CONFIG_WERROR=n" >> ${defconfig}
-          sed -i '/CONFIG_WERROR/d' $GITHUB_WORKSPACE/$CONFIG/common/Makefile
           sed -E -i 's/(^#define MIN.+$)/#ifndef MIN\n\1\n#endif/g' $GITHUB_WORKSPACE/$CONFIG/common/kernel/power/process.c
           sed -E -i 's|^(changed_common_files=.*)|\1,kernel/power/process.c|g' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME
           sed -E -i 's/^([[:space:]]*struct sys_reg_desc clidr)/\1 = {0}/g' $GITHUB_WORKSPACE/$CONFIG/common/arch/arm64/kvm/sys_regs.c
