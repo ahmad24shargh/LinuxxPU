@@ -724,6 +724,7 @@ jobs:
           for conf in CONFIG_PID_NS CONFIG_SYSVIPC CONFIG_POSIX_MQUEUE CONFIG_IPC_NS CONFIG_DEVTMPFS CONFIG_BINFMT_MISC CONFIG_BINFMT_SCRIPT CONFIG_BINFMT_ELF CONFIG_NETFILTER_XT_MATCH_ADDRTYPE;do sed -Ei '/'$conf'( |=)/d' ${defconfig};echo "$conf=y" >> ${defconfig};done
 
       - name: add Mirage (nomountfs) vfs support
+        if: false
         working-directory: ${{ github.workspace }}
         run: |
           cd $CONFIG/common
