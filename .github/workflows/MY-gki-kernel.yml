@@ -525,9 +525,8 @@ jobs:
         
           if [ ${{ env.ksu_fork }} == 'xxKSU' ];then
             echo "CONFIG_KSU_KPROBES_KSUD=y"  >> ${defconfig}
-            echo "CONFIG_KSU_EXTRAS=n" >> ${defconfig}
-            echo "CONFIG_KSU_KRETPROBES_SUCOMPAT=n"  >> ${defconfig}
             echo "CONFIG_KSU_THRONE_TRACKER_ALWAYS_THREADED=y"  >> ${defconfig}
+            echo "CONFIG_KSU_HACK_ARM64_BRANCH_LINK=y"  >> ${defconfig}
             # manual_lsm_security_hook.patch
             echo "CONFIG_KSU_LSM_SECURITY_HOOKS=n" >> ${defconfig}
           else
