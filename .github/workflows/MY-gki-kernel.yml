@@ -528,7 +528,7 @@ jobs:
             echo "CONFIG_KSU_THRONE_TRACKER_ALWAYS_THREADED=y"  >> ${defconfig}
             echo "CONFIG_KSU_HACK_ARM64_BRANCH_LINK=y"  >> ${defconfig}
             # manual_lsm_security_hook.patch
-            echo "CONFIG_KSU_LSM_SECURITY_HOOKS=n" >> ${defconfig}
+            #echo "CONFIG_KSU_LSM_SECURITY_HOOKS=n" >> ${defconfig}
           else
             echo "CONFIG_KSU_MANUAL_HOOK=y" >> ${defconfig}
             echo "CONFIG_KSU_KPROBES_HOOK=n"  >> ${defconfig}
@@ -608,6 +608,7 @@ jobs:
           #fi
           
       - name: Apply New Hooks Patches
+        if: false
         run: |
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG/common"
