@@ -556,8 +556,10 @@ jobs:
           
 
           # Add BBR & network Configs
+          pushd "${GITHUB_WORKSPACE}/${CONFIG}/common"
           cp $GITHUB_WORKSPACE/kernel_patches/0001-net-tcp-backport-BBRv3-to-android13-5.15.patch ./
           patch -p1 -F 3 < 0001-net-tcp-backport-BBRv3-to-android13-5.15.patch
+          popd
           echo "CONFIG_TCP_CONG_ADVANCED=y" >> ${defconfig} 
           echo "CONFIG_TCP_CONG_BIC=n" >> ${defconfig}
           echo "CONFIG_TCP_CONG_WESTWOOD=y" >> ${defconfig}
