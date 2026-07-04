@@ -425,7 +425,7 @@ jobs:
           echo "-> DroidSpaces-OSS A lightweight, LXC-inspired container runtime for Android and Linux" >> $GITHUB_ENV
           #echo "-> Mirage (nomountfs) stackable virtual filesystem" >> $GITHUB_ENV
           [ ${{ inputs.BBG }} == 'true'  ] && echo "-> Added Baseband Guard (BBG) support to prevent unauthorised writes to certain partitions" >> $GITHUB_ENV
-          echo "-> BBRv1 and westwood Support" >> $GITHUB_ENV
+          echo "-> BBRv3 and westwood Support" >> $GITHUB_ENV
           grep -Eq 'CC_VERSION_TEXT=.+' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME && echo "-> Kernel built with: $(grep 'CC_VERSION_TEXT=' ${GITHUB_WORKSPACE}/BUILD_SETTINGS.ME | cut -d'=' -f2-)" >> $GITHUB_ENV
           echo >> $GITHUB_ENV
           echo -e 'Commit Hashes and Links:\nLinuxxPU-Dev: ['${LPU_REF}']('${LPU_URL}')' >> $GITHUB_ENV
