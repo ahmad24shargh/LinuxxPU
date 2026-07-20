@@ -397,8 +397,8 @@ jobs:
 
           # patch rtmutex(CVE-2026-43499) bug
           cd "${GITHUB_WORKSPACE}/${CONFIG}/common"
-          cp $GITHUB_WORKSPACE/kernel_patches/CVE-2026-48499.patch ./
-          patch -p1 -F 3 < CVE-2026-48499.patch
+          cp $GITHUB_WORKSPACE/kernel_patches/CVE-2026-43499.patch ./
+          patch -p1 -F 3 < CVE-2026-43499.patch
 
           echo "defconfig=${defconfig}" >> $GITHUB_ENV
 
