@@ -394,7 +394,12 @@ jobs:
 
           # abi_bypass_gki (not needed but ...)
           for file in $(find ${GITHUB_WORKSPACE}/$CONFIG/ -type f -name 'check_buildtime_symbol_protection.py' 2>/dev/null | grep '/abi/');do echo $file;sed -E -i '/f"  \{symbol\} required by \{undefined_symbol_consumer_lookup\[symbol\]\}"/ {N;N;N;N;N; s/([[:space:]]+)return 1/\1print( "\\nBUT WHO CARES?\\n")\1return 0/g}' $file ;done
-          
+
+          # patch rtmutex(CVE-2026-43499) bug
+          cd "${GITHUB_WORKSPACE}/${CONFIG}/common"
+          cp $GITHUB_WORKSPACE/kernel_patches/CVE-2026-48499.patch ./
+          patch -p1 -F 3 < CVE-2026-48499.patch
+
           echo "defconfig=${defconfig}" >> $GITHUB_ENV
 
       - name: Check for Polly Support and Use Polly if Supported
