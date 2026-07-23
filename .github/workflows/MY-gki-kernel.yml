@@ -400,12 +400,6 @@ jobs:
           cp $GITHUB_WORKSPACE/kernel_patches/CVE-2026-43499.patch ./
           patch -p1 -F 3 < CVE-2026-43499.patch
 
-          # افزودن مانفیگ برای تست اتصال به lan از طریق usb otg
-          sed -i '/USB_NET_NET1080/d' ${defconfig}
-          echo "CONFIG_USB_NET_NET1080=y" >> ${defconfig}
-          sed -i '/USB_NET_RNDIS_HOST/d' ${defconfig}
-          echo "CONFIG_USB_NET_RNDIS_HOST=y" >> ${defconfig}
-          
           echo "defconfig=${defconfig}" >> $GITHUB_ENV
 
       - name: Check for Polly Support and Use Polly if Supported
