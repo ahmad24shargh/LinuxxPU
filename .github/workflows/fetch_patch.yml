@@ -257,38 +257,6 @@ jobs:
           for file in $(grep -Er ${repo_folder} -e '\("LPU[^[:space:]]*",' 2>/dev/null | cut -d':' -f1 | sort | uniq);do sed -E -i -e 's/([[:space:]]+)(\("LPU)(.+)/\1\2\3\n\1("KSU\3/g' -e 's/([[:space:]]+)(\("KSU_LinuxxPU)(.+)/\1("KSU_SUKISU\3/g'  -e 's|([[:space:]]+)(envs\.push\(\("LPU)(.+)|\1\2\3\n\1envs.push(("KSU\3|g' $file;done
           sed -E -i 's|([[:space:]]+)mavenCentral\(\)|\1mavenCentral()\n\1gradlePluginPortal()|g' ${repo_folder}/manager/settings.gradle.kts
           #grep 'nl.littlerobots.vcu.resolver' ${repo_folder}/manager/gradle.properties || echo "nl.littlerobots.vcu.resolver=true" >> ${repo_folder}/manager/gradle.properties
-          #------------------------------
-          temp_file=$(mktemp)
-          curl https://github.com/littlerobots/version-catalog-update-plugin > $temp_file
-          if [ $? -gt 0 ];then
-            echo "curl returned error in :"
-            echo "https://github.com/littlerobots/version-catalog-update-plugin"
-            exit 10
-          fi
-          vcup_ver=$(grep 'css-truncate css-truncate-target text-bold' $temp_file 2>/dev/null | grep -Eo  '>.+<' | tr -d '<>v' | cut -d ' ' -f2 2>/dev/null)
-          if [  -z $vcup_ver ];then
-            echo "grep cannot find the pattern: "
-            echo "https://github.com/littlerobots/version-catalog-update-plugin"
-            exit 11
-          fi
-          echo > $temp_file
-          curl https://github.com/ben-manes/gradle-versions-plugin > $temp_file
-          if [ $? -gt 0 ];then
-            echo "curl returned error in :"
-            echo "https://github.com/ben-manes/gradle-versions-plugin"
-            exit 10
-          fi
-          gvp_ver=$(grep 'css-truncate css-truncate-target text-bold' $temp_file 2>/dev/null | grep -Eo  '>.+<' | tr -d '<>v' | cut -d ' ' -f2 2>/dev/null)
-          if [  -z $gvp_ver ];then
-            echo "grep cannot find the pattern: "
-            echo "https://github.com/ben-manes/gradle-versions-plugin"
-            exit 11
-          fi
-          sed -E -i 's|([[:space:]]+)(alias\(libs\.plugins\.lsplugin\.cmaker\))|\1\2\n\1id("com.github.ben-manes.versions") version "'${gvp_ver}'"\n\1id("nl.littlerobots.version-catalog-update") version "'${vcup_ver}'"\n|g'  ${repo_folder}/manager/build.gradle.kts      
-          #------------------------------
- 
-
-
 
           [ -d  "${must_unchange_kernel_files}/kernel" ] && cp -af ${must_unchange_kernel_files}/kernel ${repo_folder}/ 
           for files in $(grep -R ${repo_folder} -e 'ksud' 2>/dev/null | grep -v 'https' | cut -d':' -f1 | sort | uniq);do sed -i 's|ksud|lpud|g' $files;done
