@@ -113,6 +113,8 @@ jobs:
           sed -E -i 's|val managerVersionName by extra.+|val managerVersionName by extra("'${C_TAG_NAME}'")|g' ./manager/build.gradle.kts
           commiteid_of_temp_hax=$(git --no-pager  log --oneline | grep --max-count 1 'kernel: temporary setgroups hax' | cut -d ' ' -f1 2>/dev/null)
           if [ -n "$commiteid_of_temp_hax" ];then
+            git config --global user.email "example@github.com"
+            git config --global user.name "Ahmad Karimi"
             git revert $commiteid_of_temp_hax
           fi
           cd ..
