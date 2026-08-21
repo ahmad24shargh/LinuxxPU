@@ -111,6 +111,10 @@ jobs:
           for file in $(grep -R --exclude='.github' --exclude='.git' . -e 'let version_name' 2>/dev/null | cut -d':' -f 1 | sort | uniq);do sed -E -i 's/(let version_name = )version_name(\.trim.+)/\1"'${C_TAG_NAME}'"\2/g' $file;cat $file | grep  'let version_';done
           for file in $(grep -R --exclude='.github' --exclude='.git' . -e 'return getGitDescribe()' 2>/dev/null | cut -d':' -f 1 | sort | uniq);do sed -i 's/return getGitDescribe()/return "'${C_TAG_NAME}'"/g' $file;cat $file | grep  'return';done
           sed -E -i 's|val managerVersionName by extra.+|val managerVersionName by extra("'${C_TAG_NAME}'")|g' ./manager/build.gradle.kts
+          commiteid_of_temp_hax=$(git --no-pager  log --oneline | grep --max-count 1 'kernel: temporary setgroups hax' | cut -d ' ' -f1 2>/dev/null)
+          if [ -n "$commiteid_of_temp_hax" ];then
+            git revert $commiteid_of_temp_hax
+          fi
           cd ..
           repo_folder=$(realpath .)
           mkdir -p /home/runner/mylinuxxpu
