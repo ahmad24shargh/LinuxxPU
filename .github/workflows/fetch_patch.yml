@@ -116,6 +116,8 @@ jobs:
             git config --global user.email "example@github.com"
             git config --global user.name "Ahmad Karimi"
             git revert $commiteid_of_temp_hax
+          else
+            echo "temporary setgroups hax commite not found in git log ..."
           fi
           cd ..
           repo_folder=$(realpath .)
