@@ -742,7 +742,7 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           cd $CONFIG/common
-          curl -LSs "https://raw.githubusercontent.com/maxsteeel/Mirage/master/setup.sh" | bash -
+          curl -LSs "https://raw.githubusercontent.com/maxsteeel/Mirage/master/setup.sh" | sed -E 's|\+= mirage[[:space:]]+\/\\n| += mirage/\\n|g' | bash -
           cd Mirage/src
           echo "CONFIG_MIRAGE=y" >> ${defconfig}
           #echo "CONFIG_MIRAGE_KERNEL_UMOUNT=y" >> ${defconfig}
