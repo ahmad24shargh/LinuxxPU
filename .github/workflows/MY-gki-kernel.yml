@@ -561,7 +561,8 @@ jobs:
           
 
           # Add BBR & network Configs
-          if [[ -e "$GITHUB_WORKSPACE/$CONFIG/common/net/ipv4/tcp_bbr3.c" ]]‎;then
+          file "$GITHUB_WORKSPACE/$CONFIG/common/net/ipv4/tcp_bbr3.c" || true
+          if [ -e "$GITHUB_WORKSPACE/$CONFIG/common/net/ipv4/tcp_bbr3.c" ];then
             echo "✅ bbrv3 tcp cong patch already applied on this kernel source ..."
           else
             pushd $GITHUB_WORKSPACE/$CONFIG/common
