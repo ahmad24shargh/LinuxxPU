@@ -575,7 +575,7 @@ jobs:
           echo "CONFIG_TCP_CONG_WESTWOOD=y" >> ${defconfig}
           echo "CONFIG_TCP_CONG_HTCP=n" >> ${defconfig}
           echo "CONFIG_NET_SCH_FQ=y" >> ${defconfig}
-          sed -i '/CONFIG_TCP_CONG_BBR/d' ${defconfig}
+          echo "CONFIG_TCP_CONG_CUBIC=y" >> ${defconfig}
           echo "CONFIG_TCP_CONG_BBR3=y" >> ${defconfig}
           sed -i '/CONFIG_DEFAULT_TCP_CONG/d' ${defconfig}
           echo 'CONFIG_DEFAULT_TCP_CONG="BBR3"' >> ${defconfig}
@@ -738,13 +738,12 @@ jobs:
           for conf in CONFIG_PID_NS CONFIG_SYSVIPC CONFIG_POSIX_MQUEUE CONFIG_IPC_NS CONFIG_DEVTMPFS CONFIG_BINFMT_MISC CONFIG_BINFMT_SCRIPT CONFIG_BINFMT_ELF CONFIG_NETFILTER_XT_MATCH_ADDRTYPE;do sed -Ei '/'$conf'( |=)/d' ${defconfig};echo "$conf=y" >> ${defconfig};done
 
       - name: add Mirage (nomountfs) vfs support
-        if: false
+        #if: false
         working-directory: ${{ github.workspace }}
         run: |
           cd $CONFIG/common
-          curl -LSs "https://raw.githubusercontent.com/maxsteeel/Mirage/master/setup.sh" | sed -e 's/setup_nomountfs/setup_mirage/g' -e 's/+= mirage  \/\\n/+= mirage\/\\n/g' | bash -
+          curl -LSs "https://raw.githubusercontent.com/maxsteeel/Mirage/master/setup.sh" | bash -
           cd Mirage/src
-          for file in $(grep -Ri . -e nomount_ 2>/dev/null | cut -d ':' -f 1 | sort | uniq);do sed -i -e 's/nomount_/mirage_/g' -e 's/NOMOUNT_/MIRAGE_/g' $file;done
           echo "CONFIG_MIRAGE=y" >> ${defconfig}
           #echo "CONFIG_MIRAGE_KERNEL_UMOUNT=y" >> ${defconfig}
           
