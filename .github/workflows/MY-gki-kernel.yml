@@ -541,6 +541,7 @@ jobs:
           fi
             
           # Add additional tmpfs config setting
+          ls $GITHUB_WORKSPACE/$CONFIG/common/net/ipv4/
           echo "CONFIG_TMPFS_XATTR=y" >> ${defconfig}
           echo "CONFIG_TMPFS_POSIX_ACL=y" >> ${defconfig}
 
@@ -561,9 +562,7 @@ jobs:
           
 
           # Add BBR & network Configs
-          result=$(find "$GITHUB_WORKSPACE/$CONFIG/common/net/ipv4" -type f  -name "tcp_bbr3.c‎")
-          echo "result of find command: $result"
-          if test -n "$result";then
+          if test -f $GITHUB_WORKSPACE/$CONFIG/common/net/ipv4/tcp_bbr3.c‎;then
             echo "✅ bbrv3 tcp cong patch already applied on this kernel source ..."
           else
             pushd $GITHUB_WORKSPACE/$CONFIG/common
