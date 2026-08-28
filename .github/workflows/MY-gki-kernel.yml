@@ -561,7 +561,7 @@ jobs:
           
 
           # Add BBR & network Configs
-          result=$(find "$GITHUB_WORKSPACE/$CONFIG" -name "tcp_bbr3.c‎" 2>/dev/null)
+          result=$(find . -type f  -name "tcp_bbr3.c‎" 2>/dev/null)
           echo "result of find command: $result"
           if test -n "$result";then
             echo "✅ bbrv3 tcp cong patch already applied on this kernel source ..."
