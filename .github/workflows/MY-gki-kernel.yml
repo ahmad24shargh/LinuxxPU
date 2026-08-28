@@ -49,7 +49,7 @@ on:
 jobs:
   build-kernel-kernelsu:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 120
     env:
       kernel_variant: ${{ inputs.kernel_variant }}
       ksu_fork: ${{ inputs.ksu_fork }}
