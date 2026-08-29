@@ -738,14 +738,13 @@ jobs:
           for conf in CONFIG_PID_NS CONFIG_SYSVIPC CONFIG_POSIX_MQUEUE CONFIG_IPC_NS CONFIG_DEVTMPFS CONFIG_BINFMT_MISC CONFIG_BINFMT_SCRIPT CONFIG_BINFMT_ELF CONFIG_NETFILTER_XT_MATCH_ADDRTYPE;do sed -Ei '/'$conf'( |=)/d' ${defconfig};echo "$conf=y" >> ${defconfig};done
 
       - name: add Mirage (nomountfs) vfs support
-        #if: false
+        if: false
         working-directory: ${{ github.workspace }}
         run: |
           cd $CONFIG/common
           git clone https://github.com/maxsteeel/Mirage
           sed -E 's|\+= mirage[[:space:]]+\/\\n| += mirage/\\n|g' Mirage/setup.sh
-          cd Mirage
-          chmod +x setup.sh && ./setup.sh
+          chmod +x ./Mirage/setup.sh && ./Mirage/setup.sh
           echo "CONFIG_MIRAGE=y" >> ${defconfig}
           #echo "CONFIG_MIRAGE_KERNEL_UMOUNT=y" >> ${defconfig}
           
