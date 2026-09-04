@@ -403,7 +403,7 @@ jobs:
           echo "defconfig=${defconfig}" >> $GITHUB_ENV
 
       - name: Check for Polly Support and Use Polly if Supported
-        if: false
+        #if: false
         run: |
           
           cat <<EOF > test_polly.c
