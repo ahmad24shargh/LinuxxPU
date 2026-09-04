@@ -178,11 +178,11 @@ jobs:
           cp -af ${repo_folder}/.github/myksunext $(dirname ${patched_folder})
           rm -rf ${repo_folder}/.github/myksunext
           cd  ${repo_folder}
-          for dirs in $(find ${repo_folder}/manager/app/src/main/res -maxdepth 1 -type d  -name 'values-*');do [ "$(echo $dirs | rev | cut -d'-' -f1 | rev)" != "night" ] && rm -rf $dirs;done
+          #for dirs in $(find ${repo_folder}/manager/app/src/main/res -maxdepth 1 -type d  -name 'values-*');do [ "$(echo $dirs | rev | cut -d'-' -f1 | rev)" != "night" ] && rm -rf $dirs;done
           sed -i '/app_name_wild_ksu/d' ${repo_folder}/manager/app/src/main/res/values/strings.xml
           for file in $(find ${repo_folder}/userspace -type f -name 'module.rs' 2>/dev/null);do sed -i '/.env("WKSU", "true")/d' $file;done
           for files in $(find ${repo_folder}/docs -type f  -name 'README_*');do rm -f ${files};done
-          rm -rf ${repo_folder}/manager/app/src/main/res/mipmap-*
+          #rm -rf ${repo_folder}/manager/app/src/main/res/mipmap-*
           #[ -f "${GITHUB_WORKSPACE}/kernel/extras.c" ] && echo "file exist in ${GITHUB_WORKSPACE}/kernel/extras.c" || echo "${GITHUB_WORKSPACE}/kernel/extras.c NOT EXIST !!!"
           for file in $(find ${repo_folder}/manager/app/src/main/jniLibs -name 'libmagiskboot.so' 2>/dev/null);do mv -f $file $(dirname $file)/liblpuboot.so;done
           for file in $(grep -R ${repo_folder}/manager  -e 'libmagiskboot.so' 2>/dev/null | cut -d':' -f1 | sort | uniq);do  sed -i 's|libmagiskboot.so|liblpuboot.so|g' $file;done
@@ -201,7 +201,7 @@ jobs:
           [ -d  "${patched_folder}" ] && cp -af ${patched_folder}/* ${patched_folder}/.* ${repo_folder}/
           [ -f "${repo_folder}/banner" ] && for dirs in $(find ${repo_folder}/userspace -maxdepth 1 -type d  -name 'ksud*');do cp "${repo_folder}/banner" "$dirs/src/";done
           [ -f "${repo_folder}/banner" ] && rm -f "${repo_folder}/banner"
-          [ -f ${repo_folder}/manager/app/src/main/res/values/ic_launcher_background.xml -a -f ${repo_folder}/manager/app/src/main/res/values/colors.xml ] && rm ${repo_folder}/manager/app/src/main/res/values/colors.xml
+          #[ -f ${repo_folder}/manager/app/src/main/res/values/ic_launcher_background.xml -a -f ${repo_folder}/manager/app/src/main/res/values/colors.xml ] && rm ${repo_folder}/manager/app/src/main/res/values/colors.xml
           cd ${repo_folder}
           for file in $(find ${repo_folder}/manager -name 'Home*' 2>/dev/null);do sed -E -i -e 's|^([[:space:]]+)(UpdateCard\(\))|\1//\2|g' -e 's|^([[:space:]]+)(Unofficial\(\))|\1//\2|g' -e 's|^([[:space:]]+)(DonateCard\(\))|\1//\2|g' -e 's|^([[:space:]]+)(LearnMoreCard\(\))|\1//\2|g' -e 's|^([[:space:]]+)(IssueReportCard\(\))|\1//\2|g' -e 's|^([[:space:]]+)(ContributionCard\(\))|\1//\2|g' $file;done
           for file in $(find ./userspace -type f -name 'Application.mk' 2>/dev/null);do sed -E -i 's/APP_ABI \:= .+/APP_ABI := arm64-v8a/g' $file;done
