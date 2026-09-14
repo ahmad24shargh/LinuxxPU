@@ -399,8 +399,12 @@ jobs:
 
           # patch rtmutex(CVE-2026-43499) bug
           cd "${GITHUB_WORKSPACE}/${CONFIG}/common"
-          cp $GITHUB_WORKSPACE/kernel_patches/CVE-2026-43499.patch ./
-          patch -p1 -F 3 < CVE-2026-43499.patch
+          if grep -q waiter_task  ./kernel/locking/rtmutex.c;then
+            echo 'rtmutex(CVE-2026-43499) bug already patched ...'
+          else
+            cp $GITHUB_WORKSPACE/kernel_patches/CVE-2026-43499.patch ./
+            patch -p1 -F 3 < CVE-2026-43499.patch
+          fi
 
           echo "defconfig=${defconfig}" >> $GITHUB_ENV
 
