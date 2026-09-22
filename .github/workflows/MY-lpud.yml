@@ -32,7 +32,7 @@ jobs:
     - name: Setup Rust
       run: |
         rustup update stable
-        rustup target add aarch64-apple-darwin
+        rustup target add aarch64-linux-android
 
     - name: Cache lpud
       if: ${{ inputs.ksu_fork == 'SUKISU' }} || ${{ inputs.ksu_fork == 'xxKSU' }}
