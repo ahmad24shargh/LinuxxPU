@@ -284,7 +284,6 @@ jobs:
             #sed -E -i 's/#if.+CONFIG_KPROBES.+/#if 0/g' $(find ${GITHUB_WORKSPACE}/kernel -type f -name 'extras.c')
             #grep '#if 0' $(find ${GITHUB_WORKSPACE}/kernel -type f -name 'extras.c')
           #fi
-          sed -i '/std=gnu23/d' ${repo_folder}/kernel/Makefile
     
       - name: Delete Artifact
         uses: GeekyEggo/delete-artifact@main
