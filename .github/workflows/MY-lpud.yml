@@ -41,13 +41,20 @@ jobs:
         workspaces: userspace/lpud
         cache-targets: false
 
-    - name: Setup Cross
-      run: |
-        RUSTFLAGS="" cargo install cross --git https://github.com/cross-rs/cross --rev 66845c1 --force
-
+    - uses: nttld/setup-ndk@v1
+      id: setup-ndk
+      with:
+        ndk-version: r29
+        
     - name: Build lpud
-      if: ${{ inputs.ksu_fork == 'SUKISU' }} || ${{ inputs.ksu_fork == 'xxKSU' }}
-      run: CROSS_NO_WARNINGS=0 cross build --target ${{ inputs.target }} --release --manifest-path ./userspace/lpud/Cargo.toml
+      env:
+        ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+      run: |
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          export KSU_PACKAGE_NAME="me.weishu.kernelsu.pr"
+        fi
+        source .github/scripts/setup-rust-build.sh ${{ inputs.target }} 26
+        cargo build --target $TRIPLE --release --manifest-path ./userspace/ksud/Cargo.toml
 
     - name: Upload ksud artifact
       if: ${{ inputs.ksu_fork == 'SUKISU' }} || ${{ inputs.ksu_fork == 'xxKSU' }}
