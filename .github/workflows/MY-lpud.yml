@@ -51,10 +51,10 @@ jobs:
         ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
       run: |
         if [ "${{ github.event_name }}" = "pull_request" ]; then
-          export KSU_PACKAGE_NAME="me.weishu.kernelsu.pr"
+          export KSU_PACKAGE_NAME="com.ahmad.linuxxpu.pr"
         fi
         source .github/scripts/setup-rust-build.sh ${{ inputs.target }} 26
-        cargo build --target $TRIPLE --release --manifest-path ./userspace/ksud/Cargo.toml
+        cargo build --target $TRIPLE --release --manifest-path ./userspace/lpud/Cargo.toml
 
     - name: Upload ksud artifact
       if: ${{ inputs.ksu_fork == 'SUKISU' }} || ${{ inputs.ksu_fork == 'xxKSU' }}
