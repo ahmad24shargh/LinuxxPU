@@ -406,6 +406,12 @@ jobs:
             patch -p1 -F 3 < CVE-2026-43499.patch
           fi
 
+          #Fix error in compiling fs/eventpoll.c file
+          if ! grep -q 'refcount_t refcount;' ${GITHUB_WORKSPACE}/$CONFIG/common/fs/eventpoll.c;then
+            echo 'Fix error in compiling fs/eventpoll.c ...'
+            sed -E -i 's/([[:blank:]]+)(u8 loop_check_depth;)/\1\2\n\1refcount_t refcount;/g' ${GITHUB_WORKSPACE}/$CONFIG/common/fs/eventpoll.c
+          fi
+
           echo "defconfig=${defconfig}" >> $GITHUB_ENV
 
       - name: Check for Polly Support and Use Polly if Supported
