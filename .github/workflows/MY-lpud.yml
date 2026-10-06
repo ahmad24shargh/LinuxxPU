@@ -35,7 +35,7 @@ jobs:
         rustup target add aarch64-linux-android
 
     - name: Cache lpud
-      if: ${{ inputs.ksu_fork == 'SUKISU' }} || ${{ inputs.ksu_fork == 'xxKSU' }}
+      if: ${{ inputs.ksu_fork == 'SUKISU'  || inputs.ksu_fork  == 'xxKSU' }}
       uses: Swatinem/rust-cache@master
       with:
         workspaces: userspace/lpud
@@ -57,7 +57,7 @@ jobs:
         cargo build --target $TRIPLE --release --manifest-path ./userspace/lpud/Cargo.toml
 
     - name: Upload ksud artifact
-      if: ${{ inputs.ksu_fork == 'SUKISU' }} || ${{ inputs.ksu_fork == 'xxKSU' }}
+      if: ${{ inputs.ksu_fork == 'SUKISU' ||  inputs.ksu_fork == 'xxKSU' }}
       uses: actions/upload-artifact@main
       with:
         name: lpud-${{ inputs.target }}
