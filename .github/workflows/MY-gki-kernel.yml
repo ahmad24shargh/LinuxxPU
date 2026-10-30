@@ -759,17 +759,17 @@ jobs:
           curl https://raw.githubusercontent.com/maxsteeel/nomount/refs/heads/dev/kernel/setup.sh | bash -
           echo "CONFIG_NOMOUNT=y" >> ${defconfig}
 
-      - name: creat fgetpriority module
+      - name: create fgetpriority module
         #if: false
         run: |
           if git ls-remote https://github.com/aerath-stuff/fgetpriority/tree/lkm &>/dev/null;then
-            cd $GITHUB_WORKSPACE/$CONFIG/common
+            cd $GITHUB_WORKSPACE/$CONFIG/common/drivers
             git clone https://github.com/aerath-stuff/fgetpriority/tree/lkm fgetpriority
             grep -q "fgetpriority" Makefile || printf "\nobj-$(CONFIG_FGETPRIORITY) += fgetpriority/\n" >> Makefile && echo "[+] Modified Makefile for fgetpriority."
             grep -q "source \"fgetpriority/kernel/Kconfig\"" Kconfig || sed -i "/endmenu/i\source \"fgetpriority/kernel/Kconfig\"" Kconfig && echo "[+] Modified Kconfig for fgetpriority."
-            echo "CONFIG_LKM_TEMPLATE=m" >> ${defconfig}  
+            echo "CONFIG_FGETPRIORITY=m" >> ${defconfig}  
           else
-            echo "backslashxx took the lkm_template repo offline again ??!?!?"
+            echo "aerath-stuff/fgetpriority repo offline again ??!?!?"
           fi
       
       - name: Build kernel
