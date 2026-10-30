@@ -758,7 +758,23 @@ jobs:
           cd $CONFIG/common
           curl https://raw.githubusercontent.com/maxsteeel/nomount/refs/heads/dev/kernel/setup.sh | bash -
           echo "CONFIG_NOMOUNT=y" >> ${defconfig}
-          
+
+      - name: creat fgetpriority module
+        if: ${{ env.ksu_fork  == 'xxKSU' }}
+        #if: false
+        run: |
+          if git ls-remote https://github.com/backslashxx/lkm_template &>/dev/null;then
+            cd $GITHUB_WORKSPACE/$CONFIG
+            git clone https://github.com/backslashxx/lkm_template 
+            grep -q 'Wno-declaration-after-statement' || echo 'ccflags-y += -Wno-declaration-after-statement' >> lkm_template/lkm_template/Makefile
+            cd common
+            cp -r ../lkm_template/lkm_template drivers
+            grep -q "lkm_template" drivers/Makefile || printf "\nobj-\$(CONFIG_LKM_TEMPLATE) += lkm_template/\n" >> drivers/Makefile && echo "[+] Modified Makefile for lkm_template."
+            grep -q "source \"drivers/lkm_template/Kconfig\"" drivers/Kconfig || sed -i "/endmenu/i\source \"drivers/lkm_template/Kconfig\"" drivers/Kconfig && echo "[+] Modified Kconfig for lkm_template."
+            echo "CONFIG_LKM_TEMPLATE=m" >> ${defconfig}  
+          else
+            echo "backslashxx took the lkm_template repo offline again ??!?!?"
+          fi
       
       - name: Build kernel
         env:
