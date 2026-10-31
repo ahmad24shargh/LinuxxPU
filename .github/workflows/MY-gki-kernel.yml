@@ -1043,9 +1043,7 @@ jobs:
       - name: Find and compress kernel driver module files (if present)
         run: |
           mkdir -p kernel_modules
-          echo "list of *.ko file in $CONFIG :"
-          find "$CONFIG" -type f -name '*.ko' 2>/dev/null
-          for file in $(find "$CONFIG" -type f -name '*.ko' 2>/dev/null); do
+          for file in $(find "$CONFIG" -type f -name '*.ko' 2>/dev/null | grep "/dist/"); do
             cp -f $file kernel_modules
           done
           if [ ! -z "$( ls -A 'kernel_modules' )" ]; then
