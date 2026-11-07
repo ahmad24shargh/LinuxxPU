@@ -760,7 +760,7 @@ jobs:
           echo "CONFIG_NOMOUNT=y" >> ${defconfig}
 
       - name: create fgetpriority module
-        #if: false
+        if: false
         run: |
           cd $GITHUB_WORKSPACE/$CONFIG/common/drivers
           git clone https://github.com/backslashxx/fgetpriority
